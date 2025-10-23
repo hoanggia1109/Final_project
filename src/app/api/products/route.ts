@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Fake data - sau này bạn có thể thay bằng database thực
+  // Fake data - sau thay bằng database thực
   const products = [
     {
       id: 1,

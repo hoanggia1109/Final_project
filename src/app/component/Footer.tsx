@@ -85,7 +85,7 @@ export default function Footer() {
             
             <div className="mb-3">
               <p className="mb-2" style={{ fontSize: '13px', color: '#aaa' }}>
-                VANTAYdecor rất hân hạnh được phục vụ quý khách tại văn phòng của chúng tôi:
+                DANNYdecor rất hân hạnh được phục vụ quý khách tại văn phòng của chúng tôi:
               </p>
               <p className="mb-0 fw-semibold" style={{ fontSize: '13px', lineHeight: '1.7' }}>
                 Số Đường 3, KDC Vạn Phúc, Hiệp Bình Phước, Thủ Đức, TP. HCM
@@ -100,13 +100,13 @@ export default function Footer() {
 
             <div className="mb-2">
               <p className="mb-1" style={{ fontSize: '13px' }}>
-                Email: <a href="mailto:info@vantaydecor.com" className="text-warning text-decoration-none">info@vantaydecor.com</a>
+                Email: <a href="mailto:info@dannydecor.com" className="text-warning text-decoration-none">info@dannydecor.com</a>
               </p>
             </div>
 
             <div>
               <p className="mb-1" style={{ fontSize: '13px' }}>
-                Web: <a href="https://vantaydecor.com" className="text-warning text-decoration-none">vantaydecor.com</a>
+                Web: <a href="https://dannydecor.com" className="text-warning text-decoration-none">dannydecor.com</a>
               </p>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-top border-secondary mt-5 pt-3">
           <p className="text-center mb-0" style={{ fontSize: '13px', color: '#777' }}>
-            Vantaydecor © 2022 , All Rights Reserved
+            Dannydecor © 2022 , All Rights Reserved
           </p>
         </div>
       </div>

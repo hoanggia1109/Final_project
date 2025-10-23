@@ -9,7 +9,7 @@ export default function HomeButton() {
       style={{
         position: 'fixed',
         bottom: '30px',
-        right: '30px',
+        left: '30px',
         width: '60px',
         height: '60px',
         borderRadius: '50%',
