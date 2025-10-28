@@ -55,14 +55,20 @@ const LoaiModel = sequelize.define(
 );
 
 // THƯƠNG HIỆU
+// THƯƠNG HIỆU
 const ThuongHieuModel = sequelize.define(
   "thuonghieu",
   {
     id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    code: DataTypes.STRING,
     tenbrand: DataTypes.STRING,
+    logo: DataTypes.TEXT,
+    thutu: DataTypes.INTEGER,
+    anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
   },
-  { tableName: "thuonghieu",  timestamps: false }
+  { tableName: "thuonghieu", timestamps: false }
 );
+
 
 // SẢN PHẨM
 const SanPhamModel = sequelize.define(

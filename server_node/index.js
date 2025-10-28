@@ -28,6 +28,7 @@ app.use("/api/danhmuc", require("./routes/danhmuc"));
 app.use("/api/lienhe", require("./routes/lienhe"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/bienthe", require("./routes/bienthe"));
+app.use("/api/thuonghieu", require("./routes/thuonghieu"));
 
 // Import model từ file database
 const {
@@ -99,6 +100,12 @@ app.post("/api/uploads", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ message: "Không có file" });
   res.json({ url: `http://localhost:${port}/uploads/${req.file.filename}` });
 });
+
+
+/* ------Tôi cho phép các request từ domain http://localhost:3000 được truy cập vào API này ----- */
+// const cors = require("cors");
+// app.use(cors({ origin: "http://localhost:3000" }));
+
 
 
 
