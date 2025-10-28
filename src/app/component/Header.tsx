@@ -248,7 +248,7 @@ export default function Header() {
                   <i className={`bi ${isLoggedIn ? 'bi-person-circle-fill' : 'bi-person-circle'}`}></i>
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Dropdown Menu /*/}
                 {showDropdown && (
                   <div
                     className="position-absolute bg-white shadow-lg rounded-3 overflow-hidden"
