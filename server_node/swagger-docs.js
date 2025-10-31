@@ -183,6 +183,32 @@
  *         description: Thành công
  */
 
+// =============THUONG HIEU========================
+/**
+ * @swagger
+ * /api/thuonghieu:
+ *   get:
+ *     summary: Lấy danh sách thương hiệu hiển thị
+ *     tags: [Thương hiệu]
+ *     responses:
+ *       200:
+ *         description: Danh sách thương hiệu thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   tenbrand:
+ *                     type: string
+ *                   logo:
+ *                     type: string
+ *                   anhien:
+ *                     type: integer
+ */
 /**
  * @swagger
  * /api/sanpham/thuonghieu/{id}:
@@ -286,6 +312,60 @@
  *         description: Thêm nhiều sản phẩm thành công
  */
 
+ /**
+ * @swagger
+ * /api/giohang/{id}:
+ *   put:
+ *     summary: Cập nhật số lượng sản phẩm trong giỏ hàng
+ *     tags: [Giỏ hàng]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của sản phẩm trong giỏ hàng
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               soluong:
+ *                 type: integer
+ *                 example: 3
+ *     responses:
+ *       200:
+ *         description: Cập nhật số lượng thành công
+ *       404:
+ *         description: Không tìm thấy sản phẩm trong giỏ hàng
+ */
+
+/**
+ * @swagger
+ * /api/giohang/{id}:
+ *   delete:
+ *     summary: Xóa sản phẩm khỏi giỏ hàng
+ *     tags: [Giỏ hàng]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của sản phẩm trong giỏ hàng
+ *     responses:
+ *       200:
+ *         description: Xóa sản phẩm khỏi giỏ hàng thành công
+ *       404:
+ *         description: Không tìm thấy sản phẩm trong giỏ hàng
+ */
+
 /* ===================== ĐƠN HÀNG ===================== */
 /**
  * @swagger
@@ -296,60 +376,45 @@
 
 /**
  * @swagger
+ /**
+ * @swagger
  * /api/donhang:
  *   post:
- *     summary: Tạo đơn hàng mới từ giỏ hàng người dùng
- *     description: API này lấy toàn bộ giỏ hàng của user, tính tổng tiền, áp dụng mã giảm giá (nếu có), và tạo đơn hàng.
+ *     summary: Tạo đơn hàng từ giỏ hàng người dùng
+ *     description: Tạo mới đơn hàng từ giỏ hàng hiện tại của user, có thể áp dụng mã giảm giá và phí vận chuyển.
  *     tags: [Đơn hàng]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
- *       required: false
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
+ *               diachi_id:
+ *                 type: string
+ *                 example: "0e55aa1b-b321-11f0-b695-2a4b22e88692"
+ *               ghichu:
+ *                 type: string
+ *                 example: "Giao hàng trong giờ hành chính"
  *               magiamgia_code:
  *                 type: string
- *                 example: SALE10
+ *                 example: "SALE10"
+ *               tinh_thanh:
+ *                 type: string
+ *                 example: "Hà Nội"
  *     responses:
  *       200:
  *         description: Đặt hàng thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Đặt hàng thành công
- *                 donhang:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     code:
- *                       type: string
- *                       example: OD17323456789
- *                     tongtien:
- *                       type: number
- *                       example: 1500000
- *                     giamgia:
- *                       type: number
- *                       example: 150000
- *                     tongtien_sau_giam:
- *                       type: number
- *                       example: 1350000
- *                     magiamgia_code:
- *                       type: string
- *                       example: SALE10
  *       400:
- *         description: Giỏ hàng trống
+ *         description: Giỏ hàng trống hoặc dữ liệu không hợp lệ
  *       500:
  *         description: Lỗi server
  */
 
+
+ 
 /**
  * @swagger
  * /api/donhang:
@@ -362,53 +427,44 @@
  *     responses:
  *       200:
  *         description: Danh sách đơn hàng trả về thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   code:
- *                     type: string
- *                   tongtien:
- *                     type: number
- *                   giamgia:
- *                     type: number
- *                   tongtien_sau_giam:
- *                     type: number
- *                   trangthai:
- *                     type: string
- *                     example: pending
- *                   DonHangChiTiets:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         bienthe_id:
- *                           type: string
- *                         soluong:
- *                           type: number
- *                         gia:
- *                           type: number
- *                         bienthe:
- *                           type: object
- *                           properties:
- *                             id:
- *                               type: string
- *                             sanpham:
- *                               type: object
- *                               properties:
- *                                 id:
- *                                   type: string
- *                                 tensp:
- *                                   type: string
- *                                 thumbnail:
- *                                   type: string
  */
 
+/**
+/**
+ * @swagger
+ * /api/donhang/tinh-tong-tien:
+ *   post:
+ *     summary: Tính tổng tiền tạm tính đơn hàng
+ *     description: Tính tổng tiền hàng, áp dụng mã giảm giá (nếu có) và phí vận chuyển, nhưng **không tạo đơn hàng**.
+ *     tags: [Đơn hàng]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ * 
+ * diachi_id :
+ * type:string
+ *               magiamgia_code:
+ *                 type: string
+ *                 description: Mã giảm giá hoặc mã freeship (nếu có)
+ *                 example: "FREESHIP30"
+ *               tinh_thanh:
+ *                 type: string
+ *                 description: Tỉnh/thành phố để tính phí vận chuyển
+ *                 example: "Hà Nội"
+ *     responses:
+ *       200:
+ *         description: Tính tổng tiền thành công
+ *       400:
+ *         description: Giỏ hàng trống hoặc dữ liệu không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
 /**
  * @swagger
  * /api/donhang/{id}:
@@ -427,47 +483,6 @@
  *     responses:
  *       200:
  *         description: Chi tiết đơn hàng được trả về thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 code:
- *                   type: string
- *                 tongtien:
- *                   type: number
- *                 giamgia:
- *                   type: number
- *                 tongtien_sau_giam:
- *                   type: number
- *                 trangthai:
- *                   type: string
- *                   example: completed
- *                 DonHangChiTiets:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       bienthe_id:
- *                         type: string
- *                       soluong:
- *                         type: number
- *                       gia:
- *                         type: number
- *                       bienthe:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                           sanpham:
- *                             type: object
- *                             properties:
- *                               tensp:
- *                                 type: string
- *                               thumbnail:
- *                                 type: string
  *       404:
  *         description: Không tìm thấy đơn hàng
  */
@@ -505,78 +520,210 @@
 /* ===================== REVIEW ===================== */
 /**
  * @swagger
+ * tags:
+ *   name: Review
+ *   description: API Quản lý đánh giá sản phẩm (có upload ảnh)
+
+ * components:
+ *   schemas:
+ *     Review:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "7f12a3d9-abc3-4e11-9b98-2f61aa4e5cda"
+ *         bienthe_id:
+ *           type: string
+ *           example: "f50e6aa9-b333-11f0-b695-2a4b22e88692"
+ *         rating:
+ *           type: integer
+ *           example: 5
+ *         binhluan:
+ *           type: string
+ *           example: "Sản phẩm chất lượng, giao hàng nhanh."
+ *         created_at:
+ *           type: string
+ *           example: "2025-10-29T09:00:00Z"
+ *         updated_at:
+ *           type: string
+ *           example: "2025-10-29T09:10:00Z"
+ *         user:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             ho_ten:
+ *               type: string
+ *         hinhanh:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *                 example: "/uploads/reviews/1730182233990-image1.jpg"
+ */
+
+/**
+ * @swagger
  * /api/review:
  *   post:
- *     summary: Gửi đánh giá sản phẩm
+ *     summary: Tạo đánh giá mới cho sản phẩm
  *     tags: [Review]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               bienthe_id:
+ *               chitiet_donhang_id:
  *                 type: string
+ *                 example: "f50e6aa9-b333-11f0-b695-2a4b22e88692"
  *               rating:
  *                 type: integer
+ *                 example: 4
  *               binhluan:
  *                 type: string
+ *                 example: "Giao hàng nhanh, chất lượng ổn."
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Tối đa 5 ảnh upload
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Tạo đánh giá thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Review'
+ *       400:
+ *         description: Thiếu thông tin đánh giá
+ *       401:
+ *         description: Chưa đăng nhập
  */
 
-/* ===================== MÃ GIẢM GIÁ ===================== */
 /**
  * @swagger
- * tags:
- *   - name: Mã giảm giá
- *     description: Quản lý và áp dụng mã khuyến mãi
- */
-
-/**
- * @swagger
- * /api/magiamgia:
+ * /api/review/{sanpham_id}/average:
  *   get:
- *     summary: Lấy danh sách mã giảm giá còn hiệu lực
- *     tags: [Mã giảm giá]
+ *     summary: Lấy danh sách đánh giá theo sản phẩm biến thể
+ *     tags: [Review]
+ *     parameters:
+ *       - in: path
+ *         name: sanpham_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của sản phẩm
  *     responses:
  *       200:
- *         description: Danh sách mã giảm giá hợp lệ
+ *         description: Danh sách đánh giá
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   code:
- *                     type: string
- *                     example: SALE10
- *                   mota:
- *                     type: string
- *                     example: Giảm 10% cho đơn hàng trên 500k
- *                   loai:
- *                     type: string
- *                     example: percent
- *                   giatrigiam:
- *                     type: number
- *                     example: 10
- *                   giatri_toithieu:
- *                     type: number
- *                     example: 500000
- *                   soluong:
- *                     type: integer
- *                     example: 100
- *                   ngaybatdau:
- *                     type: string
- *                     example: 2025-01-01
- *                   ngayketthuc:
- *                     type: string
- *                     example: 2025-12-31
+ *                 $ref: '#/components/schemas/Review'
+ */
+
+/**
+ * @swagger
+ * /api/review/{id}:
+ *   put:
+ *     summary: Cập nhật đánh giá
+ *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 example: 5
+ *               binhluan:
+ *                 type: string
+ *                 example: "Sau khi dùng 1 tuần thấy rất ổn!"
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Cập nhật đánh giá thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Review'
+ *       403:
+ *         description: Không có quyền sửa đánh giá
+ *       404:
+ *         description: Không tìm thấy đánh giá
+ */
+
+/**
+ * @swagger
+ * /api/review/{id}:
+ *   delete:
+ *     summary: Xóa đánh giá của người dùng
+ *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã xóa đánh giá thành công
+ *       403:
+ *         description: Không có quyền xóa
+ *       404:
+ *         description: Không tìm thấy đánh giá
+ */
+
+/**
+ * @swagger
+ * /api/review/bienthe/{bienthe_id}/average:
+ *   get:
+ *     summary: Lấy điểm trung bình đánh giá của sản phẩm biến thể
+ *     tags: [Review]
+ *     parameters:
+ *       - in: path
+ *         name: bienthe_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Điểm trung bình rating
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 average_rating:
+ *                   type: number
+ *                   example: 4.6
  */
 
 /**
@@ -601,29 +748,6 @@
  *     responses:
  *       200:
  *         description: Mã giảm giá hợp lệ, trả về kết quả giảm
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Áp dụng mã giảm giá thành công
- *                 code:
- *                   type: string
- *                   example: SALE20
- *                 loai:
- *                   type: string
- *                   example: percent
- *                 giatrigiam:
- *                   type: number
- *                   example: 20
- *                 giam:
- *                   type: number
- *                   example: 240000
- *                 tong_tien_sau_giam:
- *                   type: number
- *                   example: 960000
  *       400:
  *         description: Lỗi dữ liệu đầu vào hoặc đơn hàng chưa đủ điều kiện
  *       404:
@@ -720,22 +844,8 @@
  *     responses:
  *       200:
  *         description: Danh sách danh mục được trả về thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   tendm:
- *                     type: string
- *                   anhien:
- *                     type: integer
- *                   slug:
- *                     type: string
- */
+ * 
+ */          
 // ======DANH MỤC========================================
 /**
  * @swagger
@@ -753,31 +863,11 @@
  *     responses:
  *       200:
  *         description: Thông tin danh mục và danh sách sản phẩm
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 tendm:
- *                   type: string
- *                 sanpham:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       tensp:
- *                         type: string
- *                       thumbnail:
- *                         type: string
  */
 
 /**
  * @swagger
- * /api/danhmuc:
+ * /admin/danhmuc:
  *   post:
  *     summary: (Admin) Thêm danh mục mới
  *     tags: [Danh mục]
@@ -793,10 +883,10 @@
  *               tendm:
  *                 type: string
  *                 example: Ghế Văn Phòng
- *               anhien:
- *                 type: integer
- *                 example: 1
- *               slug:
+ *               code:
+ *                 type: string
+ *                 example: DM009
+ *               mota:
  *                 type: string
  *                 example: ghe-van-phong
  *     responses:
@@ -806,7 +896,7 @@
 
 /**
  * @swagger
- * /api/danhmuc/{id}:
+ * /admin/danhmuc/{id}:
  *   put:
  *     summary: (Admin) Cập nhật danh mục
  *     tags: [Danh mục]
@@ -838,7 +928,7 @@
 
 /**
  * @swagger
- * /api/danhmuc/{id}:
+ * /admin/danhmuc/{id}:
  *   delete:
  *     summary: (Admin) Xóa danh mục
  *     tags: [Danh mục]
@@ -862,35 +952,11 @@
  *     description: Quản lý và hiển thị thương hiệu sản phẩm
  */
 
-/**
- * @swagger
- * /api/sanpham/thuonghieu:
- *   get:
- *     summary: Lấy danh sách thương hiệu hiển thị
- *     tags: [Thương hiệu]
- *     responses:
- *       200:
- *         description: Danh sách thương hiệu thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   tenbrand:
- *                     type: string
- *                   logo:
- *                     type: string
- *                   anhien:
- *                     type: integer
- */
+
 
 /**
  * @swagger
- * /api/sanpham/thuonghieu/{id}:
+ * /api/thuonghieu/{id}:
  *   get:
  *     summary: Lấy danh sách sản phẩm theo thương hiệu
  *     tags: [Thương hiệu]
@@ -921,7 +987,7 @@
 
 /**
  * @swagger
- * /api/admin/thuonghieu:
+ * /admin/thuonghieu:
  *   post:
  *     summary: (Admin) Thêm thương hiệu mới
  *     tags: [Thương hiệu]
@@ -950,7 +1016,7 @@
 
 /**
  * @swagger
- * /api/admin/thuonghieu/{id}:
+ * /admin/thuonghieu/{id}:
  *   put:
  *     summary: (Admin) Cập nhật thương hiệu
  *     tags: [Thương hiệu]
@@ -982,7 +1048,7 @@
 
 /**
  * @swagger
- * /api/admin/thuonghieu/{id}:
+ * /admin/thuonghieu/{id}:
  *   delete:
  *     summary: (Admin) Xóa thương hiệu
  *     tags: [Thương hiệu]
@@ -1017,26 +1083,26 @@
  *         description: Thành công
  */
 
-/**
- * @swagger
- * /api/bienthe/{id}:
- *   get:
- *     summary: Lấy chi tiết biến thể theo ID
- *     tags: [Biến thể]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Thành công
- */
+// /**
+//  * @swagger
+//  * /api/bienthe/{id}:
+//  *   get:
+//  *     summary: Lấy chi tiết biến thể theo ID
+//  *     tags: [Biến thể]
+//  *     parameters:
+//  *       - in: path
+//  *         name: id
+//  *         required: true
+//  *         schema:
+//  *           type: string
+//  *     responses:
+//  *       200:
+//  *         description: Thành công
+//  */
 
 /**
  * @swagger
- * /api/bienthe:
+ * /admin/bienthe:
  *   post:
  *     summary: Thêm biến thể mới
  *     tags: [Biến thể]
@@ -1064,7 +1130,7 @@
 
 /**
  * @swagger
- * /api/bienthe/{id}:
+ * /admin/bienthe/{id}:
  *   put:
  *     summary: Cập nhật biến thể
  *     tags: [Biến thể]
@@ -1096,7 +1162,7 @@
 
 /**
  * @swagger
- * /api/bienthe/{id}:
+ * /admin/bienthe/{id}:
  *   delete:
  *     summary: Xóa biến thể
  *     tags: [Biến thể]
@@ -1111,6 +1177,129 @@
  *     responses:
  *       200:
  *         description: Xóa biến thể thành công
+ */
+/**
+ * @swagger
+ * tags:
+ *   - name: Địa chỉ
+ *     description: API quản lý địa chỉ giao hàng của người dùng
+ */
+
+/* ===================== ĐỊA CHỈ ===================== */
+
+/**
+ * @swagger
+ * /api/diachi:
+ *   get:
+ *     summary: Lấy danh sách địa chỉ theo người dùng
+ *     tags: [Địa chỉ]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *       401:
+ *        description: Chưa đăng nhập hoặc không có quyền truy cập
+ */
+
+/**
+ * @swagger
+ * /api/diachi:
+ *   post:
+ *     summary: Thêm địa chỉ mới
+ *     tags: [Địa chỉ]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [hoten, sdt, diachichitiet, phuong_xa, quan_huyen, tinh_thanh]
+ *             properties:
+ *               hoten: { type: string, example: "Nguyễn Văn A" }
+ *               sdt: { type: string, example: "0912345678" }
+ *               diachichitiet: { type: string, example: "12A đường Hoa Sữa" }
+ *               phuong_xa: { type: string, example: "Phường 7" }
+ *               quan_huyen: { type: string, example: "Quận 3" }
+ *               tinh_thanh: { type: string, example: "TP.HCM" }
+ *               macdinh: { type: integer, example: 1, description: "0 hoặc 1" }
+ *               loaidiachi:
+ *                 type: string
+ *                 enum: [home, office, other]
+ *                 example: home
+ *     responses:
+ *       201:
+ *         description: Thêm thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: string }
+ *                 message: { type: string, example: "Thêm địa chỉ thành công" }
+ */
+
+/**
+ * @swagger
+ * /api/diachi/{id}:
+ *   put:
+ *     summary: Cập nhật địa chỉ
+ *     tags: [Địa chỉ]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID địa chỉ
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               hoten: { type: string }
+ *               sdt: { type: string }
+ *               diachichitiet: { type: string }
+ *               phuong_xa: { type: string }
+ *               quan_huyen: { type: string }
+ *               tinh_thanh: { type: string }
+ *               macdinh: { type: integer, example: 0 }
+ *               loaidiachi:
+ *                 type: string
+ *                 enum: [home, office, other]
+ *     responses:
+ *       200:
+ *         description: Cập nhật địa chỉ thành công
+ *       404:
+ *         description: Không tìm thấy địa chỉ
+ */
+
+/**
+ * @swagger
+ * /api/diachi/{id}:
+ *   delete:
+ *     summary: Xoá địa chỉ
+ *     tags: [Địa chỉ]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID địa chỉ
+ *     responses:
+ *       200:
+ *         description: Xoá địa chỉ thành công
+ *       404:
+ *         description: Không tìm thấy địa chỉ
  */
 // ==================thanh toán===================
 /**
@@ -1222,3 +1411,4 @@
  *       200:
  *         description: Thông tin trạng thái thanh toán
  */
+

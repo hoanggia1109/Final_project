@@ -9,8 +9,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 const app = express();
-const port = process.env.PORT || 3001;
-
+const port = 3000;
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
@@ -29,6 +28,8 @@ app.use("/api/lienhe", require("./routes/lienhe"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/bienthe", require("./routes/bienthe"));
 app.use("/api/thuonghieu", require("./routes/thuonghieu"));
+app.use("/admin", require("./routes/admin"));
+app.use("/api/diachi", require("./routes/diachi"));
 
 // Import model từ file database
 const {
@@ -41,7 +42,13 @@ const {
   ImageModel,
   GioHangModel,
   DonHangModel,
+  DiaChiModel,
+  MaGiamGiaModel,
+  BaiVietModel,
+  DanhMucBaiVietModel,
+  DanhGiaModel,
   DonHangChiTietModel,
+  ReviewImageModel,
 } = require("./database");
 
 // kết nối DB
@@ -77,16 +84,17 @@ const swaggerOptions = {
 },
     servers: [
       {
-        url: "http://localhost:3001",
+        url: "http://localhost:3000",
       },
     ],
   },
-  apis: ["./index.js", "./swagger-docs.js"], // file chứa mô tả API (ngay trong file này)
+  apis: ["./index.js", "./swagger-docs.js"], 
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
+console.log("Swagger Docs Loaded:", Object.keys(swaggerDocs.paths || {}));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-console.log("📘 Swagger UI đã được khởi tạo tại: http://localhost:3000/api-docs");
+console.log(`Swagger UI đã được khởi tạo tại: http://localhost:${port}/api-docs`);
 
 
 /* ---------------- UPLOAD ẢNH ---------------- */
@@ -102,20 +110,6 @@ app.post("/api/uploads", upload.single("file"), (req, res) => {
 });
 
 
-/* ------Tôi cho phép các request từ domain http://localhost:3000 được truy cập vào API này ----- */
-// const cors = require("cors");
-// app.use(cors({ origin: "http://localhost:3000" }));
-
-
-
 
 /* ---------------- START SERVER ---------------- */
-console.log("⚡ Chuẩn bị khởi động server...");
-
-app.get("/", (req, res) => {
-  res.send("✅ Backend đang hoạt động!");
-});
-
-app.listen(port, () => console.log(`✅ Server đang chạy tại http://localhost:${port}`));
-
-console.log("⚡ Đã chạy qua dòng app.listen()");
+app.listen(port, () => console.log(` Server chạy http://localhost:${port}`));
