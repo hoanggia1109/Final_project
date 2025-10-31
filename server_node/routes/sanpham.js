@@ -1,6 +1,6 @@
 const express = require("express");
 const { Op } = require("sequelize");
-const { SanPhamModel, SanPhamBienTheModel, LoaiModel, ThuongHieuModel, ImageModel } = require("../database");
+const { SanPhamModel, SanPhamBienTheModel, ThuongHieuModel, LoaiModel, ImageModel } = require("../database");
 const router = express.Router();
 
 // lấy tất cả sp
@@ -13,7 +13,7 @@ router.get("/", async (req, res) => {
         "tensp",
         "mota",
         "thumbnail",
-        "hot",
+        "luotban",
         "anhien",
         "slug",
       ],
@@ -41,9 +41,6 @@ router.get("/", async (req, res) => {
 
 
 
-
-
-
 //tìm kiêms
 router.get("/timkiem", async (req, res) => {
   const q = req.query.q || "";
@@ -61,22 +58,21 @@ router.get("/trongloai/:id", async (req, res) => {
   res.json(sp);
 });
 
-// Danh sách thương hiệu
-router.get("/thuonghieu", async (_, res) => {
-  const th = await ThuongHieuModel.findAll({ where: { anhien: 1 } });
-  res.json(th);
-});
 
-// Sản phẩm theo thương hiệu
-router.get("/thuonghieu/:id", async (req, res) => {
-  const sp = await SanPhamModel.findAll({ where: { thuonghieu_id: req.params.id, anhien: 1 } });
-  res.json(sp);
-});
 
 // Sản phẩm hot
 router.get("/hot", async (_, res) => {
-  const sp = await SanPhamModel.findAll({ where: { hot: 1, anhien: 1 }, limit: 8 });
-  res.json(sp);
+  try {
+    const sp = await SanPhamModel.findAll({
+      where: { anhien: 1 },          
+      order: [["luotban", "DESC"]],  
+      limit: 8,                      
+    });
+    res.json(sp);
+  } catch (err) {
+    console.error("Lỗi lấy sản phẩm hot:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
 });
 
 // Sản phẩm mới
