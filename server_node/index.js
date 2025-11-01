@@ -9,9 +9,18 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 const app = express();
-const port = 3000;
+const port = 5000; // ĐỔI PORT ĐỂ TRÁNH CONFLICT VỚI NEXT.JS (port 3000)
 app.use(cors());
 app.use(express.json());
+
+// LOGGING middleware - log mọi request
+app.use((req, res, next) => {
+  console.log(`\n📥 [${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  console.log('   Headers:', req.headers['content-type']);
+  console.log('   Body:', req.body);
+  next();
+});
+
 app.use("/uploads", express.static("uploads"));
 
 
@@ -110,6 +119,36 @@ app.post("/api/uploads", upload.single("file"), (req, res) => {
 });
 
 
+
+/* ---------------- ERROR HANDLING TOÀN CỤC ---------------- */
+// Bắt lỗi unhandled promise rejection
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 UNHANDLED REJECTION:');
+  console.error('Reason:', reason);
+  console.error('Promise:', promise);
+  // KHÔNG tắt server để tiếp tục debug
+});
+
+// Bắt lỗi uncaught exception
+process.on('uncaughtException', (error) => {
+  console.error('🔥 UNCAUGHT EXCEPTION:');
+  console.error('Error:', error.message);
+  console.error('Stack:', error.stack);
+  // KHÔNG tắt server để tiếp tục debug
+});
+
+// Middleware bắt lỗi Express (phải đặt SAU tất cả routes)
+app.use((err, req, res, next) => {
+  console.error('🔥 EXPRESS ERROR HANDLER:');
+  console.error('URL:', req.url);
+  console.error('Method:', req.method);
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  res.status(500).json({ 
+    message: 'Server error', 
+    error: err.message 
+  });
+});
 
 /* ---------------- START SERVER ---------------- */
 app.listen(port, () => console.log(` Server chạy http://localhost:${port}`));

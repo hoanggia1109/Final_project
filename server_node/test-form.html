@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Đăng Ký</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #FFC107;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #FFB300;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>🧪 Test Form Đăng Ký</h2>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="email" required placeholder="test@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" required placeholder="******">
+            </div>
+            
+            <button type="submit">Đăng Ký</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registerForm');
+        const resultDiv = document.getElementById('result');
+        const logDiv = document.getElementById('log');
+
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Clear previous results
+            resultDiv.style.display = 'none';
+            logDiv.innerHTML = '';
+            
+            addLog('🚀 Bắt đầu gửi request...');
+            addLog(`📧 Email: ${email}`);
+            addLog(`🔐 Password: ${password}`);
+            addLog(`📤 URL: http://localhost:5000/api/auth/dangky`);
+            addLog(`📋 Method: POST`);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/dangky', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                addLog(`📥 Status: ${response.status} ${response.statusText}`);
+                
+                const data = await response.json();
+                addLog(`✅ Response: ${JSON.stringify(data)}`);
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = '✅ ' + data.message;
+                    resultDiv.style.display = 'block';
+                    
+                    // Clear form
+                    form.reset();
+                } else {
+                    throw new Error(data.message || 'Đăng ký thất bại');
+                }
+                
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ ' + error.message;
+                resultDiv.style.display = 'block';
+            }
+        });
+        
+        // Test initial log
+        addLog('✅ Form đã sẵn sàng!');
+        addLog('👉 Nhập email và password để test');
+    </script>
+</body>
+</html>
+

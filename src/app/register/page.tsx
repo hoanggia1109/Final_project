@@ -24,7 +24,7 @@ export default function RegisterPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -37,9 +37,34 @@ export default function RegisterPage() {
       return;
     }
     
-    console.log('Register:', formData);
-    alert('Đăng ký thành công!');
-    router.push('/login');
+    try {
+      // ✅ GỌI API THẬT
+      const response = await fetch('http://localhost:5000/api/auth/dangky', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng ký thất bại');
+      }
+
+      console.log('✅ Đăng ký thành công:', data);
+      alert('Đăng ký thành công! Vui lòng đăng nhập.');
+      router.push('/login');
+    } catch (error) {
+      console.error('❌ Lỗi đăng ký:', error);
+      alert((error as Error).message || 'Có lỗi xảy ra khi đăng ký!');
+    }
   };
 
   return (

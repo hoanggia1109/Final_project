@@ -15,11 +15,12 @@ const UserModel = sequelize.define(
   {
     id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    password: { type: DataTypes.STRING, allowNull: false },
+    code: { type: DataTypes.STRING, allowNull: true },
     ngaysinh : { type: DataTypes.DATEONLY, allowNull: true },
     gioitinh :{ type: DataTypes.STRING, allowNull: true },
-    ho_ten : { type: DataTypes.STRING, allowNull: true },
-    sdt : { type: DataTypes.STRING, allowNull: true },
-    password: { type: DataTypes.STRING, allowNull: false },
+    ho_ten : { type: DataTypes.STRING, allowNull: true }, // Thêm hỗ trợ fullName
+    sdt : { type: DataTypes.STRING, allowNull: true }, // Thêm hỗ trợ phone
     role: { type: DataTypes.ENUM('admin','customer'), defaultValue: "customer" },
     trangthai: { type: DataTypes.TINYINT, defaultValue: 1 },
     created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },

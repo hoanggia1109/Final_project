@@ -1,22 +1,60 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const express = require("express");
-const router = express.Router();
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const bcrypt = require("bcryptjs");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const jwt = require("jsonwebtoken");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { UserModel } = require("../database");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nodemailer = require("nodemailer");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { v4: uuidv4 } = require("uuid");
+
+const router = express.Router();
 
 /* -------- Đăng ký -------- */
 router.post("/dangky", async (req, res) => {
+  console.log("🔵 Nhận request đăng ký:", req.body);
+  
   try {
-    const { email, password } = req.body;
-    const existed = await UserModel.findOne({ where: { email } });
-    if (existed) return res.status(400).json({ message: "Email đã tồn tại" });
+    const { email, password, fullName, phone } = req.body;
+    
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email và mật khẩu là bắt buộc" });
+    }
 
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Mật khẩu phải có ít nhất 6 ký tự" });
+    }
+    
+    console.log("🔍 Checking email:", email);
+    
+    const existed = await UserModel.findOne({ where: { email } });
+    
+    if (existed) {
+      console.log("❌ Email đã tồn tại");
+      return res.status(400).json({ message: "Email đã tồn tại" });
+    }
+
+    console.log("🔐 Hashing password...");
     const hashed = await bcrypt.hash(password, 10);
-    await UserModel.create({ id: uuidv4(), email, password: hashed });
+    
+    console.log("💾 Creating user...");
+    const newUser = await UserModel.create({ 
+      id: uuidv4(), 
+      email, 
+      password: hashed,
+      ho_ten: fullName || null,
+      sdt: phone || null
+    });
+    
+    console.log("✅ User created:", newUser.id);
+    
     res.json({ message: "Đăng ký thành công" });
   } catch (err) {
+    console.error("🔥 ERROR:", err.message);
     res.status(500).json({ message: err.message });
   }
 });
@@ -31,8 +69,19 @@ router.post("/dangnhap", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: "Sai mật khẩu" });
 
-    const token = jwt.sign({ id: user.id, email }, "SECRET_KEY", { expiresIn: "7d" });
-    res.json({ message: "Đăng nhập thành công", token });
+    const token = jwt.sign({ id: user.id, email, role: user.role }, "SECRET_KEY", { expiresIn: "7d" });
+    
+    // Trả về thông tin user đầy đủ
+    res.json({ 
+      message: "Đăng nhập thành công", 
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.ho_ten || email.split('@')[0], // Dùng email nếu không có tên
+        role: user.role || 'customer'
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

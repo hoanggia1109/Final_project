@@ -1,11 +1,8 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,11 +18,90 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', formData);
-    alert('Đăng nhập thành công!');
-    router.push('/');
+    
+    try {
+      // ✅ GỌI API THẬT
+      const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng nhập thất bại');
+      }
+
+      console.log('✅ Đăng nhập thành công:', data);
+      
+      // Lưu token và user info vào localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        
+        // Kiểm tra xem có user object không
+        if (data.user) {
+          const userName = data.user.fullName || data.user.email.split('@')[0];
+          localStorage.setItem('userEmail', data.user.email);
+          localStorage.setItem('userName', userName);
+          localStorage.setItem('userRole', data.user.role || 'customer');
+          
+          console.log('💾 Login Page - Đã lưu localStorage:', {
+            token: data.token.substring(0, 20) + '...',
+            email: data.user.email,
+            name: userName,
+            role: data.user.role || 'customer'
+          });
+        } else {
+          // Fallback nếu backend không trả về user object
+          const userName = formData.email.split('@')[0];
+          localStorage.setItem('userEmail', formData.email);
+          localStorage.setItem('userName', userName);
+          localStorage.setItem('userRole', 'customer');
+          
+          console.log('💾 Login Page - Đã lưu localStorage (fallback):', {
+            token: data.token.substring(0, 20) + '...',
+            email: formData.email,
+            name: userName,
+            role: 'customer'
+          });
+        }
+        
+        // Verify localStorage đã được lưu
+        console.log('🔍 Verify localStorage:', {
+          token: localStorage.getItem('token') ? 'CÓ' : 'KHÔNG',
+          email: localStorage.getItem('userEmail'),
+          name: localStorage.getItem('userName'),
+          role: localStorage.getItem('userRole')
+        });
+      }
+      
+      console.log('✅ Đăng nhập thành công!');
+      
+      // Thông báo Header cập nhật ngay trong cùng tab
+      try { 
+        window.dispatchEvent(new Event('loginSuccess'));
+        window.dispatchEvent(new Event('storage'));
+      } catch {}
+      
+      alert('Đăng nhập thành công!');
+      
+      // Đảm bảo localStorage được flush trước khi redirect
+      console.log('🔄 Redirect về trang chủ...');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 200);
+    } catch (error) {
+      console.error('❌ Lỗi đăng nhập:', error);
+      alert((error as Error).message || 'Email hoặc mật khẩu không đúng!');
+    }
   };
 
   return (

@@ -6,6 +6,7 @@ import BootstrapClient from './BootstrapClient';
 import Header from './component/Header';
 import HomeButton from './component/HomeButton';
 import Footer from './component/Footer';
+// import DebugAuth from './component/DebugAuth';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,12 +30,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Bootstrap Icons CDN Backup */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <BootstrapClient />
         <Header />
         {children}
         <Footer />
         <HomeButton />
+        {/* <DebugAuth /> */}
       </body>
     </html>
   );

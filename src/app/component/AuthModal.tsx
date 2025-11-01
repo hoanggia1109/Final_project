@@ -11,6 +11,8 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLoginSuccess }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,28 +23,131 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(''); // Clear error khi user nhập
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'login') {
-      console.log('Login:', { email: formData.email, password: formData.password });
-      alert('Đăng nhập thành công!');
-      if (onLoginSuccess) onLoginSuccess();
-    } else {
-      if (formData.password !== formData.confirmPassword) {
-        alert('Mật khẩu không khớp!');
-        return;
+    setLoading(true);
+    setError('');
+
+    try {
+      if (mode === 'login') {
+        // ========== ĐĂNG NHẬP ==========
+        const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Đăng nhập thất bại');
+        }
+
+        // Lưu token và thông tin user vào localStorage
+        localStorage.setItem('token', data.token);
+        
+        // Kiểm tra xem có user object không
+        if (data.user) {
+          const userName = data.user.fullName || data.user.email.split('@')[0];
+          localStorage.setItem('userEmail', data.user.email);
+          localStorage.setItem('userName', userName);
+          localStorage.setItem('userRole', data.user.role || 'customer');
+          
+          console.log('💾 AuthModal - Đã lưu localStorage:', {
+            token: data.token.substring(0, 20) + '...',
+            email: data.user.email,
+            name: userName,
+            role: data.user.role || 'customer'
+          });
+        } else {
+          // Fallback nếu backend không trả về user object
+          const userName = formData.email.split('@')[0];
+          localStorage.setItem('userEmail', formData.email);
+          localStorage.setItem('userName', userName);
+          localStorage.setItem('userRole', 'customer');
+          
+          console.log('💾 AuthModal - Đã lưu localStorage (fallback):', {
+            token: data.token.substring(0, 20) + '...',
+            email: formData.email,
+            name: userName,
+            role: 'customer'
+          });
+        }
+
+        console.log('✅ Đăng nhập thành công!');
+        
+        // Bắn event để Header cập nhật ngay trong cùng tab
+        try { 
+          window.dispatchEvent(new Event('loginSuccess'));
+          window.dispatchEvent(new Event('storage'));
+        } catch {}
+        
+        alert('Đăng nhập thành công!');
+        if (onLoginSuccess) onLoginSuccess();
+        onClose();
+        
+        // Reload để update header
+        setTimeout(() => {
+          window.location.reload();
+        }, 200);
+
+      } else {
+        // ========== ĐĂNG KÝ ==========
+        if (formData.password !== formData.confirmPassword) {
+          setError('Mật khẩu không khớp!');
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('http://localhost:5000/api/auth/dangky', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName,
+            phone: formData.phone,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Đăng ký thất bại');
+        }
+
+        alert('Đăng ký thành công! Vui lòng đăng nhập.');
+        // Chuyển sang mode login sau khi đăng ký thành công
+        setMode('login');
+        setFormData({
+          email: formData.email, // Giữ lại email
+          password: '',
+          confirmPassword: '',
+          fullName: '',
+          phone: '',
+        });
       }
-      console.log('Register:', formData);
-      alert('Đăng ký thành công!');
-      if (onLoginSuccess) onLoginSuccess();
+    } catch (err: unknown) {
+      console.error('❌ Lỗi đăng ký:', err);
+      setError((err as Error).message || 'Có lỗi xảy ra khi đăng ký!');
+    } finally {
+      setLoading(false);
     }
-    onClose();
   };
 
   const switchMode = () => {
     setMode(mode === 'login' ? 'register' : 'login');
+    setError('');
     setFormData({
       email: '',
       password: '',
@@ -99,52 +204,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="alert alert-danger py-2 px-3 mb-3" role="alert">
+              <small>{error}</small>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit}>
-            {mode === 'register' && (
-              <>
-                {/* Full Name */}
-                <div className="mb-3">
-                  <label className="form-label small fw-semibold text-dark">Họ và tên</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    className="form-control"
-                    placeholder="Nhập họ và tên"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      padding: '12px 16px',
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      fontSize: '15px',
-                    }}
-                  />
-                </div>
-
-                {/* Phone */}
-                <div className="mb-3">
-                  <label className="form-label small fw-semibold text-dark">Số điện thoại</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    className="form-control"
-                    placeholder="Nhập số điện thoại"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      padding: '12px 16px',
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      fontSize: '15px',
-                    }}
-                  />
-                </div>
-              </>
-            )}
-
             {/* Email */}
             <div className="mb-3">
               <label className="form-label small fw-semibold text-dark">Email</label>
@@ -156,6 +224,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 style={{
                   padding: '12px 16px',
                   border: '1px solid #ddd',
@@ -176,6 +245,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                 value={formData.password}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 style={{
                   padding: '12px 16px',
                   border: '1px solid #ddd',
@@ -196,6 +266,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   style={{
                     padding: '12px 16px',
                     border: '1px solid #ddd',
@@ -219,21 +290,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
             <button
               type="submit"
               className="btn btn-warning text-white w-100 py-3 fw-semibold mb-3"
+              disabled={loading}
               style={{
                 fontSize: '16px',
                 borderRadius: '8px',
                 transition: 'all 0.3s ease',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
             >
-              {mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  {mode === 'login' ? 'Đang đăng nhập...' : 'Đang đăng ký...'}
+                </>
+              ) : (
+                mode === 'login' ? 'Đăng nhập' : 'Đăng ký'
+              )}
             </button>
 
             {/* Divider */}
@@ -250,6 +321,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                 type="button"
                 className="btn btn-outline-dark py-2"
                 style={{ borderRadius: '8px', fontSize: '15px' }}
+                disabled={loading}
               >
                 <i className="bi bi-google me-2"></i>
                 Tiếp tục với Google
@@ -258,6 +330,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                 type="button"
                 className="btn btn-outline-primary py-2"
                 style={{ borderRadius: '8px', fontSize: '15px' }}
+                disabled={loading}
               >
                 <i className="bi bi-facebook me-2"></i>
                 Tiếp tục với Facebook
@@ -273,6 +346,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                   onClick={switchMode}
                   className="btn btn-link p-0 text-decoration-none fw-semibold"
                   style={{ color: '#FFC107' }}
+                  disabled={loading}
                 >
                   {mode === 'login' ? 'Đăng ký ngay' : 'Đăng nhập ngay'}
                 </button>
