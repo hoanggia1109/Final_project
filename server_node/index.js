@@ -30,6 +30,7 @@ app.use("/api/bienthe", require("./routes/bienthe"));
 app.use("/api/thuonghieu", require("./routes/thuonghieu"));
 app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
+app.use("/api/banner", require("./routes/banner"));
 
 // Import model từ file database
 const {
@@ -49,6 +50,7 @@ const {
   DanhGiaModel,
   DonHangChiTietModel,
   ReviewImageModel,
+  BannerModel
 } = require("./database");
 
 // kết nối DB

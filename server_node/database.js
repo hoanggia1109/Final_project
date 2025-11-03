@@ -126,6 +126,20 @@ const SanPhamModel = sequelize.define(
   {tableName: "san_pham",
    timestamps: false }
 );
+//BANNER
+const BannerModel = sequelize.define("banners", {
+  id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+  tieude: DataTypes.STRING,
+  mota: DataTypes.TEXT,
+  url: DataTypes.STRING,
+  thutu: DataTypes.INTEGER,
+  anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
+  linksp : DataTypes.STRING,
+  created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
+  updated_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW},
+},
+  { tableName: "banners",  timestamps : false }
+  );
 
 //Danh mục bài viết 
 const DanhMucBaiVietModel = sequelize.define(
@@ -441,4 +455,5 @@ module.exports = {
   DonHangModel,
   DonHangChiTietModel,
   ReviewImageModel,
+  BannerModel,
 };

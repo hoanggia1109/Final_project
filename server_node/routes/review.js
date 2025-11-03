@@ -24,12 +24,50 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
+/* ------------------- HÀM PHỤ: CẬP NHẬT RATINGTB CHO SẢN PHẨM ------------------- */
+async function capNhatRatingSanPham(chitiet_donhang_id) {
+  try {
+    // tìm sản phẩm liên quan
+    const chiTiet = await DonHangChiTietModel.findByPk(chitiet_donhang_id, {
+      include: [{ model: SanPhamBienTheModel, as: "bienthe" }],
+    });
+
+    if (!chiTiet || !chiTiet.bienthe) return;
+
+    const sanphamId = chiTiet.bienthe.sanpham_id;
+
+    // lấy tất cả review của sản phẩm
+    const reviews = await DanhGiaModel.findAll({
+      include: [
+        {
+          model: DonHangChiTietModel,
+          as: "chitiet_donhang",
+          include: [
+            {
+              model: SanPhamBienTheModel,
+              as: "bienthe",
+              where: { sanpham_id: sanphamId },
+            },
+          ],
+        },
+      ],
+    });
+
+    const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+    const avg = reviews.length ? Number((total / reviews.length).toFixed(1)) : 0;
+
+    // cập nhật vào bảng san_pham
+    await SanPhamModel.update({ ratingTB: avg }, { where: { id: sanphamId } });
+  } catch (error) {
+    console.error("Lỗi cập nhật ratingTB:", error);
+  }
+}
+
 /* ------------------- TẠO REVIEW ------------------- */
 router.post("/", auth, upload.array("images", 5), async (req, res) => {
   try {
     const { chitiet_donhang_id, rating, binhluan } = req.body;
 
-    // Kiểm tra user có sở hữu chi tiết đơn hàng này không
     const chiTiet = await DonHangChiTietModel.findOne({
       where: { id: chitiet_donhang_id },
       include: [{ model: DonHangModel, as: "donhang" }],
@@ -44,7 +82,6 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
     if (chiTiet.donhang.trangthai !== "delivered")
       return res.status(400).json({ message: "Chỉ được đánh giá sau khi đơn hàng đã giao thành công" });
 
-    // Tạo đánh giá
     const review = await DanhGiaModel.create({
       id: uuidv4(),
       user_id: req.user.id,
@@ -53,7 +90,6 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
       binhluan,
     });
 
-    // Lưu ảnh nếu có
     if (req.files && req.files.length > 0) {
       const images = req.files.map((file) => ({
         id: uuidv4(),
@@ -64,6 +100,9 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
       review.dataValues.hinhanh = images;
     }
 
+    // ✅ Cập nhật ratingTB sau khi thêm review
+    await capNhatRatingSanPham(chitiet_donhang_id);
+
     res.json({ message: "Thêm đánh giá thành công", review });
   } catch (err) {
     console.error("Lỗi tạo đánh giá:", err);
@@ -72,7 +111,7 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
 });
 
 /* ------------------- LẤY REVIEW THEO SẢN PHẨM ------------------- */
-router.get("/sanpham/:sanpham_id", async (req, res) => {
+router.get("/:sanpham_id/average", async (req, res) => {
   try {
     const reviews = await DanhGiaModel.findAll({
       include: [
@@ -114,7 +153,6 @@ router.put("/:id", auth, upload.array("images", 5), async (req, res) => {
     rv.binhluan = binhluan;
     await rv.save();
 
-    // Cập nhật ảnh nếu có
     if (req.files && req.files.length > 0) {
       await ReviewImageModel.destroy({ where: { danhgia_id: rv.id } });
       const imgs = req.files.map((f) => ({
@@ -126,46 +164,12 @@ router.put("/:id", auth, upload.array("images", 5), async (req, res) => {
       rv.dataValues.hinhanh = imgs;
     }
 
+    // ✅ Cập nhật lại ratingTB sau khi sửa review
+    await capNhatRatingSanPham(rv.chitiet_donhang_id);
+
     res.json({ message: "Cập nhật đánh giá thành công", review: rv });
   } catch (err) {
-    res.status(500).json({ message: "Lỗi server", error: err.message });
-  }
-});
-
-// ---------------TRUNG BÌNH RATING---------------------
-router.get("/:sanpham_id/average", async (req, res) => {
-  try {
-    const sanphamId = req.params.sanpham_id;
-
-    const reviews = await DanhGiaModel.findAll({
-      include: [
-        {
-          model: DonHangChiTietModel,
-          as: "chitiet_donhang",
-          include: [
-            {
-              model: require("../database").SanPhamBienTheModel,
-              as: "bienthe",
-              where: { sanpham_id: sanphamId },
-            },
-          ],
-        },
-      ],
-    });
-
-    if (!reviews.length)
-      return res.json({ sanpham_id: sanphamId, average_rating: 0, count: 0 });
-
-    const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
-    const average = Number((total / reviews.length).toFixed(1));
-
-    res.json({
-      sanpham_id: sanphamId,
-      average_rating: average,
-      count: reviews.length,
-    });
-  } catch (err) {
-    console.error("❌ Lỗi tính trung bình rating sản phẩm:", err);
+    console.error(" Lỗi cập nhật đánh giá:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -181,8 +185,12 @@ router.delete("/:id", auth, async (req, res) => {
     await ReviewImageModel.destroy({ where: { danhgia_id: rv.id } });
     await rv.destroy();
 
+    // ✅ Cập nhật ratingTB sau khi xóa review
+    await capNhatRatingSanPham(rv.chitiet_donhang_id);
+
     res.json({ message: "Đã xóa đánh giá" });
   } catch (err) {
+    console.error("Lỗi xóa đánh giá:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });

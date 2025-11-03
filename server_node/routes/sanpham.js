@@ -16,6 +16,7 @@ router.get("/", async (req, res) => {
         "luotban",
         "anhien",
         "slug",
+      "ratingTB",
       ],
       include: [
         {

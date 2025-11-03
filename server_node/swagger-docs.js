@@ -1412,3 +1412,121 @@
  *         description: Thông tin trạng thái thanh toán
  */
 
+/**
+ * @swagger
+ * tags:
+ *   name: Banners
+ *   description: Quản lý banner cho trang chủ 
+ */
+
+/**
+ * @swagger
+ * /api/banner:
+ *   get:
+ *     summary: Lấy danh sách banner hiển thị
+ *     tags: [Banners]
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách banner
+ */
+
+/**
+ * @swagger
+ * /admin/banner:
+ *   post:
+ *     summary: Thêm banner mới (Admin)
+ *     tags: [Banners]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tieude:
+ *                 type: string
+ *               url:
+ *                 type: string
+ *                 example: /images/banner1.jpg
+ *               linksp:
+ *                 type: string
+ *               anhien:
+ *                 type: boolean
+ *               mota:
+ *                 type: string
+ *               thutu:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Banner được tạo thành công
+ *       400:
+ *         description: Thiếu dữ liệu đầu vào
+ */
+/**
+ * @swagger
+ * /api/banner/{id}:
+ *   get:
+ *     summary: Lấy chi tiết banner
+ *     tags: [Banners]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+/**
+ * @swagger
+ * /admin/banner/{id}:
+ *   put:
+ *     summary: Cập nhật banner (Admin)
+ *     tags: [Banners]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID của banner cần sửa
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tieude:
+ *                 type: string
+ *               anhien:
+ *                 type: boolean
+ *               thutu:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Cập nhật thành công
+ *       404:
+ *         description: Không tìm thấy banner
+ */
+
+/**
+ * @swagger
+ * /admin/banner/{id}:
+ *   delete:
+ *     summary: Xóa banner (Admin)
+ *     tags: [Banners]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID banner cần xóa
+ *     responses:
+ *       200:
+ *         description: Xóa thành công
+ *       404:
+ *         description: Không tìm thấy banner
+ */
