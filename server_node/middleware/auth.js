@@ -5,6 +5,7 @@ const auth = (req, res, next) => {
   if (!token) return res.status(401).json({ message: "Thiếu token" });
   try {
     req.user = jwt.verify(token, "SECRET_KEY");
+ console.log(" Xác thực người dùng:", req.user);
     next();
   } catch (err) {
     res.status(401).json({ message: "Token không hợp lệ" });

@@ -7,10 +7,66 @@ const {
   GioHangModel,
   SanPhamBienTheModel,
   SanPhamModel,
-  MaGiamGiaModel
 } = require("../database");
 const { auth } = require("../middleware/auth");
 const router = express.Router();
+    const { tinhPhiVanChuyen } = require("./utils/shipping");
+    const { apDungMaGiamGia } = require("./utils/discount");
+/**
+ * POST /api/donhang/tinh-tong-tien
+ * Tính tạm tổng tiền, giảm giá và phí vận chuyển (không tạo đơn hàng)
+ */
+router.post("/tinh-tong-tien", auth, async (req, res) => {
+  try {
+    const cart = await GioHangModel.findAll({
+      where: { user_id: req.user.id },
+      include: [
+        {
+          model: SanPhamBienTheModel,
+          as: "bienthe",
+          include: [{ model: SanPhamModel, as: "sanpham" }],
+        },
+      ],
+    });
+
+    if (!cart.length)
+      return res.status(400).json({ message: "Giỏ hàng trống" });
+
+
+    let total = 0;
+    for (const c of cart)
+      total += Number(c.bienthe?.gia || 0) * Number(c.soluong || 0);
+
+
+
+
+    const phiVanChuyen = tinhPhiVanChuyen({ tinh_thanh: req.body.tinh_thanh });
+
+
+    const {
+  giamgia,
+  phiVanChuyen: phiSauGiam,
+  magiamgia_id,
+  magiamgia_code,
+  message,
+} = await apDungMaGiamGia(req.body.magiamgia_code, total, phiVanChuyen);
+
+    //  Tổng cuối cùng
+    const tong_sau_giam = total - giamgia + phiSauGiam;
+
+    res.json({
+  message: message || "Tính tổng tiền thành công",
+  tong_tien_hang: total,
+  giam_gia: giamgia,
+  phi_van_chuyen: phiSauGiam,
+  tong_thanh_toan: Math.max(0, total - giamgia) + (phiSauGiam || 0),
+  magiamgia_code,
+});
+  } catch (err) {
+    console.error(" Lỗi tính tổng tiền:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
 
 /**
  * POST /api/donhang
@@ -18,7 +74,7 @@ const router = express.Router();
  */
 router.post("/", auth, async (req, res) => {
   try {
-    // Lấy giỏ hàng của user
+    // Lấy giỏ hàng user
     const cart = await GioHangModel.findAll({
       where: { user_id: req.user.id },
       include: [
@@ -26,45 +82,47 @@ router.post("/", auth, async (req, res) => {
           model: SanPhamBienTheModel,
           as: "bienthe",
           required: true,
-          attributes: ["id", "gia"],
-          include: [{ model: SanPhamModel, as: "sanpham", attributes: ["id", "tensp"] }],
+          include: [{ model: SanPhamModel, as: "sanpham" }],
         },
       ],
     });
 
-    if (!cart.length) return res.status(400).json({ message: "Giỏ hàng trống" });
+    if (!cart.length)
+      return res.status(400).json({ message: "Giỏ hàng trống" });
 
-    // Tính tổng tiền
+    // ====== Tính tổng tiền hàng ======
     let total = 0;
     for (const c of cart) {
-      if (c.bienthe) total += Number(c.bienthe.gia) * c.soluong;
+      total += Number(c.bienthe?.gia || 0) * Number(c.soluong || 0);
     }
 
-    // ===== Áp dụng mã giảm giá (nếu có) =====
-    let giamgia = 0;
-    let magiamgia_code = null;
+    // ====== Tính phí vận chuyển ======
+    const phiVanChuyenCoBan = tinhPhiVanChuyen({
+      tinh_thanh: req.body.tinh_thanh,
+    });
+
+    // ====== Áp dụng mã giảm giá (nếu có) ======
+    let giamgia = 0,
+      phiSauGiam = phiVanChuyenCoBan,
+      magiamgia_id = null,
+      magiamgia_code = null;
+
     if (req.body.magiamgia_code) {
-      const now = new Date();
-      const mg = await MaGiamGiaModel.findOne({
-        where: {
-          code: req.body.magiamgia_code,
-          trangthai: 1,
-          ngaybatdau: { [Op.lte]: now },
-          ngayketthuc: { [Op.gte]: now },
-        },
-      });
-
-      if (mg) {
-        magiamgia_code = mg.code;
-        if (mg.loai === "percent") giamgia = (total * mg.giatrigiam) / 100;
-        if (mg.loai === "cash") giamgia = mg.giatrigiam;
-        if (giamgia > total) giamgia = total;
-      }
+      const kq = await apDungMaGiamGia(
+        req.body.magiamgia_code,
+        total,
+        phiVanChuyenCoBan
+      );
+      giamgia = kq.giamgia;
+      phiSauGiam = kq.phiVanChuyen;
+      magiamgia_id = kq.magiamgia_id;
+      magiamgia_code = kq.magiamgia_code;
     }
 
-    const tong_sau_giam = total - giamgia;
+    // ====== Tính tổng cuối ======
+    const tong_sau_giam = Math.max(0, total - giamgia) + (phiSauGiam || 0);
 
-    // ===== Tạo đơn hàng =====
+    // ====== Tạo đơn hàng ======
     const dh = await DonHangModel.create({
       id: uuidv4(),
       code: "OD" + Date.now(),
@@ -72,31 +130,53 @@ router.post("/", auth, async (req, res) => {
       tongtien: total,
       giamgia,
       tongtien_sau_giam: tong_sau_giam,
+      phi_van_chuyen: phiSauGiam,
+      magiamgia_id,
       magiamgia_code,
+      diachi_id: req.body.diachi_id || null,
+      ghichu: req.body.ghichu || null,
+      trangthai: "pending",
+      trangthaithanhtoan: "pending",
     });
 
-    // ===== Lưu chi tiết đơn hàng =====
+    // ====== Lưu chi tiết đơn hàng ======
     for (const c of cart) {
-      if (c.bienthe) {
-        await DonHangChiTietModel.create({
-          id: uuidv4(),
-          donhang_id: dh.id,
-          bienthe_id: c.bienthe_id,
-          soluong: c.soluong,
-          gia: c.bienthe.gia,
-        });
-      }
+      await DonHangChiTietModel.create({
+        id: uuidv4(),
+        donhang_id: dh.id,
+        bienthe_id: c.bienthe_id,
+        soluong: c.soluong,
+        gia: c.bienthe.gia,
+      });
     }
 
-    // Xóa giỏ hàng sau khi đặt hàng
+    // ====== Xóa giỏ hàng sau khi đặt ======
     await GioHangModel.destroy({ where: { user_id: req.user.id } });
 
-    res.json({ message: "Đặt hàng thành công", donhang: dh });
+    // ====== Trả về kết quả ======
+    res.json({
+      message: "Đặt hàng thành công",
+      donhang: {
+        id: dh.id,
+        code: dh.code,
+        tong_tien_hang: total,
+        giam_gia: giamgia,
+        phi_van_chuyen: phiSauGiam,
+        tong_thanh_toan: tong_sau_giam,
+        magiamgia_code,
+        trangthai: dh.trangthai,
+        trangthaithanhtoan: dh.trangthaithanhtoan,
+      },
+    });
   } catch (err) {
-    console.error("Lỗi tạo đơn hàng:", err);
+    console.error(" Lỗi tạo đơn hàng:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
+
+module.exports = router;
+
+
 
 /**
  * GET /api/donhang
@@ -108,6 +188,7 @@ router.get("/", auth, async (req, res) => {
     include: [
       {
         model: DonHangChiTietModel,
+        as: "chitiet",
         include: [
           {
             model: SanPhamBienTheModel,
@@ -117,7 +198,7 @@ router.get("/", auth, async (req, res) => {
         ],
       },
     ],
-    order: [["createdAt", "DESC"]],
+    order: [["created_at", "DESC"]],
   });
   res.json(dh);
 });
@@ -131,6 +212,7 @@ router.get("/:id", auth, async (req, res) => {
     include: [
       {
         model: DonHangChiTietModel,
+        as: "chitiet",
         include: [
           {
             model: SanPhamBienTheModel,

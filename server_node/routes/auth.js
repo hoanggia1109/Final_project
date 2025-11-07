@@ -31,7 +31,7 @@ router.post("/dangnhap", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: "Sai mật khẩu" });
 
-    const token = jwt.sign({ id: user.id, email }, "SECRET_KEY", { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.id, email }, "SECRET_KEY", { expiresIn: "7d" });
     res.json({ message: "Đăng nhập thành công", token });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -72,16 +72,30 @@ router.post("/quenpass", async (req, res) => {
 
 /* -------- Đổi mật khẩu -------- */
 router.post("/doipass", async (req, res) => {
-  const { token } = req.headers;
-  const { oldPass, newPass } = req.body;
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ message: "Thiếu header Authorization" });
+
+    const token = authHeader.split(" ")[1]; // lấy phần sau "Bearer"
+    if (!token)
+      return res.status(401).json({ message: "Token không hợp lệ" });
+
     const decoded = jwt.verify(token, "SECRET_KEY");
+
+    const { pass_old, pass_new1, pass_new2 } = req.body;
+    if (pass_new1 !== pass_new2)
+      return res.status(400).json({ message: "Mật khẩu mới không khớp" });
+
     const user = await UserModel.findByPk(decoded.id);
-    const match = await bcrypt.compare(oldPass, user.password);
+    if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
+
+    const match = await bcrypt.compare(pass_old, user.password);
     if (!match) return res.status(400).json({ message: "Sai mật khẩu cũ" });
 
-    const hashed = await bcrypt.hash(newPass, 10);
+    const hashed = await bcrypt.hash(pass_new1, 10);
     await user.update({ password: hashed });
+
     res.json({ message: "Đổi mật khẩu thành công" });
   } catch (err) {
     res.status(500).json({ message: err.message });
