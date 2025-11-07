@@ -94,9 +94,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
         if (onLoginSuccess) onLoginSuccess();
         onClose();
         
-        // Reload để update header
+        // Redirect theo role
+        const userRole = localStorage.getItem('userRole');
         setTimeout(() => {
-          window.location.reload();
+          if (userRole === 'admin') {
+            window.location.href = '/admin';
+          } else {
+            window.location.reload();
+          }
         }, 200);
 
       } else {

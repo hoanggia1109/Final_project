@@ -22,9 +22,10 @@ router.get("/:id", async (req, res) => {
     const danhmuc = await LoaiModel.findByPk(id, {
       include: [
         {
-          model: SanPhamModel, as : "sanphams",
+          model: SanPhamModel, 
+          as: "sanphams",
           where: { anhien: 1 },
-          required: false, // để nếu chưa có sản phẩm vẫn trả về danh mục
+          required: false,
         },
       ],
     });

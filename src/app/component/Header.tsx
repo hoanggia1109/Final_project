@@ -517,72 +517,114 @@ export default function Header() {
               
               {/* User Dropdown */}
               <li className="nav-item position-relative user-dropdown d-flex align-items-center">
-                <button
-                  onClick={() => {
-                    const next = !showDropdown;
-                    
-                    if (next) {
-                      // FORCE CHECK localStorage mỗi lần mở dropdown
-                      console.log('👆 Opening dropdown - Force checking localStorage...');
-                      const token = localStorage.getItem('token');
-                      const email = localStorage.getItem('userEmail');
-                      const name = localStorage.getItem('userName');
-                      const role = localStorage.getItem('userRole');
+                {isLoggedIn ? (
+                  <button
+                    onClick={() => {
+                      const next = !showDropdown;
                       
-                      console.log('📦 Current localStorage:', { token: !!token, email, name, role });
-                      
-                      if (token && email) {
-                        setIsLoggedIn(true);
-                        setUserEmail(email);
-                        setUserName(name || email.split('@')[0]);
-                        setUserRole(role || 'customer');
-                        console.log('✅ Force updated state - User is logged in!');
-                      } else {
-                        console.log('❌ No token or email found');
+                      if (next) {
+                        // FORCE CHECK localStorage mỗi lần mở dropdown
+                        console.log(' Opening dropdown - Force checking localStorage...');
+                        const token = localStorage.getItem('token');
+                        const email = localStorage.getItem('userEmail');
+                        const name = localStorage.getItem('userName');
+                        const role = localStorage.getItem('userRole');
+                        
+                        console.log(' Current localStorage:', { token: !!token, email, name, role });
+                        
+                        if (token && email) {
+                          setIsLoggedIn(true);
+                          setUserEmail(email);
+                          setUserName(name || email.split('@')[0]);
+                          setUserRole(role || 'customer');
+                          console.log(' Force updated state - User is logged in!');
+                        } else {
+                          console.log(' No token or email found');
+                        }
                       }
-                    }
-                    
-                    setShowDropdown(next);
-                  }}
-                  className="btn btn-link p-0 d-flex align-items-center gap-2"
-                  style={{
-                    color: isLoggedIn ? '#FFC107' : '#333',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    textDecoration: 'none',
-                    padding: '0 20px',
-                    height: '40px',
-                    borderRadius: '24px',
-                    fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: isLoggedIn ? 'rgba(255, 193, 7, 0.08)' : 'transparent',
-                    border: 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.backgroundColor = 'rgba(255,193,7,0.12)';
-                    e.currentTarget.style.color = '#FFC107';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.backgroundColor = isLoggedIn ? 'rgba(255, 193, 7, 0.08)' : 'transparent';
-                    e.currentTarget.style.color = isLoggedIn ? '#FFC107' : '#333';
-                  }}
-                >
-                  <i 
-                    className={`bi ${isLoggedIn ? 'bi-person-circle-fill' : 'bi-person-circle'}`}
-                    style={{ fontSize: '20px' }}
-                  ></i>
-                  <span
-                    className="d-none d-lg-inline"
+                      
+                      setShowDropdown(next);
+                    }}
+                    className="btn btn-link p-0 d-flex align-items-center gap-2"
                     style={{
+                      color: '#FFC107',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      textDecoration: 'none',
+                      padding: '0 20px',
+                      height: '40px',
+                      borderRadius: '24px',
                       fontSize: '15px',
                       fontWeight: '500',
-                      transition: 'all 0.3s ease'
+                      backgroundColor: 'rgba(255, 193, 7, 0.08)',
+                      border: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255,193,7,0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
                     }}
                   >
-                    {isLoggedIn ? (userName || 'Tài khoản') : 'Tài khoản'}
-                  </span>
-                </button>
+                    <i 
+                      className="bi bi-person-circle-fill"
+                      style={{ fontSize: '20px' }}
+                    ></i>
+                    <span
+                      className="d-none d-lg-inline"
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {userName || 'Tài khoản'}
+                    </span>
+                  </button>
+                ) : (
+                  <Link
+                    href="/auth"
+                    className="btn btn-link p-0 d-flex align-items-center gap-2"
+                    style={{
+                      color: '#333',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      textDecoration: 'none',
+                      padding: '0 20px',
+                      height: '40px',
+                      borderRadius: '24px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      backgroundColor: 'transparent',
+                      border: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255,193,7,0.12)';
+                      e.currentTarget.style.color = '#FFC107';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#333';
+                    }}
+                  >
+                    <i 
+                      className="bi bi-person-circle"
+                      style={{ fontSize: '20px' }}
+                    ></i>
+                    <span
+                      className="d-none d-lg-inline"
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      Tài khoản
+                    </span>
+                  </Link>
+                )}
 
                 {/* Dropdown Menu */}
                 {showDropdown && (
@@ -806,7 +848,7 @@ export default function Header() {
                         {/* Not logged in menu */}
                         <div className="p-2">
                           <Link
-                            href="/login"
+                            href="/auth"
                             className="d-flex align-items-center justify-content-center px-3 py-3 text-decoration-none text-white fw-semibold rounded-3 mb-2"
                             style={{ 
                               transition: 'all 0.2s ease',
@@ -825,10 +867,10 @@ export default function Header() {
                             onClick={() => setShowDropdown(false)}
                           >
                             <i className="bi bi-box-arrow-in-right me-2"></i>
-                            Đăng nhập
+                            Đăng nhập 
                           </Link>
                           <Link
-                            href="/register"
+                            href="/auth"
                             className="d-flex align-items-center justify-content-center px-3 py-3 text-decoration-none fw-semibold rounded-3"
                             style={{ 
                               transition: 'all 0.2s ease',

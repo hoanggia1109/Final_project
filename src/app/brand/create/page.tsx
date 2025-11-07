@@ -32,7 +32,7 @@ export default function CreateBrandPage() {
         logo: form.logo?.trim() || null,            // logo có thể null
       };
   
-      const res = await fetch('http://localhost:4000/api/thuonghieu', {
+      const res = await fetch('http://localhost:5000/api/thuonghieu', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

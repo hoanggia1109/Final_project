@@ -20,7 +20,7 @@ export default function BrandPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/thuonghieu")
+    fetch("http://localhost:5000/api/thuonghieu")
       .then((res) => res.json())
       .then((data) => setBrands(data))
       .catch((err) => console.error("Lỗi khi tải thương hiệu:", err));
@@ -29,7 +29,7 @@ export default function BrandPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc muốn xóa thương hiệu này không?")) return;
     try {
-      const res = await fetch(`http://localhost:4000/api/thuonghieu/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

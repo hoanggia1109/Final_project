@@ -93,10 +93,15 @@ export default function LoginPage() {
       
       alert('Đăng nhập thành công!');
       
-      // Đảm bảo localStorage được flush trước khi redirect
-      console.log('🔄 Redirect về trang chủ...');
+      // Redirect theo role
+      const userRole = localStorage.getItem('userRole');
+      console.log('🔄 Redirect...', { role: userRole });
       setTimeout(() => {
-        window.location.href = '/';
+        if (userRole === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/';
+        }
       }, 200);
     } catch (error) {
       console.error('❌ Lỗi đăng nhập:', error);
@@ -105,7 +110,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden">
+    <div 
+      className="min-vh-100 d-flex align-items-center justify-content-center position-relative"
+      style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        overflow: 'hidden'
+      }}
+    >
       {/* Background Image with Overlay */}
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
@@ -113,19 +124,18 @@ export default function LoginPage() {
           backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.4)',
-          zIndex: 0,
+          opacity: 0.1,
         }}
       ></div>
 
       {/* Animated Shapes */}
-      <div className="position-absolute top-0 start-0 w-100 h-100" style={{ zIndex: 1 }}>
+      <div className="position-absolute top-0 start-0 w-100 h-100">
         <div
           className="position-absolute rounded-circle"
           style={{
             width: '300px',
             height: '300px',
-            background: 'linear-gradient(135deg, rgba(255,193,7,0.3) 0%, rgba(255,193,7,0.1) 100%)',
+            background: 'rgba(255, 255, 255, 0.1)',
             top: '-150px',
             right: '-150px',
             animation: 'float 6s ease-in-out infinite',
@@ -136,7 +146,7 @@ export default function LoginPage() {
           style={{
             width: '200px',
             height: '200px',
-            background: 'linear-gradient(135deg, rgba(255,193,7,0.2) 0%, rgba(255,193,7,0.05) 100%)',
+            background: 'rgba(255, 255, 255, 0.08)',
             bottom: '-100px',
             left: '-100px',
             animation: 'float 8s ease-in-out infinite',
@@ -145,10 +155,10 @@ export default function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <div className="container position-relative" style={{ zIndex: 2 }}>
-        <div className="row justify-content-center">
-          <div className="col-md-10 col-lg-8">
-            <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
+      <div className="container position-relative" style={{ zIndex: 10, padding: '20px' }}>
+          <div className="row justify-content-center">
+            <div className="col-md-10 col-lg-8">
+              <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
               <div className="row g-0">
                 {/* Left Side - Branding */}
                 <div
@@ -367,7 +377,7 @@ export default function LoginPage() {
       </div>
 
       {/* Animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% {
             transform: translateY(0) rotate(0deg);
@@ -380,4 +390,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

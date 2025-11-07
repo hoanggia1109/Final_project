@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import PromoModal from './PromoModal';
+import ChatBox from './ChatBox';
 
 //INTERFACES
 interface Product {
@@ -126,6 +127,7 @@ function Banner() {
         onClick={prevSlide}
         className="btn btn-light rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3"
         style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
+        suppressHydrationWarning
       >
         <i className="bi bi-chevron-left"></i>
       </button>
@@ -135,6 +137,7 @@ function Banner() {
         onClick={nextSlide}
         className="btn btn-light rounded-circle position-absolute top-50 end-0 translate-middle-y me-3"
         style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
+        suppressHydrationWarning
       >
         <i className="bi bi-chevron-right"></i>
       </button>
@@ -154,8 +157,15 @@ function ProductCategories() {
   useEffect(() => {
     fetch('/api/categories')
       .then(res => res.json())
-      .then(data => { setCategories(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
+      .then(data => { 
+        // Giới hạn chỉ lấy 6 danh mục đầu tiên cho trang chủ
+        setCategories(data.slice(0, 6)); 
+        setLoading(false); 
+      })
+      .catch(err => { 
+        console.error('Error fetching categories:', err); 
+        setLoading(false); 
+      });
   }, []);
 
   const itemsPerPage = 3;
@@ -190,13 +200,26 @@ function ProductCategories() {
 
   if (loading) return <div className="py-5 text-center"><div className="spinner-border text-warning"></div></div>;
 
+  if (categories.length === 0) {
+    return (
+      <section className="py-5 bg-light">
+        <div className="container">
+          <div className="text-center py-5">
+            <h3 className="text-muted">Không có danh mục nào</h3>
+            <p className="text-muted">Vui lòng kiểm tra kết nối API</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const visibleCategories = categories.slice(currentIndex * itemsPerPage, (currentIndex * itemsPerPage) + itemsPerPage);
 
   return (
     <section className="py-5 bg-light">
       <div className="container">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="text-uppercase fw-bold section-title mb-0">DANH MỤC SẢN PHẨM</h2>
+          <h3 className="text-uppercase fw-bold mb-0" style={{ fontSize: '1.3rem', letterSpacing: '1px' }}>DANH MỤC SẢN PHẨM</h3>
           <div className="d-flex align-items-center gap-2">
             <span className="text-muted small">{currentIndex + 1} / {maxIndex + 1}</span>
           </div>
@@ -234,6 +257,11 @@ function ProductCategories() {
           </button>
 
           <div className="row g-4">
+            {visibleCategories.length === 0 && (
+              <div className="col-12 text-center">
+                <p className="text-muted">Không có danh mục hiển thị</p>
+              </div>
+            )}
             {visibleCategories.map((cat) => (
               <div 
                 key={cat.id} 
@@ -263,14 +291,14 @@ function ProductCategories() {
                       e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
                     }}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '300px' }}>
+                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
                       <div 
                         className="position-absolute top-0 start-0 w-100 h-100"
                         style={{ transition: 'transform 0.4s ease' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                       >
-                        <Image src={cat.image} alt={cat.title} fill style={{ objectFit: 'cover' }} />
+                        <Image src={cat.image} alt={cat.title} fill style={{ objectFit: 'cover', objectPosition: 'center' }} />
                       </div>
                       {/* Overlay on hover */}
                       <div 
@@ -288,13 +316,13 @@ function ProductCategories() {
                         ></i>
                       </div>
                     </div>
-                    <div className="card-body text-center py-3">
-                      <h5 className="card-title text-dark mb-0 fw-bold" style={{ transition: 'color 0.3s ease' }}
+                    <div className="card-body text-center py-2">
+                      <h6 className="card-title text-dark mb-0 fw-semibold" style={{ transition: 'color 0.3s ease', fontSize: '0.95rem' }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = '#333'; }}
                       >
                         {cat.title}
-                      </h5>
+                      </h6>
                     </div>
                   </div>
                 </Link>
@@ -316,8 +344,20 @@ function HotProducts() {
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
-      .then(data => { setProducts(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
+      .then(data => { 
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          console.error('Products API did not return array:', data);
+          setProducts([]);
+        }
+        setLoading(false); 
+      })
+      .catch(err => { 
+        console.error('Error fetching products:', err); 
+        setProducts([]);
+        setLoading(false); 
+      });
   }, []);
 
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -342,8 +382,8 @@ function HotProducts() {
     <section className="py-5">
       <div className="container">
       <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="text-uppercase fw-bold section-title mb-0">SẢN PHẨM HOT</h2>
-          <Link href="/products" className="text-dark text-decoration-none">xem tất cả →</Link>
+          <h3 className="text-uppercase fw-bold mb-0" style={{ fontSize: '1.3rem', letterSpacing: '1px' }}>SẢN PHẨM HOT</h3>
+          <Link href="/products" className="text-dark text-decoration-none" style={{ fontSize: '0.9rem' }}>xem tất cả →</Link>
         </div>
         <div className="position-relative">
           {/* Previous Arrow */}
@@ -394,8 +434,8 @@ function HotProducts() {
                       e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
                     }}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
-                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fw-bold" style={{ fontSize: '14px', zIndex: 2 }}>
+                    <div className="position-relative overflow-hidden" style={{ height: '200px' }}>
+                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fw-bold" style={{ fontSize: '11px', zIndex: 2 }}>
                         -{product.discount}%
                       </div>
                       <div 
@@ -411,11 +451,11 @@ function HotProducts() {
                         <Image src={product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
                       </div>
                     </div>
-                    <div className="card-body text-center py-3">
-                      <p className="mb-2 text-dark product-name fw-medium">{product.name}</p>
+                    <div className="card-body text-center py-2">
+                      <p className="mb-2 text-dark fw-medium" style={{ fontSize: '0.9rem', lineHeight: '1.3' }}>{product.name}</p>
                       <div className="d-flex align-items-center justify-content-center gap-2">
-                        <span className="text-danger fw-bold price-text">{formatPrice(product.price)}</span>
-                        <span className="text-muted text-decoration-line-through" style={{ fontSize: '12px' }}>{formatPrice(product.originalPrice)}</span>
+                        <span className="text-danger fw-bold" style={{ fontSize: '1rem' }}>{formatPrice(product.price)}</span>
+                        <span className="text-muted text-decoration-line-through" style={{ fontSize: '0.8rem' }}>{formatPrice(product.originalPrice)}</span>
                       </div>
                     </div>
                   </div>
@@ -438,8 +478,20 @@ function DiscountProducts() {
   useEffect(() => {
     fetch('/api/discount-products')
       .then(res => res.json())
-      .then(data => { setProducts(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
+      .then(data => { 
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          console.error('Discount products API did not return array:', data);
+          setProducts([]);
+        }
+        setLoading(false); 
+      })
+      .catch(err => { 
+        console.error('Error fetching discount products:', err); 
+        setProducts([]);
+        setLoading(false); 
+      });
   }, []);
 
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -464,8 +516,8 @@ function DiscountProducts() {
     <section className="py-5 bg-light">
       <div className="container">
       <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="text-uppercase fw-bold section-title mb-0">SẢN PHẨM GIẢM GIÁ</h2>
-          <Link href="/discount-products" className="text-dark text-decoration-none">xem tất cả →</Link>
+          <h3 className="text-uppercase fw-bold mb-0" style={{ fontSize: '1.3rem', letterSpacing: '1px' }}>SẢN PHẨM GIẢM GIÁ</h3>
+          <Link href="/discount-products" className="text-dark text-decoration-none" style={{ fontSize: '0.9rem' }}>xem tất cả →</Link>
         </div>
         <div className="position-relative">
           {/* Previous Arrow */}
@@ -516,8 +568,8 @@ function DiscountProducts() {
                       e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
                     }}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
-                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fw-bold" style={{ fontSize: '14px', zIndex: 2 }}>
+                    <div className="position-relative overflow-hidden" style={{ height: '200px' }}>
+                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fw-bold" style={{ fontSize: '11px', zIndex: 2 }}>
                         -{product.discount}%
                       </div>
                       <div 
@@ -533,11 +585,11 @@ function DiscountProducts() {
                         <Image src={product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
                       </div>
                     </div>
-                    <div className="card-body">
-                      <h6 className="card-title mb-3 product-name text-dark" style={{ minHeight: '40px' }}>{product.name}</h6>
+                    <div className="card-body py-2">
+                      <h6 className="card-title mb-2 text-dark" style={{ minHeight: '38px', fontSize: '0.9rem', lineHeight: '1.3' }}>{product.name}</h6>
                       <div className="d-flex align-items-center gap-2">
-                        <span className="text-danger fw-bold price-text">{formatPrice(product.price)}</span>
-                        <span className="text-muted text-decoration-line-through" style={{ fontSize: '12px' }}>{formatPrice(product.originalPrice)}</span>
+                        <span className="text-danger fw-bold" style={{ fontSize: '1rem' }}>{formatPrice(product.price)}</span>
+                        <span className="text-muted text-decoration-line-through" style={{ fontSize: '0.8rem' }}>{formatPrice(product.originalPrice)}</span>
                       </div>
                     </div>
                   </div>
@@ -716,204 +768,208 @@ function Partners() {
 }
 
 // PORTFOLIO 
-function PortfolioQuote() {
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    message: '',
-  });
+// function PortfolioQuote() {
+//   const [formData, setFormData] = useState({
+//     name: '',
+//     phone: '',
+//     message: '',
+//   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Cảm ơn bạn! Chúng tôi sẽ liên hệ sớm.');
-    setFormData({ name: '', phone: '', message: '' });
-  };
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     console.log('Form submitted:', formData);
+//     alert('Cảm ơn bạn! Chúng tôi sẽ liên hệ sớm.');
+//     setFormData({ name: '', phone: '', message: '' });
+//   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+//     setFormData({ ...formData, [e.target.name]: e.target.value });
+//   };
 
-  return (
-    <section className="py-5">
-      <div className="container">
-        <div className="row g-4">
-          {/* Portfolio Card - Left */}
-          <div className="col-md-6">
-            <div 
-              className="card border-0 shadow-lg overflow-hidden h-100"
-              style={{ 
-                background: 'linear-gradient(135deg, rgba(150,120,100,0.9) 0%, rgba(100,80,70,0.9) 100%)',
-                transition: 'all 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-10px)';
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
-              }}
-            >
-              <div className="card-body p-5 text-white">
-                {/* Logo */}
-                <div className="mb-4">
-                  <div className="d-flex align-items-center mb-2">
-                    <div className="bg-white text-dark px-2 py-1 fw-bold me-2" style={{ fontSize: '16px' }}>
-                      Danny
-                    </div>
-                    <span className="text-white" style={{ fontSize: '10px' }}>DECOR</span>
-                  </div>
-                </div>
+//   return (
+//     <section className="py-5">
+//       <div className="container">
+//         <div className="row g-4">
+//           {/* Portfolio Card - Left */}
+//           <div className="col-md-6">
+//             <div 
+//               className="card border-0 shadow-lg overflow-hidden h-100"
+//               style={{ 
+//                 background: 'linear-gradient(135deg, rgba(150,120,100,0.9) 0%, rgba(100,80,70,0.9) 100%)',
+//                 transition: 'all 0.3s ease',
+//               }}
+//               onMouseEnter={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(-10px)';
+//                 e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+//               }}
+//               onMouseLeave={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(0)';
+//                 e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+//               }}
+//             >
+//               <div className="card-body p-5 text-white">
+//                 {/* Logo */}
+//                 <div className="mb-4">
+//                   <div className="d-flex align-items-center mb-2">
+//                     <div className="bg-white text-dark px-2 py-1 fw-bold me-2" style={{ fontSize: '16px' }}>
+//                       Danny
+//                     </div>
+//                     <span className="text-white" style={{ fontSize: '10px' }}>DECOR</span>
+//                   </div>
+//                 </div>
 
-                {/* Title */}
-                <h2 className="display-5 fw-bold mb-3">PORTFOLIO</h2>
-                <p className="mb-4" style={{ fontSize: '14px', opacity: 0.9 }}>
-                  & CATALOGUE
-                </p>
+//                 {/* Title */}
+//                 <h2 className="display-5 fw-bold mb-3">PORTFOLIO</h2>
+//                 <p className="mb-4" style={{ fontSize: '14px', opacity: 0.9 }}>
+//                   & CATALOGUE
+//                 </p>
 
-                {/* Description */}
-                <p className="mb-4" style={{ fontSize: '14px', lineHeight: '1.8' }}>
-                  Để có thể hiểu rõ hơn về những dịch vụ mà chúng tôi cung cấp cho khách hàng.<br/>
-                  Để có thể tìm hiểu rõ hơn về phong cách thiết kế nội thất mà chúng tôi hướng tới.<br/>
-                  Để có thể thấy được chất lượng công trình mà chúng tôi đã và đang thi công.
-                </p>
+//                 {/* Description */}
+//                 <p className="mb-4" style={{ fontSize: '14px', lineHeight: '1.8' }}>
+//                   Để có thể hiểu rõ hơn về những dịch vụ mà chúng tôi cung cấp cho khách hàng.<br/>
+//                   Để có thể tìm hiểu rõ hơn về phong cách thiết kế nội thất mà chúng tôi hướng tới.<br/>
+//                   Để có thể thấy được chất lượng công trình mà chúng tôi đã và đang thi công.
+//                 </p>
 
-                {/* Download Button */}
-                <button 
-                  className="btn btn-warning text-white fw-semibold px-5 py-3"
-                  style={{ 
-                    fontSize: '16px',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  Tải Portfolio
-                </button>
+//                 {/* Download Button */}
+//                 <button 
+//                   className="btn btn-warning text-white fw-semibold px-5 py-3"
+//                   style={{ 
+//                     fontSize: '16px',
+//                     transition: 'all 0.3s ease',
+//                   }}
+//                   onMouseEnter={(e) => {
+//                     e.currentTarget.style.transform = 'scale(1.05)';
+//                     e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
+//                   }}
+//                   onMouseLeave={(e) => {
+//                     e.currentTarget.style.transform = 'scale(1)';
+//                     e.currentTarget.style.boxShadow = 'none';
+//                   }}
+//                   suppressHydrationWarning
+//                 >
+//                   Tải Portfolio
+//                 </button>
 
-                {/* Decorative Image */}
-                <div className="position-absolute" style={{ bottom: '20px', right: '20px', opacity: 0.3 }}>
-                  <i className="bi bi-folder2-open" style={{ fontSize: '120px' }}></i>
-                </div>
-              </div>
-            </div>
-          </div>
+//                 {/* Decorative Image */}
+//                 <div className="position-absolute" style={{ bottom: '20px', right: '20px', opacity: 0.3 }}>
+//                   <i className="bi bi-folder2-open" style={{ fontSize: '120px' }}></i>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
 
-          {/* Quote Form - Right */}
-          <div className="col-md-6">
-            <div 
-              className="card shadow-lg h-100"
-              style={{ 
-                border: '3px dashed #FFC107',
-                transition: 'all 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-10px)';
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,193,7,0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
-              }}
-            >
-              <div className="card-body p-5">
-                <h2 className="text-center fw-bold mb-4 section-title">
-                  NHẬN BÁO GIÁ
-                </h2>
+//           {/* Quote Form - Right */}
+//           <div className="col-md-6">
+//             <div 
+//               className="card shadow-lg h-100"
+//               style={{ 
+//                 border: '3px dashed #FFC107',
+//                 transition: 'all 0.3s ease',
+//               }}
+//               onMouseEnter={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(-10px)';
+//                 e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,193,7,0.2)';
+//               }}
+//               onMouseLeave={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(0)';
+//                 e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+//               }}
+//             >
+//               <div className="card-body p-5">
+//                 <h2 className="text-center fw-bold mb-4 section-title">
+//                   NHẬN BÁO GIÁ
+//                 </h2>
 
-                <form onSubmit={handleSubmit}>
-                  {/* Name Input */}
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      name="name"
-                      className="form-control"
-                      placeholder="Họ & Tên"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      style={{
-                        padding: '12px 16px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '15px',
-                      }}
-                    />
-                  </div>
+//                 <form onSubmit={handleSubmit}>
+//                   {/* Name Input */}
+//                   <div className="mb-3">
+//                     <input
+//                       type="text"
+//                       name="name"
+//                       className="form-control"
+//                       placeholder="Họ & Tên"
+//                       value={formData.name}
+//                       onChange={handleChange}
+//                       required
+//                       style={{
+//                         padding: '12px 16px',
+//                         border: '1px solid #ddd',
+//                         borderRadius: '4px',
+//                         fontSize: '15px',
+//                       }}
+//                       suppressHydrationWarning
+//                     />
+//                   </div>
 
-                  {/* Phone Input */}
-                  <div className="mb-3">
-                    <input
-                      type="tel"
-                      name="phone"
-                      className="form-control"
-                      placeholder="Số điện thoại"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                      style={{
-                        padding: '12px 16px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '15px',
-                      }}
-                    />
-                  </div>
+//                   {/* Phone Input */}
+//                   <div className="mb-3">
+//                     <input
+//                       type="tel"
+//                       name="phone"
+//                       className="form-control"
+//                       placeholder="Số điện thoại"
+//                       value={formData.phone}
+//                       onChange={handleChange}
+//                       required
+//                       style={{
+//                         padding: '12px 16px',
+//                         border: '1px solid #ddd',
+//                         borderRadius: '4px',
+//                         fontSize: '15px',
+//                       }}
+//                       suppressHydrationWarning
+//                     />
+//                   </div>
 
-                  {/* Message Textarea */}
-                  <div className="mb-4">
-                    <textarea
-                      name="message"
-                      className="form-control"
-                      rows={5}
-                      placeholder="Nội dung tin nhắn..."
-                      value={formData.message}
-                      onChange={handleChange}
-                      style={{
-                        padding: '12px 16px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '15px',
-                        resize: 'none',
-                      }}
-                    ></textarea>
-                  </div>
+//                   {/* Message Textarea */}
+//                   <div className="mb-4">
+//                     <textarea
+//                       name="message"
+//                       className="form-control"
+//                       rows={5}
+//                       placeholder="Nội dung tin nhắn..."
+//                       value={formData.message}
+//                       onChange={handleChange}
+//                       style={{
+//                         padding: '12px 16px',
+//                         border: '1px solid #ddd',
+//                         borderRadius: '4px',
+//                         fontSize: '15px',
+//                         resize: 'none',
+//                       }}
+//                     ></textarea>
+//                   </div>
 
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    className="btn btn-warning text-white w-100 py-3 fw-semibold"
-                    style={{
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    Gửi
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+//                   {/* Submit Button */}
+//                   <button
+//                     type="submit"
+//                     className="btn btn-warning text-white w-100 py-3 fw-semibold"
+//                     style={{
+//                       fontSize: '16px',
+//                       transition: 'all 0.3s ease',
+//                     }}
+//                     onMouseEnter={(e) => {
+//                       e.currentTarget.style.transform = 'translateY(-2px)';
+//                       e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
+//                     }}
+//                     onMouseLeave={(e) => {
+//                       e.currentTarget.style.transform = 'translateY(0)';
+//                       e.currentTarget.style.boxShadow = 'none';
+//                     }}
+//                     suppressHydrationWarning
+//                   >
+//                     Gửi
+//                   </button>
+//                 </form>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 // CONTACT INFO SECTION
 function ContactInfo() {
@@ -1296,10 +1352,10 @@ export default function HomePage() {
       <DiscountProducts />
       <Features />
       <Partners />
-      <PortfolioQuote />
+      {/* <PortfolioQuote /> */}
       <ContactInfo />
       <News />
-      <ScrollToTopButton />
+      <ChatBox />
     </>
   );
 }

@@ -24,7 +24,7 @@ export default function EditBrandPage() {
     if (!id) return;
     const fetchBrand = async () => {
       try {
-        const res = await fetch(`http://localhost:4000/api/thuonghieu/${id}`);
+        const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`);
         const data = await res.json();
         setForm({
           code: data.code || '',
@@ -51,7 +51,7 @@ export default function EditBrandPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/thuonghieu/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

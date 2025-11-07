@@ -10,8 +10,26 @@ const nextConfig: NextConfig = {
         pathname: '/**',                 // /** nghĩa là chấp nhận mọi đường dẫn trong domain
       },
       {
+        protocol: 'https',
+        hostname: 'images.pexels.com',  // cho phép load ảnh từ Pexels
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'noithattoz.com',     // cho phép load ảnh từ noithattoz.com
+        port: '',
+        pathname: '/**',
+      },
+      {
         protocol: 'https',              // giao thức https
         hostname: 'cdn.hstatic.net',    // cho phép ảnh từ CDN của hstatic.net
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'theme.hstatic.net',  // cho phép ảnh theme từ hstatic.net
         port: '',
         pathname: '/**',
       },
