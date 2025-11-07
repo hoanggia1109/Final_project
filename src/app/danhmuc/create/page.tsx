@@ -4,38 +4,33 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 
-export default function CreateBrandPage() {
+export default function CreateDanhMucPage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
     code: '',
-    tenbrand: '',
-    logo: '', // có thể là link hoặc file path
-    thutu: '',
+    tendm: '',
+    mota: '',
+    image: null as File | null,
     anhien: 1,
   });
 
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // 🧩 Thay đổi text input
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
-  // 🖼️ Xử lý upload ảnh thật
   const handleFileChange = (e: any) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files[0];
     if (file) {
-      setLogoFile(file);
-      const previewURL = URL.createObjectURL(file);
-      setLogoPreview(previewURL);
+      setForm({ ...form, image: file });
+      setPreview(URL.createObjectURL(file));
     }
   };
 
-  // 💾 Submit form
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setSaving(true);
@@ -43,31 +38,26 @@ export default function CreateBrandPage() {
     try {
       const formData = new FormData();
       formData.append('code', form.code);
-      formData.append('tenbrand', form.tenbrand);
-      formData.append('thutu', form.thutu || '0');
-      formData.append('anhien', String(form.anhien));
+      formData.append('tendm', form.tendm);
+      formData.append('mota', form.mota);
+      formData.append('anhien', form.anhien.toString());
+      if (form.image) formData.append('image', form.image);
 
-      if (logoFile) {
-        formData.append('logo', logoFile); // gửi file thật
-      } else if (form.logo.trim() !== '') {
-        formData.append('logo', form.logo); // gửi link ảnh
-      }
-
-      const res = await fetch('http://localhost:5000/api/thuonghieu', {
+      const res = await fetch('http://localhost:5000/api/danhmuc', {
         method: 'POST',
         body: formData,
       });
 
       const data = await res.json();
       if (res.ok) {
-        alert('✅ Thêm thương hiệu thành công!');
-        router.push('/brand');
+        alert('✅ Thêm danh mục thành công!');
+        router.push('/danhmuc');
       } else {
         alert('❌ Lỗi: ' + data.message);
       }
     } catch (err) {
       console.error(err);
-      alert('Lỗi khi thêm thương hiệu!');
+      alert('Lỗi khi thêm danh mục!');
     } finally {
       setSaving(false);
     }
@@ -77,9 +67,7 @@ export default function CreateBrandPage() {
     <div className="container py-5">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <h2 className="text-primary fw-bold text-uppercase m-0">
-          Thêm thương hiệu
-        </h2>
+        <h2 className="text-primary fw-bold text-uppercase m-0">Thêm danh mục</h2>
         <button
           onClick={() => router.back()}
           className="btn btn-outline-secondary d-flex align-items-center gap-2"
@@ -95,9 +83,9 @@ export default function CreateBrandPage() {
         className="card shadow-sm border-0 mx-auto p-4"
         style={{ maxWidth: '700px' }}
       >
-        {/* Mã thương hiệu */}
+        {/* Mã danh mục */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Mã thương hiệu</label>
+          <label className="form-label fw-semibold">Mã danh mục</label>
           <input
             name="code"
             value={form.code}
@@ -107,61 +95,53 @@ export default function CreateBrandPage() {
           />
         </div>
 
-        {/* Tên thương hiệu */}
+        {/* Tên danh mục */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Tên thương hiệu</label>
+          <label className="form-label fw-semibold">Tên danh mục</label>
           <input
-            name="tenbrand"
-            value={form.tenbrand}
+            name="tendm"
+            value={form.tendm}
             onChange={handleChange}
             className="form-control"
             required
           />
         </div>
 
-        {/* Logo */}
+        {/* Mô tả */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Logo</label>
+          <label className="form-label fw-semibold">Mô tả</label>
+          <textarea
+            name="mota"
+            value={form.mota}
+            onChange={handleChange}
+            rows={4}
+            className="form-control"
+          />
+        </div>
+
+        {/* Ảnh */}
+        <div className="mb-3">
+          <label className="form-label fw-semibold">Ảnh danh mục</label>
           <input
             type="file"
             accept="image/*"
             onChange={handleFileChange}
             className="form-control"
           />
-          <input
-            type="text"
-            placeholder="Hoặc dán link ảnh..."
-            className="form-control mt-2"
-            name="logo"
-            value={form.logo}
-            onChange={handleChange}
-          />
-          {(logoPreview || form.logo) && (
+          {preview && (
             <div className="mt-3 text-center">
               <img
-                src={logoPreview || form.logo}
-                alt="Logo Preview"
+                src={preview}
+                alt="Preview"
                 className="img-thumbnail"
                 style={{
                   width: '120px',
                   height: '120px',
-                  objectFit: 'contain',
+                  objectFit: 'cover',
                 }}
               />
             </div>
           )}
-        </div>
-
-        {/* Thứ tự */}
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Thứ tự</label>
-          <input
-            type="number"
-            name="thutu"
-            value={form.thutu}
-            onChange={handleChange}
-            className="form-control"
-          />
         </div>
 
         {/* Trạng thái */}
@@ -186,7 +166,7 @@ export default function CreateBrandPage() {
             className="btn btn-primary d-flex align-items-center gap-2 px-4"
           >
             <Save size={18} />
-            {saving ? 'Đang lưu...' : 'Thêm thương hiệu'}
+            {saving ? 'Đang lưu...' : 'Thêm danh mục'}
           </button>
         </div>
       </form>

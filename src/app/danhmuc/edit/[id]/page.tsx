@@ -4,39 +4,39 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 
-export default function EditBrandPage() {
+export default function EditDanhMucPage() {
   const router = useRouter();
   const { id } = useParams();
 
   const [form, setForm] = useState({
     code: '',
-    tenbrand: '',
-    thutu: '',
-    logo: '',
+    tendm: '',
+    mota: '',
+    image: '',
     anhien: 1,
   });
-  const [newLogo, setNewLogo] = useState<File | null>(null);
+  const [newImage, setNewImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // 🔹 Lấy dữ liệu thương hiệu hiện có
+  // 🔹 Lấy dữ liệu danh mục hiện có
   useEffect(() => {
     if (!id) return;
-    fetch(`http://localhost:5000/api/thuonghieu/${id}`)
+    fetch(`http://localhost:5000/api/danhmuc/${id}`)
       .then(res => res.json())
       .then(data => {
         setForm({
           code: data.code || '',
-          tenbrand: data.tenbrand || '',
-          thutu: data.thutu || '',
-          logo: data.logo || '',
+          tendm: data.tendm || '',
+          mota: data.mota || '',
+          image: data.image || '',
           anhien: data.anhien ?? 1,
         });
         setLoading(false);
       })
       .catch(err => {
-        console.error('Lỗi khi tải thương hiệu:', err);
+        console.error('Lỗi khi tải danh mục:', err);
         setLoading(false);
       });
   }, [id]);
@@ -49,7 +49,7 @@ export default function EditBrandPage() {
   const handleFileChange = (e: any) => {
     const file = e.target.files[0];
     if (file) {
-      setNewLogo(file);
+      setNewImage(file);
       setPreview(URL.createObjectURL(file));
     }
   };
@@ -61,26 +61,26 @@ export default function EditBrandPage() {
     try {
       const formData = new FormData();
       formData.append('code', form.code);
-      formData.append('tenbrand', form.tenbrand);
-      formData.append('thutu', form.thutu);
+      formData.append('tendm', form.tendm);
+      formData.append('mota', form.mota);
       formData.append('anhien', form.anhien.toString());
-      if (newLogo) formData.append('logo', newLogo);
+      if (newImage) formData.append('image', newImage);
 
-      const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/danhmuc/${id}`, {
         method: 'PUT',
         body: formData,
       });
 
       const data = await res.json();
       if (res.ok) {
-        alert('✅ Cập nhật thương hiệu thành công!');
-        router.push('/brand');
+        alert('✅ Cập nhật danh mục thành công!');
+        router.push('/danhmuc');
       } else {
         alert('❌ Lỗi: ' + data.message);
       }
     } catch (err) {
       console.error(err);
-      alert('Lỗi khi cập nhật thương hiệu!');
+      alert('Lỗi khi cập nhật danh mục!');
     } finally {
       setSaving(false);
     }
@@ -90,7 +90,7 @@ export default function EditBrandPage() {
     return (
       <div className="container py-5 text-center text-muted">
         <div className="spinner-border text-primary me-2" />
-        Đang tải dữ liệu thương hiệu...
+        Đang tải dữ liệu danh mục...
       </div>
     );
   }
@@ -99,9 +99,7 @@ export default function EditBrandPage() {
     <div className="container py-5">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <h2 className="text-primary fw-bold text-uppercase m-0">
-          Chỉnh sửa thương hiệu
-        </h2>
+        <h2 className="text-primary fw-bold text-uppercase m-0">Chỉnh sửa danh mục</h2>
         <button
           onClick={() => router.back()}
           className="btn btn-outline-secondary d-flex align-items-center gap-2"
@@ -117,9 +115,9 @@ export default function EditBrandPage() {
         className="card shadow-sm border-0 mx-auto p-4"
         style={{ maxWidth: '700px' }}
       >
-        {/* Mã thương hiệu */}
+        {/* Mã danh mục */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Mã thương hiệu</label>
+          <label className="form-label fw-semibold">Mã danh mục</label>
           <input
             name="code"
             value={form.code}
@@ -129,33 +127,33 @@ export default function EditBrandPage() {
           />
         </div>
 
-        {/* Tên thương hiệu */}
+        {/* Tên danh mục */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Tên thương hiệu</label>
+          <label className="form-label fw-semibold">Tên danh mục</label>
           <input
-            name="tenbrand"
-            value={form.tenbrand}
+            name="tendm"
+            value={form.tendm}
             onChange={handleChange}
             className="form-control"
             required
           />
         </div>
 
-        {/* Thứ tự */}
+        {/* Mô tả */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Thứ tự</label>
-          <input
-            type="number"
-            name="thutu"
-            value={form.thutu}
+          <label className="form-label fw-semibold">Mô tả</label>
+          <textarea
+            name="mota"
+            value={form.mota}
             onChange={handleChange}
+            rows={4}
             className="form-control"
           />
         </div>
 
-        {/* Logo thương hiệu */}
+        {/* Ảnh danh mục */}
         <div className="mb-3">
-          <label className="form-label fw-semibold">Logo thương hiệu</label>
+          <label className="form-label fw-semibold">Ảnh danh mục</label>
           <input
             type="file"
             accept="image/*"
@@ -171,15 +169,15 @@ export default function EditBrandPage() {
                 className="img-thumbnail"
                 style={{ width: '120px', height: '120px', objectFit: 'cover' }}
               />
-            ) : form.logo ? (
+            ) : form.image ? (
               <img
-                src={form.logo}
-                alt="Logo cũ"
+                src={form.image}
+                alt="Ảnh cũ"
                 className="img-thumbnail"
                 style={{ width: '120px', height: '120px', objectFit: 'cover' }}
               />
             ) : (
-              <span className="text-muted fst-italic">Chưa có logo</span>
+              <span className="text-muted fst-italic">Chưa có ảnh</span>
             )}
           </div>
         </div>

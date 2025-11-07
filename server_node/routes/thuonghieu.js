@@ -1,73 +1,122 @@
 const express = require("express");
 const router = express.Router();
-const { ThuongHieuModel } = require("../database"); 
-const { v4: uuidv4 } = require("uuid");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const { ThuongHieuModel } = require("../database");
 
-// 🟢 Lấy tất cả thương hiệu
+// 🧩 Cấu hình multer để lưu ảnh vào uploads/brand
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "../uploads/brand");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  },
+});
+
+const upload = multer({ storage });
+
+// 🧠 Lấy danh sách thương hiệu
 router.get("/", async (req, res) => {
   try {
-    const brands = await ThuongHieuModel.findAll({
-      order: [["thutu", "ASC"]],
+    const list = await ThuongHieuModel.findAll({
+      where: { anhien: 1 },
+      attributes: ["id", "code", "tenbrand", "logo", "thutu", "anhien"],
     });
-    res.json(brands);
+    res.json(list);
   } catch (err) {
-    res.status(500).json({ message: "Lỗi khi lấy danh sách thương hiệu", error: err.message });
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 
-// 🟢 Lấy 1 thương hiệu theo ID
+// 🧠 Lấy chi tiết thương hiệu
 router.get("/:id", async (req, res) => {
   try {
-    const brand = await ThuongHieuModel.findByPk(req.params.id);
-    if (!brand) return res.status(404).json({ message: "Không tìm thấy thương hiệu" });
-    res.json(brand);
+    const item = await ThuongHieuModel.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: "Không tìm thấy" });
+    res.json(item);
   } catch (err) {
-    res.status(500).json({ message: "Lỗi khi lấy thương hiệu", error: err.message });
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 
-// 🟢 Thêm thương hiệu mới
-router.post("/", async (req, res) => {
+// ➕ Thêm thương hiệu
+router.post("/", upload.single("logo"), async (req, res) => {
   try {
-    const { code, tenbrand, logo, thutu, anhien } = req.body;
+    const { tenbrand, code, thutu, anhien } = req.body;
+    const logo = req.file
+      ? `http://localhost:5000/uploads/brand/${req.file.filename}`
+      : null;
+
     const newBrand = await ThuongHieuModel.create({
-      id: uuidv4(),
-      code,
       tenbrand,
-      logo,
+      code,
       thutu,
       anhien: anhien ?? 1,
+      logo,
     });
-    res.status(201).json({ message: "Thêm thương hiệu thành công", brand: newBrand });
+
+    res.status(201).json(newBrand);
   } catch (err) {
-    res.status(500).json({ message: "Lỗi khi thêm thương hiệu", error: err.message });
+    res.status(500).json({ message: "Lỗi khi thêm", error: err.message });
   }
 });
 
-// 🟢 Cập nhật thương hiệu
-router.put("/:id", async (req, res) => {
+// ✏️ Cập nhật thương hiệu
+router.put("/:id", upload.single("logo"), async (req, res) => {
   try {
-    const { id } = req.params;
-    const { code, tenbrand, logo, thutu, anhien } = req.body;
-    const brand = await ThuongHieuModel.findByPk(id);
-    if (!brand) return res.status(404).json({ message: "Không tìm thấy thương hiệu" });
+    const brand = await ThuongHieuModel.findByPk(req.params.id);
+    if (!brand) return res.status(404).json({ message: "Không tìm thấy" });
 
-    await brand.update({ code, tenbrand, logo, thutu, anhien });
-    res.json({ message: "Cập nhật thương hiệu thành công", brand });
+    let logo = brand.logo;
+    if (req.file) {
+      logo = `http://localhost:5000/uploads/brand/${req.file.filename}`;
+      // xóa ảnh cũ nếu có
+      if (brand.logo) {
+        const oldPath = path.join(
+          __dirname,
+          "../uploads/brand",
+          path.basename(brand.logo)
+        );
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+    }
+
+    await brand.update({
+      ...req.body,
+      logo,
+    });
+
+    res.json(brand);
   } catch (err) {
-    res.status(500).json({ message: "Lỗi khi cập nhật thương hiệu", error: err.message });
+    res.status(500).json({ message: "Lỗi cập nhật", error: err.message });
   }
 });
 
-// 🟢 Xóa thương hiệu
+// ❌ Xóa thương hiệu
 router.delete("/:id", async (req, res) => {
   try {
     const brand = await ThuongHieuModel.findByPk(req.params.id);
-    if (!brand) return res.status(404).json({ message: "Không tìm thấy thương hiệu" });
+    if (!brand) return res.status(404).json({ message: "Không tìm thấy" });
+
+    // Xóa ảnh cũ
+    if (brand.logo) {
+      const oldPath = path.join(
+        __dirname,
+        "../uploads/brand",
+        path.basename(brand.logo)
+      );
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
     await brand.destroy();
-    res.json({ message: "Xóa thương hiệu thành công" });
+    res.json({ message: "Đã xóa thành công" });
   } catch (err) {
-    res.status(500).json({ message: "Lỗi khi xóa thương hiệu", error: err.message });
+    res.status(500).json({ message: "Lỗi xóa", error: err.message });
   }
 });
 
