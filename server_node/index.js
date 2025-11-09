@@ -31,6 +31,7 @@ app.use("/api/thuonghieu", require("./routes/thuonghieu"));
 app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use('/api/banner', require('./routes/banner'));
 
 
 // Import model từ file database
