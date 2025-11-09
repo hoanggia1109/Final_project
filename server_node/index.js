@@ -32,6 +32,7 @@ app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use('/api/banner', require('./routes/banner'));
+app.use("/api/danhmucbaiviet", require("./routes/danhmucbaiviet"));
 
 
 // Import model từ file database
