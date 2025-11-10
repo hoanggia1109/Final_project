@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import AuthModal from './AuthModal';
+import { getCartCount } from '../utils/cart';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,18 +26,12 @@ export default function Header() {
     });
   }, [isLoggedIn, userName, userEmail, userRole]);
 
-  // Update cart count
+  // Update cart count from backend API
   useEffect(() => {
-    const updateCartCount = () => {
+    const updateCartCount = async () => {
       try {
-        const cart = localStorage.getItem('cart');
-        if (cart) {
-          const items = JSON.parse(cart);
-          const count = items.reduce((total: number, item: { quantity: number }) => total + item.quantity, 0);
-          setCartCount(count);
-        } else {
-          setCartCount(0);
-        }
+        const count = await getCartCount();
+        setCartCount(count);
       } catch (error) {
         console.error('Error loading cart count:', error);
         setCartCount(0);

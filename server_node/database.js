@@ -225,14 +225,18 @@ const DonHangModel = sequelize.define(
     phi_van_chuyen : DataTypes.DECIMAL(15, 2),
     magiaodich: DataTypes.CHAR(100),
     magiamgia_id: DataTypes.CHAR(36),
+    magiamgia_code: DataTypes.STRING, // Thêm cột mã giảm giá
     diachi_id: DataTypes.CHAR(36),
     thoidiemthanhtoan : DataTypes.DATE,
     trangthaithanhtoan: DataTypes.ENUM('pending','paid','failed','refunded','cancelled'),
+    phuongthucthanhtoan: DataTypes.ENUM('cod','stripe','vnpay','momo','banking'), // Thêm phương thức thanh toán
+    payment_intent_id: DataTypes.STRING, // Thêm Stripe payment intent ID
+    ngaythanhtoan: DataTypes.DATE, // Thêm ngày thanh toán
       created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
       updated_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW},
     tongtien: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0},
     giamgia: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0},
-    tongtien_saugiam: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0},
+    tongtien_sau_giam: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0}, // Sửa tên cột
 trangthai: {
   type: DataTypes.ENUM("pending", "confirmed", "shipping", "delivered", "cancelled", "returned"),
   defaultValue: "pending",
@@ -263,6 +267,23 @@ const ReviewImageModel = sequelize.define("hinhanh_danhgia", {
   tableName: "hinhanh_danhgia",
   timestamps: false, // hoặc true nếu muốn có created_at / updated_at
 });
+
+// LIÊN HỆ
+const LienHeModel = sequelize.define(
+  "lien_he",
+  {
+    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    hoten: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false },
+    sdt: { type: DataTypes.STRING, allowNull: true },
+    tieude: { type: DataTypes.STRING, allowNull: false },
+    noidung: { type: DataTypes.TEXT, allowNull: false },
+    trangthai: { type: DataTypes.ENUM('pending', 'processing', 'resolved'), defaultValue: 'pending' },
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "lien_he", timestamps: false }
+);
 
 /* ------------------ QUAN HỆ ------------------ */
 // ======================
@@ -442,4 +463,5 @@ module.exports = {
   DonHangModel,
   DonHangChiTietModel,
   ReviewImageModel,
+  LienHeModel,
 };

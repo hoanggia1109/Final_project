@@ -19,43 +19,43 @@ async function testAPI() {
     }
   };
 
-  console.log("📤 Gửi request đến:", `http://localhost:5000${options.path}`);
-  console.log("📋 Data:", JSON.parse(testData));
+  console.log(" Gửi request đến:", `http://localhost:5000${options.path}`);
+  console.log(" Data:", JSON.parse(testData));
 
   const req = http.request(options, (res) => {
     let data = '';
 
-    console.log("\n📥 Response Status:", res.statusCode);
-    console.log("📋 Response Headers:", res.headers);
+    console.log("\n Response Status:", res.statusCode);
+    console.log(" Response Headers:", res.headers);
 
     res.on('data', (chunk) => {
       data += chunk;
     });
 
     res.on('end', () => {
-      console.log("\n📄 Response Body:", data);
+      console.log("\n Response Body:", data);
       
       try {
         const jsonData = JSON.parse(data);
-        console.log("✅ Response JSON:", jsonData);
+        console.log(" Response JSON:", jsonData);
         
         if (res.statusCode === 200) {
-          console.log("\n🎉 ĐĂNG KÝ THÀNH CÔNG!");
-          console.log("👉 Hãy vào PHPMyAdmin kiểm tra bảng nguoi_dung!");
+          console.log("\n ĐĂNG KÝ THÀNH CÔNG!");
+          console.log(" Hãy vào PHPMyAdmin kiểm tra bảng nguoi_dung!");
         } else {
-          console.log("\n❌ ĐĂNG KÝ THẤT BẠI!");
+          console.log("\n ĐĂNG KÝ THẤT BẠI!");
           console.log("Lý do:", jsonData.message);
         }
       } catch (e) {
-        console.log("⚠️  Response không phải JSON");
+        console.log("  Response không phải JSON");
       }
     });
   });
 
   req.on('error', (error) => {
-    console.error("\n❌ LỖI KẾT NỐI:");
+    console.error("\n LỖI KẾT NỐI:");
     console.error(error.message);
-    console.log("\n⚠️  Kiểm tra:");
+    console.log("\n Kiểm tra:");
     console.log("  1. Server đã chạy chưa? (node index.js)");
     console.log("  2. Port 3000 có bị block không?");
   });

@@ -22,7 +22,7 @@ export default function LoginPage() {
     e.preventDefault();
     
     try {
-      // ✅ GỌI API THẬT
+      //  GỌI API THẬT
       const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
         method: 'POST',
         headers: {
@@ -40,7 +40,7 @@ export default function LoginPage() {
         throw new Error(data.message || 'Đăng nhập thất bại');
       }
 
-      console.log('✅ Đăng nhập thành công:', data);
+      console.log(' Đăng nhập thành công:', data);
       
       // Lưu token và user info vào localStorage
       if (data.token) {
@@ -53,7 +53,7 @@ export default function LoginPage() {
           localStorage.setItem('userName', userName);
           localStorage.setItem('userRole', data.user.role || 'customer');
           
-          console.log('💾 Login Page - Đã lưu localStorage:', {
+          console.log(' Login Page - Đã lưu localStorage:', {
             token: data.token.substring(0, 20) + '...',
             email: data.user.email,
             name: userName,
@@ -66,7 +66,7 @@ export default function LoginPage() {
           localStorage.setItem('userName', userName);
           localStorage.setItem('userRole', 'customer');
           
-          console.log('💾 Login Page - Đã lưu localStorage (fallback):', {
+          console.log(' Login Page - Đã lưu localStorage (fallback):', {
             token: data.token.substring(0, 20) + '...',
             email: formData.email,
             name: userName,
@@ -75,7 +75,7 @@ export default function LoginPage() {
         }
         
         // Verify localStorage đã được lưu
-        console.log('🔍 Verify localStorage:', {
+        console.log(' Verify localStorage:', {
           token: localStorage.getItem('token') ? 'CÓ' : 'KHÔNG',
           email: localStorage.getItem('userEmail'),
           name: localStorage.getItem('userName'),
@@ -83,7 +83,7 @@ export default function LoginPage() {
         });
       }
       
-      console.log('✅ Đăng nhập thành công!');
+      console.log(' Đăng nhập thành công!');
       
       // Thông báo Header cập nhật ngay trong cùng tab
       try { 
@@ -95,7 +95,7 @@ export default function LoginPage() {
       
       // Redirect theo role
       const userRole = localStorage.getItem('userRole');
-      console.log('🔄 Redirect...', { role: userRole });
+      console.log(' Redirect...', { role: userRole });
       setTimeout(() => {
         if (userRole === 'admin') {
           window.location.href = '/admin';
@@ -104,7 +104,7 @@ export default function LoginPage() {
         }
       }, 200);
     } catch (error) {
-      console.error('❌ Lỗi đăng nhập:', error);
+      console.error(' Lỗi đăng nhập:', error);
       alert((error as Error).message || 'Email hoặc mật khẩu không đúng!');
     }
   };

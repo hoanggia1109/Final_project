@@ -100,7 +100,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
           if (userRole === 'admin') {
             window.location.href = '/admin';
           } else {
-            window.location.reload();
+          window.location.reload();
           }
         }, 200);
 

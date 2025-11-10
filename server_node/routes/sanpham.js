@@ -13,9 +13,8 @@ const {
 } = require("../database");
 
 const router = express.Router();
-const upload = createMulterUpload("sanpham"); // 📂 Lưu ảnh vào uploads/sanpham/
+const upload = createMulterUpload("sanpham");
 
-// Hàm tạo slug thân thiện
 const slugify = (str) =>
   str
     .toLowerCase()
@@ -24,11 +23,7 @@ const slugify = (str) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 
-/* ==============================
- 🟢 LẤY TẤT CẢ SẢN PHẨM
-============================== */
-
-router.get("/", async (req, res) => {
+router.get("/", async (_req, res) => {
   try {
     const sanphams = await SanPhamModel.findAll({
       attributes: ["id", "code", "tensp", "thumbnail", "anhien", "slug", "ngay", "created_at"],
@@ -37,7 +32,6 @@ router.get("/", async (req, res) => {
         { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
         { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc"] },
       ],
-      order: [["created_at", "DESC"]],
     });
     res.status(200).json(sanphams);
   } catch (err) {
@@ -46,9 +40,25 @@ router.get("/", async (req, res) => {
   }
 });
 
-/* ==============================
- 🟢 LẤY CHI TIẾT 1 SẢN PHẨM
-============================== */
+router.get("/giamgia", async (_req, res) => {
+  try {
+    console.log(" API /api/sanpham/giamgia được gọi!");
+    const sanphams = await SanPhamModel.findAll({
+      attributes: ["id", "code", "tensp", "thumbnail", "slug"],
+      include: [
+        { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
+        { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
+        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc"] },
+      ],
+      limit: 8,
+    });
+    console.log(` Tìm thấy ${sanphams.length} sản phẩm giảm giá`);
+    res.status(200).json(sanphams);
+  } catch (err) {
+    console.error("Lỗi lấy sản phẩm giảm giá:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
 
 router.get("/:id", async (req, res) => {
   try {
@@ -72,9 +82,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-/* ==============================
- 🟢 THÊM SẢN PHẨM (có upload ảnh)
-============================== */
 router.post("/", upload.single("thumbnail"), async (req, res) => {
   const t = await SanPhamModel.sequelize.transaction();
   try {
@@ -88,8 +95,7 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
       thuonghieu_id,
       bienthe,
     } = req.body;
-    
-    // nếu client gửi dạng JSON string thì parse lại
+
     if (typeof bienthe === "string") {
       try {
         bienthe = JSON.parse(bienthe);
@@ -97,19 +103,14 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
         bienthe = [];
       }
     }
-    
 
-    // Nếu có file ảnh thì lưu đường dẫn
-    const thumbnailPath = req.file
-      ? `/uploads/sanpham/${req.file.filename}`
-      : null;
+    const thumbnailPath = req.file ? `/uploads/sanpham/${req.file.filename}` : null;
 
     const finalSlug =
       slug?.trim() && slug.trim() !== ""
         ? slugify(slug)
         : slugify(tensp) + "-" + uuidv4().slice(0, 6);
 
-    // 🟢 1. Tạo sản phẩm chính
     const sp = await SanPhamModel.create(
       {
         code,
@@ -124,7 +125,6 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
       { transaction: t }
     );
 
-    // 🟢 2. Tạo biến thể + ảnh
     if (Array.isArray(bienthe) && bienthe.length > 0) {
       for (const bt of bienthe) {
         const newBT = await SanPhamBienTheModel.create(
@@ -159,9 +159,6 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
   }
 });
 
-/* ==============================
- 🟡 CẬP NHẬT SẢN PHẨM
-============================== */
 router.put("/:id", upload.any(), async (req, res) => {
   const t = await SanPhamModel.sequelize.transaction();
   try {
@@ -171,48 +168,64 @@ router.put("/:id", upload.any(), async (req, res) => {
     let { tensp, mota, anhien, danhmuc_id, thuonghieu_id, bienthe } = req.body;
     if (typeof bienthe === "string") bienthe = JSON.parse(bienthe || "[]");
 
-    // ---------------- Thumbnail ----------------
-    const thumbnailFile = req.files.find(f => f.fieldname === 'thumbnail');
-    const thumbnailPath = thumbnailFile ? `/uploads/sanpham/${thumbnailFile.filename}` : sp.thumbnail;
-    await sp.update({ tensp, mota, anhien, danhmuc_id, thuonghieu_id, thumbnail: thumbnailPath }, { transaction: t });
+    const thumbnailFile = req.files.find((f) => f.fieldname === "thumbnail");
+    const thumbnailPath = thumbnailFile
+      ? `/uploads/sanpham/${thumbnailFile.filename}`
+      : sp.thumbnail;
+    await sp.update(
+      { tensp, mota, anhien, danhmuc_id, thuonghieu_id, thumbnail: thumbnailPath },
+      { transaction: t }
+    );
 
-    // ---------------- Biến thể ----------------
-    const oldVariants = await SanPhamBienTheModel.findAll({ where: { sanpham_id: sp.id }, include: [{ model: ImageModel, as: "images" }], transaction: t });
+    const oldVariants = await SanPhamBienTheModel.findAll({
+      where: { sanpham_id: sp.id },
+      include: [{ model: ImageModel, as: "images" }],
+      transaction: t,
+    });
 
     for (let i = 0; i < bienthe.length; i++) {
       const bt = bienthe[i];
+      const filesForVariant = req.files.filter((f) => f.fieldname === `images_${i}`);
 
-      // Lấy tất cả file của biến thể này theo fieldname
-      const filesForThisVariant = req.files.filter(f => f.fieldname === `images_${i}`);
-
-      if (bt.id) { // update biến thể cũ
-        const oldBT = oldVariants.find(v => v.id === bt.id);
+      if (bt.id) {
+        const oldBT = oldVariants.find((v) => v.id === bt.id);
         if (oldBT) {
-          await oldBT.update({
+          await oldBT.update(
+            {
+              mausac: bt.mausac,
+              kichthuoc: bt.kichthuoc,
+              chatlieu: bt.chatlieu,
+              gia: bt.gia,
+              sl_tonkho: bt.sl_tonkho ?? 0,
+            },
+            { transaction: t }
+          );
+
+          for (const file of filesForVariant) {
+            await ImageModel.create(
+              { bienthe_id: oldBT.id, url: `/uploads/sanpham/${file.filename}` },
+              { transaction: t }
+            );
+          }
+        }
+      } else {
+        const newBT = await SanPhamBienTheModel.create(
+          {
+            sanpham_id: sp.id,
             mausac: bt.mausac,
             kichthuoc: bt.kichthuoc,
             chatlieu: bt.chatlieu,
             gia: bt.gia,
-            sl_tonkho: bt.sl_tonkho ?? 0
-          }, { transaction: t });
+            sl_tonkho: bt.sl_tonkho ?? 0,
+          },
+          { transaction: t }
+        );
 
-          // Thêm ảnh mới
-          for (const file of filesForThisVariant) {
-            await ImageModel.create({ bienthe_id: oldBT.id, url: `/uploads/sanpham/${file.filename}` }, { transaction: t });
-          }
-        }
-      } else { // thêm biến thể mới
-        const newBT = await SanPhamBienTheModel.create({
-          sanpham_id: sp.id,
-          mausac: bt.mausac,
-          kichthuoc: bt.kichthuoc,
-          chatlieu: bt.chatlieu,
-          gia: bt.gia,
-          sl_tonkho: bt.sl_tonkho ?? 0
-        }, { transaction: t });
-
-        for (const file of filesForThisVariant) {
-          await ImageModel.create({ bienthe_id: newBT.id, url: `/uploads/sanpham/${file.filename}` }, { transaction: t });
+        for (const file of filesForVariant) {
+          await ImageModel.create(
+            { bienthe_id: newBT.id, url: `/uploads/sanpham/${file.filename}` },
+            { transaction: t }
+          );
         }
       }
     }
@@ -226,10 +239,6 @@ router.put("/:id", upload.any(), async (req, res) => {
   }
 });
 
-
-/* ==============================
- 🔴 XÓA SẢN PHẨM
-============================== */
 router.delete("/:id", async (req, res) => {
   try {
     const sp = await SanPhamModel.findByPk(req.params.id);
@@ -243,3 +252,5 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
+
+

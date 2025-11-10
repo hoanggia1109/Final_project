@@ -15,7 +15,7 @@ const router = express.Router();
 
 /* -------- Đăng ký -------- */
 router.post("/dangky", async (req, res) => {
-  console.log("🔵 Nhận request đăng ký:", req.body);
+  console.log(" Nhận request đăng ký:", req.body);
   
   try {
     const { email, password, fullName, phone } = req.body;
@@ -29,19 +29,19 @@ router.post("/dangky", async (req, res) => {
       return res.status(400).json({ message: "Mật khẩu phải có ít nhất 6 ký tự" });
     }
     
-    console.log("🔍 Checking email:", email);
+    console.log(" Checking email:", email);
     
     const existed = await UserModel.findOne({ where: { email } });
     
     if (existed) {
-      console.log("❌ Email đã tồn tại");
+      console.log(" Email đã tồn tại");
       return res.status(400).json({ message: "Email đã tồn tại" });
     }
 
-    console.log("🔐 Hashing password...");
+    console.log(" Hashing password...");
     const hashed = await bcrypt.hash(password, 10);
     
-    console.log("💾 Creating user...");
+    console.log(" Creating user...");
     const newUser = await UserModel.create({ 
       id: uuidv4(), 
       email, 
@@ -50,11 +50,11 @@ router.post("/dangky", async (req, res) => {
       sdt: phone || null
     });
     
-    console.log("✅ User created:", newUser.id);
+    console.log(" User created:", newUser.id);
     
     res.json({ message: "Đăng ký thành công" });
   } catch (err) {
-    console.error("🔥 ERROR:", err.message);
+    console.error(" ERROR:", err.message);
     res.status(500).json({ message: err.message });
   }
 });

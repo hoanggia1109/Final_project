@@ -114,9 +114,9 @@ export default function RegisterPage() {
 
       {/* Register Card */}
       <div className="container position-relative" style={{ zIndex: 10, padding: '20px' }}>
-          <div className="row justify-content-center">
-            <div className="col-md-10 col-lg-9">
-              <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
+        <div className="row justify-content-center">
+          <div className="col-md-10 col-lg-9">
+            <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
               <div className="row g-0">
                 {/* Left Side - Branding */}
                 <div

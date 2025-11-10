@@ -128,8 +128,8 @@ export default function AuthPage() {
       style={{
         minHeight: '100vh',
         background: mode === 'login' 
-          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-          : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          ? 'linear-gradient(135deg, #FFC107 0%, #FF8E53 100%)'
+          : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
         transition: 'background 0.6s ease',
         overflow: 'hidden',
       }}
@@ -139,11 +139,11 @@ export default function AuthPage() {
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{
           backgroundImage: mode === 'login'
-            ? 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920")'
-            : 'url("https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920")',
+            ? 'url("https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920")'
+            : 'url("https://images.unsplash.com/photo-1618221469555-7f3ad97540d6?w=1920")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.1,
+          opacity: 0.15,
           transition: 'opacity 0.6s ease',
         }}
       />
@@ -192,42 +192,57 @@ export default function AuthPage() {
                 className="col-md-5 d-none d-md-flex flex-column align-items-center justify-content-center text-white p-5 position-relative"
                 style={{
                   background: mode === 'login'
-                    ? 'linear-gradient(135deg, #FFC107 0%, #FFB000 100%)'
-                    : 'linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%)',
+                    ? 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)'
+                    : 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)',
                   transition: 'background 0.6s ease',
                 }}
               >
                 <div className="position-relative z-index-2 text-center">
                   <div className="mb-4">
                     <div
-                      className="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center"
-                      style={{ width: '100px', height: '100px' }}
+                      className="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-lg"
+                      style={{ 
+                        width: '120px', 
+                        height: '120px',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+                      }}
                     >
-                      <i className="bi bi-house-heart-fill" style={{ fontSize: '48px', color: mode === 'login' ? '#FFC107' : '#FF6B6B' }}></i>
+                      <i className="bi bi-house-heart-fill" style={{ 
+                        fontSize: '56px', 
+                        background: mode === 'login' ? 'linear-gradient(135deg, #FF8E53, #FF6B6B)' : 'linear-gradient(135deg, #FF6B6B, #FFA726)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                      }}></i>
                     </div>
                   </div>
 
-                  <h2 className="fw-bold mb-3">
-                    {mode === 'login' ? 'Chào mừng trở lại!' : 'Tham gia ngay!'}
+                  <h2 className="fw-bold mb-3" style={{ fontSize: '2rem', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>
+                    {mode === 'login' ? 'Chào mừng trở lại!' : 'Tham gia cùng chúng tôi!'}
                   </h2>
-                  <p className="mb-4 opacity-75">
+                  <p className="mb-4" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
                     {mode === 'login' 
-                      ? 'Đăng nhập để trải nghiệm dịch vụ thiết kế và thi công nội thất tốt nhất'
-                      : 'Đăng ký để khám phá thế giới nội thất đẳng cấp'}
+                      ? 'Đăng nhập để trải nghiệm dịch vụ thiết kế và thi công nội thất đẳng cấp'
+                      : 'Đăng ký ngay để khám phá thế giới nội thất hiện đại và tinh tế'}
                   </p>
 
-                  <div className="text-start">
-                    <div className="d-flex align-items-center mb-3">
-                      <i className="bi bi-check-circle-fill me-2" style={{ fontSize: '20px' }}></i>
-                      <span>Thiết kế chuyên nghiệp</span>
+                  <div className="text-start mx-auto" style={{ maxWidth: '300px' }}>
+                    <div className="d-flex align-items-center mb-3 p-2 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                        <i className="bi bi-palette-fill" style={{ fontSize: '18px', color: '#FF6B6B' }}></i>
+                      </div>
+                      <span className="fw-semibold">Thiết kế độc đáo</span>
                     </div>
-                    <div className="d-flex align-items-center mb-3">
-                      <i className="bi bi-check-circle-fill me-2" style={{ fontSize: '20px' }}></i>
-                      <span>Thi công uy tín</span>
+                    <div className="d-flex align-items-center mb-3 p-2 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                        <i className="bi bi-hammer" style={{ fontSize: '18px', color: '#FF8E53' }}></i>
+                      </div>
+                      <span className="fw-semibold">Thi công chất lượng</span>
                     </div>
-                    <div className="d-flex align-items-center">
-                      <i className="bi bi-check-circle-fill me-2" style={{ fontSize: '20px' }}></i>
-                      <span>Hỗ trợ 24/7</span>
+                    <div className="d-flex align-items-center p-2 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                        <i className="bi bi-headset" style={{ fontSize: '18px', color: '#FFA726' }}></i>
+                      </div>
+                      <span className="fw-semibold">Hỗ trợ tận tâm 24/7</span>
                     </div>
                   </div>
                 </div>
@@ -243,10 +258,26 @@ export default function AuthPage() {
                     overflowX: 'hidden'
                   }}
                 >
-                  <div className="mb-3">
-                    <Link href="/" className="btn btn-link text-decoration-none p-0">
+                  <div className="mb-4">
+                    <Link 
+                      href="/" 
+                      className="btn btn-link text-decoration-none p-0 d-inline-flex align-items-center"
+                      style={{ 
+                        color: '#FF6B6B',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#FF8E53';
+                        e.currentTarget.style.transform = 'translateX(-4px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#FF6B6B';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
                       <i className="bi bi-arrow-left me-2"></i>
-                      <span style={{ color: '#666' }}>Quay lại trang chủ</span>
+                      <span>Quay lại trang chủ</span>
                     </Link>
                   </div>
 
@@ -312,33 +343,43 @@ export default function AuthPage() {
                         />
                         <label className="form-check-label small" htmlFor="rememberMe">Ghi nhớ</label>
                       </div>
-                      <Link href="/forgot-password" className="text-decoration-none small" style={{ color: '#FFC107' }}>
+                      <Link 
+                        href="/forgot-password" 
+                        className="text-decoration-none small" 
+                        style={{ color: '#FF8E53', transition: 'all 0.3s ease' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#FF6B6B'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#FF8E53'}
+                      >
                         Quên mật khẩu?
                       </Link>
                     </div>
 
                     <button 
                       type="submit" 
-                      className="btn text-white w-100 fw-bold mb-3 shadow-sm"
+                      className="btn text-white w-100 fw-bold mb-3"
                       style={{ 
-                        background: 'linear-gradient(135deg, #FFC107 0%, #FFB000 100%)',
-                        padding: '14px',
-                        fontSize: '16px',
-                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)',
+                        padding: '16px',
+                        fontSize: '17px',
+                        borderRadius: '12px',
                         transition: 'all 0.3s ease',
-                        border: 'none'
+                        border: 'none',
+                        boxShadow: '0 4px 15px rgba(255, 142, 83, 0.3)',
+                        letterSpacing: '0.5px'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 193, 7, 0.4)';
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 10px 25px rgba(255, 107, 107, 0.4)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 142, 83, 0.3)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)';
                       }}
                     >
                       <i className="bi bi-box-arrow-in-right me-2"></i>
-                      Đăng Nhập
+                      Đăng Nhập Ngay
                     </button>
 
                     <div className="text-center">
@@ -348,7 +389,9 @@ export default function AuthPage() {
                           type="button"
                           onClick={() => setMode('register')}
                           className="btn btn-link p-0 text-decoration-none fw-semibold"
-                          style={{ color: '#FFC107' }}
+                          style={{ color: '#FF6B6B', transition: 'all 0.3s ease' }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#FF8E53'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#FF6B6B'}
                         >
                           Đăng ký ngay
                         </button>
@@ -518,32 +561,44 @@ export default function AuthPage() {
                         onChange={handleRegisterChange}
                       />
                       <label className="form-check-label small" htmlFor="agreeTerms">
-                        Tôi đồng ý với <Link href="/terms" className="text-decoration-none">Điều khoản sử dụng</Link>
+                        Tôi đồng ý với <Link 
+                          href="/terms" 
+                          className="text-decoration-none" 
+                          style={{ color: '#FF6B6B', transition: 'all 0.3s ease' }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#FF8E53'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#FF6B6B'}
+                        >
+                          Điều khoản sử dụng
+                        </Link>
                       </label>
                     </div>
 
                     <button 
                       type="submit" 
-                      className="btn text-white w-100 fw-bold mb-3 shadow-sm"
+                      className="btn text-white w-100 fw-bold mb-3"
                       style={{ 
-                        background: 'linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%)',
-                        padding: '14px',
-                        fontSize: '16px',
-                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)',
+                        padding: '16px',
+                        fontSize: '17px',
+                        borderRadius: '12px',
                         transition: 'all 0.3s ease',
-                        border: 'none'
+                        border: 'none',
+                        boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+                        letterSpacing: '0.5px'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 107, 0.4)';
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 10px 25px rgba(255, 167, 38, 0.4)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FFA726 0%, #FF6B6B 100%)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.3)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)';
                       }}
                     >
                       <i className="bi bi-person-plus me-2"></i>
-                      Đăng Ký Ngay
+                      Đăng Ký Tài Khoản
                     </button>
 
                     <div className="text-center">
@@ -553,7 +608,9 @@ export default function AuthPage() {
                           type="button"
                           onClick={() => setMode('login')}
                           className="btn btn-link p-0 text-decoration-none fw-semibold"
-                          style={{ color: '#FF6B6B' }}
+                          style={{ color: '#FFA726', transition: 'all 0.3s ease' }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#FF6B6B'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#FFA726'}
                         >
                           Đăng nhập ngay
                         </button>
@@ -590,12 +647,29 @@ export default function AuthPage() {
         }
         
         .col-md-7 > div::-webkit-scrollbar-thumb {
-          background: #FFC107;
+          background: linear-gradient(180deg, #FF8E53, #FF6B6B);
           border-radius: 10px;
         }
         
         .col-md-7 > div::-webkit-scrollbar-thumb:hover {
-          background: #FFB000;
+          background: linear-gradient(180deg, #FF6B6B, #FFA726);
+        }
+        
+        /* Form Input Focus */
+        .form-control:focus,
+        .form-select:focus {
+          border-color: #FF8E53;
+          box-shadow: 0 0 0 0.2rem rgba(255, 142, 83, 0.15);
+        }
+        
+        .form-check-input:checked {
+          background-color: #FF6B6B;
+          border-color: #FF6B6B;
+        }
+        
+        .form-check-input:focus {
+          border-color: #FF8E53;
+          box-shadow: 0 0 0 0.2rem rgba(255, 142, 83, 0.15);
         }
       `}</style>
     </div>

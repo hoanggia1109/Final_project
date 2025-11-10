@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 interface BienThe {
+  id?: string;
   gia?: number;
   mausac?: string;
   kichthuoc?: string;
@@ -88,6 +89,7 @@ export async function GET(
       colors: product.bienthe
         ?.filter((bt: BienThe) => bt.mausac)
         .map((bt: BienThe) => ({
+          id: bt.id, // ID của biến thể (bienthe_id)
           name: bt.mausac || 'Màu mặc định',
           code: '#808080' // Default color
         })) || [],

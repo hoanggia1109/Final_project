@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Op } = require("sequelize");
@@ -39,6 +40,7 @@ app.use("/api/bienthe", require("./routes/bienthe"));
 app.use("/api/thuonghieu", require("./routes/thuonghieu"));
 app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
+app.use("/api/thanhtoan", require("./routes/thanhtoan"));
 
 // Import model từ file database
 const {
@@ -58,6 +60,7 @@ const {
   DanhGiaModel,
   DonHangChiTietModel,
   ReviewImageModel,
+  LienHeModel,
 } = require("./database");
 
 // kết nối DB

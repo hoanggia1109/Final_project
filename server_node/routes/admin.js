@@ -15,7 +15,7 @@ const {
 
 const router = express.Router();
 
-/* ---------------- AUTH CHECK ---------------- */
+/*  AUTH CHECK  */
 const isAdmin = async (req, res, next) => {
   if (!req.user) return res.status(401).json({ message: "Chưa đăng nhập" });
   const user = await UserModel.findByPk(req.user.id);
@@ -25,8 +25,8 @@ const isAdmin = async (req, res, next) => {
   next();
 };
 
-/* ---------------- DASHBOARD ---------------- */
-router.get("/admin/dashboard", auth, isAdmin, async (req, res) => {
+/*  DASHBOARD  */
+router.get("/dashboard", auth, isAdmin, async (req, res) => {
   const sp = await SanPhamModel.count();
   const dh = await DonHangModel.count();
   const nd = await UserModel.count();
@@ -34,18 +34,18 @@ router.get("/admin/dashboard", auth, isAdmin, async (req, res) => {
   res.json({ sanpham: sp, donhang: dh, nguoidung: nd, baiviet: bv });
 });
 
-/* ---------------- USER ---------------- */
-router.get("/admin/users", auth, isAdmin, async (_, res) => {
+/*  USER  */
+router.get("/users", auth, isAdmin, async (_, res) => {
   const list = await UserModel.findAll();
   res.json(list);
 });
 
-router.delete("/admin/users/:id", auth, isAdmin, async (req, res) => {
+router.delete("/users/:id", auth, isAdmin, async (req, res) => {
   await UserModel.destroy({ where: { id: req.params.id } });
   res.json({ message: "Đã xóa người dùng" });
 });
 
-/* ---------------- SẢN PHẨM ---------------- */
+/*  SẢN PHẨM  */
 router.post("/admin/sanpham", auth, isAdmin, async (req, res) => {
   const sp = await SanPhamModel.create({ id: uuidv4(), ...req.body });
   res.json({ message: "Thêm sản phẩm thành công", sp });
@@ -62,7 +62,7 @@ router.delete("/admin/sanpham/:id", auth, isAdmin, async (req, res) => {
 });
 
 
-/*-----------------Biến thể ----------------- */
+/* Biến thể  */
 router.post("/admin/bienthe", auth, async (req, res) => {
   try {
     const { sanpham_id, mausac, sl_tonkho, gia } = req.body;
@@ -105,7 +105,7 @@ router.delete("/bienthe/:id", auth, async (req, res) => {
   }
 });
 
-/* ---------------- DANH MỤC ---------------- */
+/*  DANH MỤC  */
 router.post("/danhmuc", auth, isAdmin, async (req, res) => {
   const dm = await LoaiModel.create({ id: uuidv4(), ...req.body });
   res.json({ message: "Thêm danh mục thành công", dm });
@@ -121,7 +121,7 @@ router.delete("/danhmuc/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa danh mục" });
 });
 
-/* ---------------- THƯƠNG HIỆU ---------------- */
+/*  THƯƠNG HIỆU  */
 router.post("/thuonghieu", auth, isAdmin, async (req, res) => {
   const th = await ThuongHieuModel.create({ id: uuidv4(), ...req.body });
   res.json({ message: "Thêm thương hiệu thành công", th });
@@ -137,7 +137,7 @@ router.delete("/thuonghieu/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa thương hiệu" });
 });
 
-/* ---------------- ĐƠN HÀNG ---------------- */
+/*  ĐƠN HÀNG  */
 router.get("/donhang", auth, isAdmin, async (_, res) => {
   const list = await DonHangModel.findAll({ order: [["ngaymua", "DESC"]] });
   res.json(list);
@@ -148,7 +148,7 @@ router.put("/donhang/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Cập nhật trạng thái đơn hàng thành công" });
 });
 
-/* ---------------- MÃ GIẢM GIÁ ---------------- */
+/*  MÃ GIẢM GIÁ  */
 router.get("/magiamgia", auth, isAdmin, async (_, res) => {
   const mg = await MaGiamGiaModel.findAll();
   res.json(mg);
@@ -169,7 +169,7 @@ router.delete("/magiamgia/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa mã giảm giá" });
 });
 
-/* ---------------- BÀI VIẾT ---------------- */
+/*  BÀI VIẾT  */
 router.get("/baiviet", auth, isAdmin, async (_, res) => {
   const bv = await BaiVietModel.findAll();
   res.json(bv);
@@ -190,7 +190,7 @@ router.delete("/baiviet/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa bài viết" });
 });
 
-/* ---------------- DANH MỤC BÀI VIẾT ---------------- */
+/*  DANH MỤC BÀI VIẾT  */
 router.get("/danhmucbaiviet", auth, isAdmin, async (_, res) => {
   const list = await DanhMucBaiVietModel.findAll();
   res.json(list);
@@ -201,7 +201,7 @@ router.post("/danhmucbaiviet", auth, isAdmin, async (req, res) => {
   res.json({ message: "Thêm danh mục bài viết thành công", dm });
 });
 
-/* ---------------- LIÊN HỆ ---------------- */
+/*  LIÊN HỆ  */
 router.get("/lienhe", auth, isAdmin, async (_, res) => {
   const list = await LienHeModel.findAll({ order: [["created_at", "DESC"]] });
   res.json(list);
@@ -212,7 +212,7 @@ router.delete("/lienhe/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa góp ý" });
 });
 
-/* ---------------- REVIEW ---------------- */
+/*  REVIEW  */
 router.get("/review", auth, isAdmin, async (_, res) => {
   const rv = await ReviewModel.findAll();
   res.json(rv);

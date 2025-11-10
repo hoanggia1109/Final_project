@@ -44,24 +44,24 @@ async function createAdmin() {
     const existed = await UserModel.findOne({ where: { email } });
     
     if (existed) {
-      console.log('⚠️  Admin đã tồn tại trong hệ thống!');
-      console.log('📧 Email:', email);
-      console.log('👤 Role:', existed.role);
+      console.log(' Admin đã tồn tại trong hệ thống!');
+      console.log(' Email:', email);
+      console.log(' Role:', existed.role);
       
       // Nếu user tồn tại nhưng không phải admin, cập nhật role
       if (existed.role !== 'admin') {
-        console.log('🔄 Cập nhật role thành admin...');
+        console.log(' Cập nhật role thành admin...');
         await existed.update({ role: 'admin' });
-        console.log('✅ Đã cập nhật role thành admin!');
+        console.log(' Đã cập nhật role thành admin!');
       }
       
       return;
     }
 
-    console.log('🔐 Mã hóa mật khẩu...');
+    console.log(' Mã hóa mật khẩu...');
     const hashed = await bcrypt.hash(password, 10);
     
-    console.log('💾 Tạo tài khoản admin...');
+    console.log(' Tạo tài khoản admin...');
     const admin = await UserModel.create({
       id: uuidv4(),
       email,
@@ -71,17 +71,17 @@ async function createAdmin() {
       trangthai: 1,
     });
 
-    console.log('\n✅ TẠO ADMIN THÀNH CÔNG!');
+    console.log('\n TẠO ADMIN THÀNH CÔNG!');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📧 Email:    ', email);
-    console.log('🔑 Password: ', password);
-    console.log('👤 Tên:      ', fullName);
-    console.log('🎭 Role:     ', admin.role);
+    console.log(' Email:    ', email);
+    console.log(' Password: ', password);
+    console.log(' Tên:      ', fullName);
+    console.log(' Role:     ', admin.role);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('\n💡 Bạn có thể đăng nhập với tài khoản này tại: http://localhost:3000/login\n');
+    console.log('\n Bạn có thể đăng nhập với tài khoản này tại: http://localhost:3000/login\n');
     
   } catch (err) {
-    console.error('❌ LỖI:', err.message);
+    console.error(' LỖI:', err.message);
   } finally {
     await sequelize.close();
     process.exit();
@@ -89,6 +89,6 @@ async function createAdmin() {
 }
 
 // Chạy script
-console.log('🚀 Khởi động script tạo admin...\n');
+console.log(' Khởi động script tạo admin...\n');
 createAdmin();
 
