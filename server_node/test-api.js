@@ -1,7 +1,7 @@
 const http = require('http');
 
 async function testAPI() {
-  console.log("🧪 === TEST API ĐĂNG KÝ ===\n");
+  console.log(" === TEST API ĐĂNG KÝ ===\n");
   
   const testData = JSON.stringify({
     email: `test_api_${Date.now()}@example.com`,
