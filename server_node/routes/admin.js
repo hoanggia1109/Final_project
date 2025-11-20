@@ -11,6 +11,8 @@ const {
   MaGiamGiaModel,
   BaiVietModel,
   DanhMucBaiVietModel,
+  LienHeModel,
+  DanhGiaModel,
 } = require("../database");
 
 const router = express.Router();
@@ -214,31 +216,39 @@ router.delete("/lienhe/:id", auth, isAdmin, async (req, res) => {
 
 /*  REVIEW  */
 router.get("/review", auth, isAdmin, async (_, res) => {
-  const rv = await ReviewModel.findAll();
+  const rv = await DanhGiaModel.findAll();
   res.json(rv);
 });
 
 router.delete("/review/:id", auth, isAdmin, async (req, res) => {
-  await ReviewModel.destroy({ where: { id: req.params.id } });
+  await DanhGiaModel.destroy({ where: { id: req.params.id } });
   res.json({ message: "Đã xóa đánh giá" });
 });
 
 module.exports = router;
+module.exports.isAdmin = isAdmin;
 
-/* ---------------- USER: CẬP NHẬT ROLE / TRẠNG THÁI ---------------- */
+/* ---------------- USER: CẬP NHẬT THÔNG TIN ---------------- */
 // PUT /api/users/:id
 router.put("/users/:id", auth, isAdmin, async (req, res) => {
   try {
-    const { role, trangthai } = req.body;
+    const { ho_ten, sdt, role, trangthai } = req.body;
+    const updateData = {};
+    
+    if (ho_ten !== undefined) updateData.ho_ten = ho_ten;
+    if (sdt !== undefined) updateData.sdt = sdt;
+    if (role !== undefined) updateData.role = role;
+    if (trangthai !== undefined) updateData.trangthai = trangthai;
+    
     const [count] = await UserModel.update(
-      { role, trangthai },
+      updateData,
       { where: { id: req.params.id } }
     );
     if (count === 0) return res.status(404).json({ message: "Không tìm thấy người dùng" });
     res.json({ message: "Cập nhật người dùng thành công" });
   } catch (err) {
-    console.error(" Lỗi PUT /users/:id:", err);
-    res.status(500).json({ message: "Lỗi server" });
+    console.error("❌ Lỗi PUT /users/:id:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 

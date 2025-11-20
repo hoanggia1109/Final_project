@@ -106,6 +106,9 @@ export default function CartPage() {
       
       // Reload cart to get updated total
       await loadCartFromAPI();
+      
+      // Notify header to update cart count
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
       console.error(' Error updating quantity:', error);
       alert('Có lỗi khi cập nhật số lượng!');
@@ -133,6 +136,9 @@ export default function CartPage() {
       
       // Reload cart to get updated total
       await loadCartFromAPI();
+      
+      // Notify header to update cart count
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (error) {
       console.error(' Error removing item:', error);
       alert('Có lỗi khi xóa sản phẩm!');

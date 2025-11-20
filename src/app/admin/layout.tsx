@@ -12,7 +12,13 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Layers,
+  Tag,
+  Image,
+  FolderOpen,
+  FileText,
+  Archive
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -53,10 +59,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       active: pathname === '/admin',
     },
     {
+      title: 'Danh mục',
+      icon: Layers,
+      path: '/admin/danhmuc',
+      active: pathname?.startsWith('/admin/danhmuc'),
+    },
+    {
+      title: 'Thương hiệu',
+      icon: Tag,
+      path: '/admin/brand',
+      active: pathname?.startsWith('/admin/brand'),
+    },
+    {
+      title: 'Banner',
+      icon: Image,
+      path: '/admin/banner',
+      active: pathname?.startsWith('/admin/banner'),
+    },
+    {
+      title: 'Danh mục Bài viết',
+      icon: FolderOpen,
+      path: '/admin/danhmucbaiviet',
+      active: pathname?.startsWith('/admin/danhmucbaiviet'),
+    },
+    {
+      title: 'Bài viết',
+      icon: FileText,
+      path: '/admin/baiviet',
+      active: pathname?.startsWith('/admin/baiviet'),
+    },
+    {
       title: 'Sản phẩm',
       icon: Package,
       path: '/admin/products',
       active: pathname?.startsWith('/admin/products'),
+    },
+    {
+      title: 'Tồn kho',
+      icon: Archive,
+      path: '/admin/tonkho',
+      active: pathname?.startsWith('/admin/tonkho'),
     },
     {
       title: 'Đơn hàng',
@@ -214,4 +256,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
-

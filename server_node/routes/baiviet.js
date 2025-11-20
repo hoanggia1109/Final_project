@@ -1,107 +1,126 @@
-
-
 const express = require("express");
-const mysql = require("mysql2/promise");
 const router = express.Router();
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const { BaiVietModel, DanhMucBaiVietModel, UserModel } = require("../database");
 
-// Tạo pool kết nối
-const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "shopnoithat",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+// 🧩 Cấu hình multer cho folder blog
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "../uploads/blog");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  },
 });
-// Lấy tất cả bài viết
-router.get("/", async (_, res) => {
+const upload = multer({ storage });
+
+// 🧠 Lấy danh sách bài viết (cho admin - lấy tất cả)
+router.get("/", async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT 
-        bv.id, 
-        bv.tieude, 
-        bv.hinh_anh AS thumbnail, 
-        0 AS luotxem, 
-        bv.created_at,
-        dm.tendanhmuc AS danh_muc,
-        u.email AS tacgia   -- dùng email thay vì hoten
-      FROM bai_viet bv
-      LEFT JOIN danhmuc_baiviet dm ON dm.id = bv.danhmuc_baiviet_id
-      LEFT JOIN nguoi_dung u ON u.id = bv.user_id
-      WHERE bv.anhien = 1
-      ORDER BY bv.created_at DESC
-    `);
-    res.json(rows);
+    const whereClause = req.query.admin === 'true' ? {} : { anhien: 1 };
+    
+    const list = await BaiVietModel.findAll({
+      where: whereClause,
+      include: [
+        { model: DanhMucBaiVietModel, as: "danhmuc", attributes: ["tendanhmuc"] },
+        { model: UserModel, as: "user", attributes: ["email", "ho_ten"] },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+    res.json(list);
   } catch (err) {
-    console.error(err);
+    console.error("Lỗi lấy danh sách bài viết:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 
-// Ví dụ: router.js (Giả sử bạn đã có pool kết nối đến database)
-
-// Lấy chi tiết bài viết theo ID VÀ TĂNG LƯỢT XEM
-router.get("/chitiet/:id", async (req, res) => {
-  const baiVietId = req.params.id;
-
+// 🧠 Lấy chi tiết bài viết
+router.get("/:id", async (req, res) => {
   try {
-    // 🔍 Lấy chi tiết bài viết
-    const [rows] = await pool.query(
-      `
-        SELECT 
-          bv.id, 
-          bv.tieude, 
-          bv.noidung, 
-          bv.hinh_anh AS thumbnail, 
-          0 AS luotxem,
-          bv.created_at,
-          dm.tendanhmuc AS danh_muc,
-          u.email AS tacgia
-        FROM bai_viet bv
-        LEFT JOIN danhmuc_baiviet dm ON dm.id = bv.danhmuc_baiviet_id
-        LEFT JOIN nguoi_dung u ON u.id = bv.user_id
-        WHERE bv.id = ? AND bv.anhien = 1
-        LIMIT 1
-      `,
-      [baiVietId]
-    );
+    const item = await BaiVietModel.findByPk(req.params.id, {
+      include: [
+        { model: DanhMucBaiVietModel, as: "danhmuc" },
+        { model: UserModel, as: "user", attributes: ["email", "ho_ten"] },
+      ],
+    });
+    if (!item) return res.status(404).json({ message: "Không tìm thấy bài viết" });
+    res.json(item);
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
 
-    // Kiểm tra nếu không có bài viết
-    if (!rows || rows.length === 0) {
-      return res.status(404).json({ message: "Bài viết không tồn tại hoặc chưa được hiển thị" });
+// 🧩 Thêm bài viết mới
+router.post("/", upload.single("hinh_anh"), async (req, res) => {
+  try {
+    const { tieude, noidung, danhmuc_baiviet_id, user_id, anhien } = req.body;
+    const hinh_anh = req.file ? `http://localhost:5000/uploads/blog/${req.file.filename}` : null;
+
+    const newItem = await BaiVietModel.create({
+      tieude,
+      noidung,
+      hinh_anh,
+      danhmuc_baiviet_id,
+      user_id,
+      anhien: anhien ?? 1,
+    });
+
+    res.status(201).json(newItem);
+  } catch (err) {
+    console.error("Lỗi khi thêm bài viết:", err);
+    res.status(500).json({ message: "Lỗi khi thêm", error: err.message });
+  }
+});
+
+// ✏️ Cập nhật bài viết
+router.put("/:id", upload.single("hinh_anh"), async (req, res) => {
+  try {
+    const item = await BaiVietModel.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: "Không tìm thấy bài viết" });
+
+    let hinh_anh = item.hinh_anh;
+    if (req.file) {
+      hinh_anh = `http://localhost:5000/uploads/blog/${req.file.filename}`;
+      // xóa ảnh cũ nếu có
+      if (item.hinh_anh) {
+        const oldPath = path.join(__dirname, "../uploads/blog", path.basename(item.hinh_anh));
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
     }
 
-    const baiVietChiTiet = rows[0];
-    baiVietChiTiet.noidung = baiVietChiTiet.noidung || ""; // tránh lỗi null
+    await item.update({
+      ...req.body,
+      hinh_anh,
+    });
 
-    return res.json(baiVietChiTiet);
+    res.json(item);
   } catch (err) {
-    console.error(" Lỗi server khi lấy chi tiết bài viết:", err);
-    return res.status(500).json({ message: "Lỗi server", error: err.message });
+    console.error("Lỗi cập nhật bài viết:", err);
+    res.status(500).json({ message: "Lỗi cập nhật", error: err.message });
   }
 });
 
-
-// module.exports = router; // Đừng quên export router
-
-// 3️⃣ Lấy tất cả danh mục bài viết
-router.get("/danhmucbaiviet/all", async (_, res) => {
+// ❌ Xóa bài viết
+router.delete("/:id", async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT 
-        id, 
-        tendanhmuc, 
-        mota, 
-        created_at, 
-        updated_at
-      FROM danhmuc_baiviet
-      ORDER BY created_at DESC
-    `);
-    res.json(rows);
+    const item = await BaiVietModel.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ message: "Không tìm thấy bài viết" });
+
+    if (item.hinh_anh) {
+      const oldPath = path.join(__dirname, "../uploads/blog", path.basename(item.hinh_anh));
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    await item.destroy();
+    res.json({ message: "Đã xóa thành công" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Lỗi server", error: err.message });
+    console.error("Lỗi xóa bài viết:", err);
+    res.status(500).json({ message: "Lỗi xóa", error: err.message });
   }
 });
 

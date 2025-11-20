@@ -5,6 +5,7 @@ interface BienThe {
   gia?: number;
   mausac?: string;
   kichthuoc?: string;
+  sl_tonkho?: number;
   images?: { url: string }[];
 }
 
@@ -49,6 +50,9 @@ export async function GET(
     const product: BackendProduct = await response.json();
     console.log('✅ Product from backend:', product);
     
+    // Tính tổng tồn kho từ tất cả các biến thể
+    const totalStock = product.bienthe?.reduce((sum, bt) => sum + (bt.sl_tonkho || 0), 0) || 0;
+    
     // Transform data để phù hợp với frontend
     const transformedProduct = {
       id: product.id,
@@ -59,7 +63,7 @@ export async function GET(
       category: product.danhmuc?.tendm || 'Chưa phân loại',
       brand: product.thuonghieu?.tenbrand || 'VANTAYdecor',
       sku: product.code || `SP-${product.id}`,
-      stock: 15,
+      stock: totalStock, // Tổng tồn kho từ tất cả biến thể
       rating: 4.8,
       reviews: 0,
       description: product.mota || 'Sản phẩm chất lượng cao từ VANTAYdecor',
@@ -91,7 +95,8 @@ export async function GET(
         .map((bt: BienThe) => ({
           id: bt.id, // ID của biến thể (bienthe_id)
           name: bt.mausac || 'Màu mặc định',
-          code: '#808080' // Default color
+          code: '#808080', // Default color
+          stock: bt.sl_tonkho || 0 // Số lượng tồn kho của biến thể này
         })) || [],
       relatedProducts: []
     };

@@ -292,7 +292,7 @@ export default function IntroductionPage() {
                 }}
               >
                 <div className="text-center mb-4">
-                  <i className="bi bi-target text-warning" style={{ fontSize: '56px' }}></i>
+                  <i className="bi bi-bullseye text-warning" style={{ fontSize: '56px' }}></i>
                 </div>
                 <h4 className="text-center fw-bold mb-3">Sứ Mệnh</h4>
                 <p className="text-muted text-center" style={{ fontSize: '15px', lineHeight: '1.8' }}>

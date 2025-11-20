@@ -2,6 +2,22 @@ import { NextResponse } from 'next/server';
 
 const BACKEND_URL = 'http://localhost:5000';
 
+interface BackendArticle {
+  id: string;
+  tieude: string;
+  noidung: string;
+  hinh_anh: string | null;
+  anhien: number;
+  created_at: string;
+  danhmuc?: {
+    tendanhmuc: string;
+  };
+  user?: {
+    ho_ten?: string;
+    email: string;
+  };
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -9,8 +25,8 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Gọi API backend để lấy chi tiết bài viết
-    const response = await fetch(`${BACKEND_URL}/api/baiviet/chitiet/${id}`, {
+    // Gọi API backend để lấy chi tiết bài viết 
+    const response = await fetch(`${BACKEND_URL}/api/baiviet/${id}`, {
       cache: 'no-store'
     });
 
@@ -21,22 +37,21 @@ export async function GET(
       );
     }
 
-    const article = await response.json();
+    const article = await response.json() as BackendArticle;
 
     // Map data từ backend sang format frontend
     const mappedArticle = {
       id: article.id,
       title: article.tieude,
       slug: article.tieude.toLowerCase().replace(/\s+/g, '-'),
-      excerpt: article.tieude, // Backend chưa có excerpt
-      image: article.thumbnail,
-      category: article.danh_muc || 'Tin tức',
-      author: article.tacgia || 'VANTAYdecor',
+      excerpt: article.tieude, 
+      category: article.danhmuc?.tendanhmuc || 'Tin tức', 
+      author: article.user?.ho_ten || article.user?.email || 'VANTAYdecor', 
       publishDate: article.created_at,
-      views: article.luotxem || 0,
+      views: 0, 
       content: article.noidung || '<p>Nội dung đang được cập nhật...</p>',
-      tags: [], // Backend chưa có tags
-      relatedNews: [] // Backend chưa có bài viết liên quan
+      tags: [], 
+      relatedNews: [] 
     };
 
     return NextResponse.json(mappedArticle);

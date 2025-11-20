@@ -315,12 +315,26 @@ export default function NewsPage() {
                   <Link href={`/news/${article.id}`} className="text-decoration-none">
                     <div className="featured-card">
                       <div className="news-image">
-                        <Image 
-                          src={article.image} 
-                          alt={article.title}
-                          fill
-                          style={{ objectFit: 'cover' }}
-                        />
+                        {article.image && (
+                          <Image 
+                            src={article.image} 
+                            alt={article.title}
+                            fill
+                            style={{ objectFit: 'cover' }}
+                          />
+                        )}
+                        {!article.image && (
+                          <div style={{ 
+                            width: '100%', 
+                            height: '100%', 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <i className="bi bi-newspaper" style={{ fontSize: '5rem', color: 'rgba(255,255,255,0.3)' }}></i>
+                          </div>
+                        )}
                       </div>
                       <div className="news-overlay">
                         <span className="news-category-badge">{article.category}</span>
@@ -337,7 +351,7 @@ export default function NewsPage() {
                           </span>
                           <span className="text-white d-flex align-items-center gap-2">
                             <i className="bi bi-eye"></i>
-                            {article.views.toLocaleString()} lượt xem
+                            {(article.views || 0).toLocaleString()} lượt xem
                           </span>
                         </div>
                       </div>
@@ -356,12 +370,26 @@ export default function NewsPage() {
                   <div className="news-card">
                     <div className="news-card-image">
                       <span className="news-category-badge">{article.category}</span>
-                      <Image 
-                        src={article.image} 
-                        alt={article.title}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
+                      {article.image && (
+                        <Image 
+                          src={article.image} 
+                          alt={article.title}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                        />
+                      )}
+                      {!article.image && (
+                        <div style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          background: 'linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <i className="bi bi-newspaper" style={{ fontSize: '3rem', color: 'rgba(0,0,0,0.1)' }}></i>
+                        </div>
+                      )}
                     </div>
                     <div className="news-card-body">
                       <h3 className="news-title">{article.title}</h3>
@@ -373,7 +401,7 @@ export default function NewsPage() {
                         </span>
                         <span className="news-views">
                           <i className="bi bi-eye"></i>
-                          {article.views.toLocaleString()}
+                          {(article.views || 0).toLocaleString()}
                         </span>
                       </div>
                     </div>

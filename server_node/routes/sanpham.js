@@ -30,7 +30,7 @@ router.get("/", async (_req, res) => {
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
         { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
-        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc"] },
+        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"] },
       ],
     });
     res.status(200).json(sanphams);
@@ -48,7 +48,7 @@ router.get("/giamgia", async (_req, res) => {
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
         { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
-        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc"] },
+        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"] },
       ],
       limit: 8,
     });
@@ -69,6 +69,7 @@ router.get("/:id", async (req, res) => {
         {
           model: SanPhamBienTheModel,
           as: "bienthe",
+          attributes: ["id", "gia", "mausac", "kichthuoc", "chatlieu", "sl_tonkho", "code"],
           include: [{ model: ImageModel, as: "images", attributes: ["id", "url"] }],
         },
       ],
@@ -151,10 +152,10 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
     }
 
     await t.commit();
-    res.status(201).json({ message: "✅ Thêm sản phẩm thành công!", sp });
+    res.status(201).json({ message: " Thêm sản phẩm thành công!", sp });
   } catch (err) {
     await t.rollback();
-    console.error("❌ Lỗi thêm sản phẩm:", err);
+    console.error(" Lỗi thêm sản phẩm:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -231,7 +232,7 @@ router.put("/:id", upload.any(), async (req, res) => {
     }
 
     await t.commit();
-    res.json({ message: "✅ Cập nhật sản phẩm thành công!", sp });
+    res.json({ message: " Cập nhật sản phẩm thành công!", sp });
   } catch (err) {
     await t.rollback();
     console.error(err);
@@ -244,9 +245,9 @@ router.delete("/:id", async (req, res) => {
     const sp = await SanPhamModel.findByPk(req.params.id);
     if (!sp) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     await sp.destroy();
-    res.json({ message: "🗑️ Đã xóa sản phẩm!" });
+    res.json({ message: " Đã xóa sản phẩm!" });
   } catch (err) {
-    console.error("❌ Lỗi xóa sản phẩm:", err);
+    console.error(" Lỗi xóa sản phẩm:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });

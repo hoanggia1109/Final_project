@@ -183,6 +183,7 @@ module.exports = router;
  * Lấy danh sách đơn hàng người dùng
  */
 router.get("/", auth, async (req, res) => {
+  const { DiaChiModel } = require("../database");
   const dh = await DonHangModel.findAll({
     where: { user_id: req.user.id },
     include: [
@@ -197,6 +198,11 @@ router.get("/", auth, async (req, res) => {
           },
         ],
       },
+      {
+        model: DiaChiModel,
+        as: "diachi",
+        required: false
+      }
     ],
     order: [["created_at", "DESC"]],
   });
@@ -208,6 +214,7 @@ router.get("/", auth, async (req, res) => {
  * Chi tiết 1 đơn hàng
  */
 router.get("/:id", auth, async (req, res) => {
+  const { DiaChiModel } = require("../database");
   const dh = await DonHangModel.findByPk(req.params.id, {
     include: [
       {
@@ -221,6 +228,11 @@ router.get("/:id", auth, async (req, res) => {
           },
         ],
       },
+      {
+        model: DiaChiModel,
+        as: "diachi",
+        required: false
+      }
     ],
   });
   res.json(dh);

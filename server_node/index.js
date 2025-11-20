@@ -34,13 +34,18 @@ app.use("/api/review", require("./routes/review"));
 app.use("/api/magiamgia", require("./routes/magiamgia"));
 app.use("/api/baiviet", require("./routes/baiviet"));
 app.use("/api/danhmuc", require("./routes/danhmuc"));
+app.use("/api/danhmucbaiviet", require("./routes/danhmucbaiviet"));
 app.use("/api/lienhe", require("./routes/lienhe"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/bienthe", require("./routes/bienthe"));
 app.use("/api/thuonghieu", require("./routes/thuonghieu"));
+app.use("/api/banner", require("./routes/banner"));
+app.use("/api/tonkho", require("./routes/tonkho"));
 app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
 app.use("/api/thanhtoan", require("./routes/thanhtoan"));
+app.use("/api/yeuthich", require("./routes/yeuthich"));
+app.use("/api/profile", require("./routes/profile"));
 
 // Import model từ file database
 const {

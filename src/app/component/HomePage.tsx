@@ -27,37 +27,30 @@ interface Category {
 //Banner 
 function Banner() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  
-  const banners = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920',
-      title: 'TRỞ THÀNH NGƯỜI CỘNG SỰ',
-      subtitle: 'NHIỆT TÌNH - UY TÍN - HIỆU QUẢ',
-      description: 'Công ty TNHH Trang trí Nội thất và Xây dựng Vân Tây chuyên thiết kế và thi công các phòng vệ sắc có hình dạng trọn gói như cửa hàng, phòng làm việc/cửa hàng, các cửa hàng, Showroom...'
-    },
-    {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920',
-      title: 'THIẾT KẾ NỘI THẤT HIỆN ĐẠI',
-      subtitle: 'SÁNG TẠO - CHUYÊN NGHIỆP - TINH TẾ',
-      description: 'Mang đến những không gian sống và làm việc hoàn hảo với phong cách thiết kế hiện đại, tối ưu công năng và thẩm mỹ cao.'
-    },
-    {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920',
-      title: 'THI CÔNG CHUYÊN NGHIỆP',
-      subtitle: 'CHẤT LƯỢNG - TIẾN ĐỘ - CAM KẾT',
-      description: 'Đội ngũ thợ lành nghề, quy trình thi công chuyên nghiệp, đảm bảo tiến độ và chất lượng công trình theo đúng cam kết.'
-    },
-    {
-      id: 4,
-      image: 'https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?w=1920',
-      title: 'GIÁ TRỊ BỀN VỮNG',
-      subtitle: 'TIN CẬY - TRÁCH NHIỆM - PHÁT TRIỂN',
-      description: 'Xây dựng mối quan hệ lâu dài với khách hàng thông qua chất lượng sản phẩm và dịch vụ tốt nhất.'
-    }
-  ];
+  const [banners, setBanners] = useState<Banner[]>([]);
+
+  // Fetch banners từ API
+  useEffect(() => {
+    fetch('http://localhost:5000/api/banner')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Chỉ lấy banner có anhien = 1, sắp xếp theo thutu và giới hạn 4 banner
+          const activeBanners = data
+            .filter(b => b.anhien === 1)
+            .sort((a, b) => a.thutu - b.thutu)
+            .slice(0, 4); // Chỉ lấy 4 banner đầu tiên
+          
+          if (activeBanners.length > 0) {
+            setBanners(activeBanners);
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Lỗi khi tải banner:', err);
+        // Giữ nguyên banner mặc định nếu lỗi
+      });
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -93,7 +86,7 @@ function Banner() {
           <div
             className="position-absolute top-0 start-0 w-100 h-100"
             style={{
-              backgroundImage: `url("${banner.image}")`,
+              backgroundImage: `url("${banner.url}")`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
@@ -107,13 +100,10 @@ function Banner() {
           ></div>
           <div className="container position-relative text-center" style={{ zIndex: 2 }}>
             <h1 className="fw-bold hero-title mb-3">
-              {banner.title}
+              {banner.tieude}
             </h1>
-            <h2 className="hero-subtitle mb-3">
-              {banner.subtitle}
-            </h2>
             <p className="mb-4 mx-auto hero-desc">
-              {banner.description}
+              {banner.mota}
             </p>
             <Link href="/contact" className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold">
               Xem thêm

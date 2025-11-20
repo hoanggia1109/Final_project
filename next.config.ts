@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        protocol: 'http',               // localhost dùng http
+        hostname: 'localhost',          // cho phép load ảnh từ localhost backend
+        port: '5000',                   // cổng backend
+        pathname: '/uploads/**',        // chỉ cho phép ảnh từ /uploads
+      },
+      {
         protocol: 'https',              // giao thức của ảnh (https)
         hostname: 'images.unsplash.com',// cho phép load ảnh từ Unsplash
         port: '',                       // để trống vì dùng cổng mặc định (443)

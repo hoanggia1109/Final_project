@@ -5,11 +5,24 @@ import Image from 'next/image';
 
 interface WishlistItem {
   id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-  inStock: boolean;
+  sanpham_id: string;
+  sanpham: {
+    id: string;
+    tensp: string;
+    code: string;
+    thumbnail: string;
+    bienthe: Array<{
+      id: string;
+      gia: number;
+      sl_tonkho: number;
+      mausac?: string;
+      kichthuoc?: string;
+      images?: Array<{ url: string }>;
+    }>;
+    danhmuc?: {
+      tendm: string;
+    };
+  };
 }
 
 export default function WishlistPage() {
@@ -17,43 +30,128 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load wishlist từ localStorage
-    const loadWishlist = () => {
-      try {
-        const saved = localStorage.getItem('wishlist');
-        if (saved) {
-          setWishlist(JSON.parse(saved));
-        }
-      } catch (error) {
-        console.error('Error loading wishlist:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadWishlist();
   }, []);
 
-  const removeFromWishlist = (id: string) => {
-    const updated = wishlist.filter(item => item.id !== id);
-    setWishlist(updated);
-    localStorage.setItem('wishlist', JSON.stringify(updated));
+  const loadWishlist = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/wishlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch wishlist');
+      }
+
+      const data = await response.json();
+      setWishlist(data);
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addToCart = (item: WishlistItem) => {
-    // Add to cart logic
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existingItem = cart.find((i: { id: string }) => i.id === item.id);
-    
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      cart.push({ ...item, quantity: 1 });
+  const removeFromWishlist = async (sanpham_id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Vui lòng đăng nhập');
+        return;
+      }
+
+      const response = await fetch(`/api/wishlist/${sanpham_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove from wishlist');
+      }
+
+      // Cập nhật UI ngay lập tức
+      setWishlist(prev => prev.filter(item => item.sanpham_id !== sanpham_id));
+      alert('Đã xóa khỏi danh sách yêu thích');
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      alert('Không thể xóa sản phẩm');
     }
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    window.dispatchEvent(new Event('cartUpdated'));
-    alert('Đã thêm vào giỏ hàng!');
+  };
+
+  const clearWishlist = async () => {
+    if (!confirm('Bạn có chắc muốn xóa tất cả sản phẩm yêu thích?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Vui lòng đăng nhập');
+        return;
+      }
+
+      const response = await fetch('/api/wishlist', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to clear wishlist');
+      }
+
+      setWishlist([]);
+      alert('Đã xóa tất cả sản phẩm yêu thích');
+    } catch (error) {
+      console.error('Error clearing wishlist:', error);
+      alert('Không thể xóa danh sách');
+    }
+  };
+
+  const addToCart = async (item: WishlistItem) => {
+    try {
+      // Lấy biến thể đầu tiên
+      const bienthe = item.sanpham.bienthe?.[0];
+      if (!bienthe) {
+        alert('Sản phẩm không có biến thể');
+        return;
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bienthe_id: bienthe.id,
+          soluong: 1,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to cart');
+      }
+
+      alert('Đã thêm vào giỏ hàng!');
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Không thể thêm vào giỏ hàng');
+    }
   };
 
   if (loading) {
@@ -136,12 +234,7 @@ export default function WishlistPage() {
                   </h4>
                   {wishlist.length > 0 && (
                     <button
-                      onClick={() => {
-                        if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm yêu thích?')) {
-                          setWishlist([]);
-                          localStorage.removeItem('wishlist');
-                        }
-                      }}
+                      onClick={clearWishlist}
                       className="btn btn-outline-danger"
                       style={{ borderRadius: '12px' }}
                     >
@@ -167,90 +260,135 @@ export default function WishlistPage() {
                   </div>
                 ) : (
                   <div className="row g-4">
-                    {wishlist.map((item) => (
-                      <div key={item.id} className="col-md-6 col-lg-4">
-                        <div
-                          className="card border-0 h-100 shadow-sm"
-                          style={{
-                            borderRadius: '16px',
-                            transition: 'all 0.3s ease',
-                            cursor: 'pointer'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-8px)';
-                            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                          }}
-                        >
-                          {/* Image */}
-                          <div className="position-relative">
-                            <div
-                              className="position-relative overflow-hidden"
-                              style={{
-                                paddingTop: '100%',
-                                backgroundColor: '#f8f9fa',
-                                borderRadius: '16px 16px 0 0'
-                              }}
-                            >
-                              <Image
-                                src={item.image}
-                                alt={item.name}
-                                fill
-                                style={{ objectFit: 'cover' }}
-                              />
-                            </div>
-                            {/* Remove Button */}
-                            <button
-                              onClick={() => removeFromWishlist(item.id)}
-                              className="btn btn-danger position-absolute top-0 end-0 m-3 rounded-circle"
-                              style={{ width: '40px', height: '40px', padding: 0 }}
-                            >
-                              <i className="bi bi-trash"></i>
-                            </button>
-                            {/* Stock Badge */}
-                            {!item.inStock && (
-                              <div
-                                className="position-absolute bottom-0 start-0 m-3 badge bg-danger"
-                                style={{ fontSize: '12px' }}
-                              >
-                                Hết hàng
+                    {wishlist.map((item) => {
+                      const bienthe = item.sanpham?.bienthe?.[0];
+                      const price = bienthe?.gia || 0;
+                      const stock = bienthe?.sl_tonkho || 0;
+                      const inStock = stock > 0;
+                      const rawImageUrl = item.sanpham?.thumbnail || bienthe?.images?.[0]?.url || '';
+                      
+                      // Format image URL correctly
+                      const getImageUrl = (url: string) => {
+                        if (!url) return '';
+                        // If already full URL, return as is
+                        if (url.startsWith('http://') || url.startsWith('https://')) {
+                          return url;
+                        }
+                        // If relative path, add backend URL
+                        return `http://localhost:5000${url.startsWith('/') ? url : '/' + url}`;
+                      };
+                      
+                      const imageUrl = getImageUrl(rawImageUrl);
+                      
+                      return (
+                        <div key={item.id} className="col-md-6 col-lg-4">
+                          <div
+                            className="card border-0 h-100 shadow-sm"
+                            style={{
+                              borderRadius: '16px',
+                              transition: 'all 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-8px)';
+                              e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                            }}
+                          >
+                            {/* Image */}
+                            <Link href={`/products/${item.sanpham_id}`} className="text-decoration-none">
+                              <div className="position-relative">
+                                <div
+                                  className="position-relative overflow-hidden"
+                                  style={{
+                                    paddingTop: '100%',
+                                    backgroundColor: '#f8f9fa',
+                                    borderRadius: '16px 16px 0 0'
+                                  }}
+                                >
+                                  {imageUrl ? (
+                                    <Image
+                                      src={imageUrl}
+                                      alt={item.sanpham?.tensp || 'Product'}
+                                      fill
+                                      style={{ objectFit: 'cover' }}
+                                    />
+                                  ) : (
+                                    <div className="w-100 h-100 d-flex align-items-center justify-content-center">
+                                      <i className="bi bi-image text-muted" style={{ fontSize: '48px' }}></i>
+                                    </div>
+                                  )}
+                                </div>
+                                {/* Remove Button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    removeFromWishlist(item.sanpham_id);
+                                  }}
+                                  className="btn btn-danger position-absolute top-0 end-0 m-3 rounded-circle"
+                                  style={{ width: '40px', height: '40px', padding: 0 }}
+                                >
+                                  <i className="bi bi-trash"></i>
+                                </button>
+                                {/* Stock Badge */}
+                                {!inStock && (
+                                  <div
+                                    className="position-absolute bottom-0 start-0 m-3 badge bg-danger"
+                                    style={{ fontSize: '12px' }}
+                                  >
+                                    Hết hàng
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            </Link>
 
-                          <div className="card-body p-3">
-                            <p className="text-muted small mb-1">
-                              <i className="bi bi-tag me-1"></i>
-                              {item.category}
-                            </p>
-                            <h6 className="fw-bold mb-2">{item.name}</h6>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <span className="fw-bold text-warning" style={{ fontSize: '18px' }}>
-                                {item.price.toLocaleString('vi-VN')}₫
-                              </span>
+                            <div className="card-body p-3">
+                              <p className="text-muted small mb-1">
+                                <i className="bi bi-tag me-1"></i>
+                                {item.sanpham?.danhmuc?.tendm || 'Chưa phân loại'}
+                              </p>
+                              <Link href={`/products/${item.sanpham_id}`} className="text-decoration-none text-dark">
+                                <h6 className="fw-bold mb-2" style={{ 
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical'
+                                }}>
+                                  {item.sanpham?.tensp || 'Sản phẩm'}
+                                </h6>
+                              </Link>
+                              <div className="d-flex justify-content-between align-items-center mb-2">
+                                <span className="fw-bold text-warning" style={{ fontSize: '18px' }}>
+                                  {price.toLocaleString('vi-VN')}₫
+                                </span>
+                                <small className="text-muted">
+                                  <i className="bi bi-box-seam me-1"></i>
+                                  Còn {stock}
+                                </small>
+                              </div>
+                              <button
+                                onClick={() => addToCart(item)}
+                                disabled={!inStock}
+                                className="btn btn-warning text-white w-100 mt-2"
+                                style={{ borderRadius: '12px', fontWeight: '600' }}
+                              >
+                                {inStock ? (
+                                  <>
+                                    <i className="bi bi-cart-plus me-2"></i>
+                                    Thêm vào giỏ
+                                  </>
+                                ) : (
+                                  'Hết hàng'
+                                )}
+                              </button>
                             </div>
-                            <button
-                              onClick={() => addToCart(item)}
-                              disabled={!item.inStock}
-                              className="btn btn-warning text-white w-100 mt-3"
-                              style={{ borderRadius: '12px', fontWeight: '600' }}
-                            >
-                              {item.inStock ? (
-                                <>
-                                  <i className="bi bi-cart-plus me-2"></i>
-                                  Thêm vào giỏ
-                                </>
-                              ) : (
-                                'Hết hàng'
-                              )}
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

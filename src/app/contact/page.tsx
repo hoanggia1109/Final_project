@@ -90,19 +90,19 @@ export default function ContactPage() {
         .contact-container {
           padding-top: 100px;
           padding-bottom: 80px;
-          background: linear-gradient(180deg, #FFF9F0 0%, #ffffff 50%, #FFF5E8 100%);
+          background: linear-gradient(180deg, #FAFAF8 0%, #FFFFFF 50%, #F8F8F6 100%);
           min-height: 100vh;
         }
 
         .contact-header {
           text-align: center;
-          margin-bottom: 50px;
+          margin-bottom: 60px;
         }
 
         .contact-title {
-          font-size: 2.5rem;
+          font-size: 2.8rem;
           font-weight: 700;
-          color: #2c3e50;
+          color: #2C2C2C;
           margin-bottom: 15px;
           position: relative;
           display: inline-block;
@@ -111,77 +111,123 @@ export default function ContactPage() {
         .contact-title::after {
           content: '';
           position: absolute;
-          bottom: -10px;
+          bottom: -12px;
           left: 50%;
           transform: translateX(-50%);
-          width: 80px;
+          width: 100px;
           height: 4px;
-          background: linear-gradient(90deg, #FF6B6B, #FF8E53);
+          background: linear-gradient(90deg, #D4AF37, #F4D03F);
           border-radius: 2px;
         }
 
         .contact-subtitle {
-          font-size: 1.1rem;
+          font-size: 1.15rem;
           color: #666;
-          margin-top: 25px;
+          margin-top: 30px;
+          font-weight: 400;
         }
 
         .contact-card {
           background: #FFFFFF;
-          border-radius: 20px;
-          box-shadow: 0 10px 40px rgba(255, 107, 107, 0.1);
+          border-radius: 24px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
           overflow: hidden;
+          border: 1px solid rgba(212, 175, 55, 0.1);
         }
 
         .contact-info-section {
-          background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-          padding: 50px 40px;
+          background: linear-gradient(135deg, #2C2C2C 0%, #3D3D3D 100%);
+          padding: 60px 40px;
           color: #fff;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .contact-info-section::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          right: -20%;
+          width: 400px;
+          height: 400px;
+          background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(244, 208, 63, 0.05));
+          border-radius: 50%;
+        }
+
+        .section-title {
+          font-weight: 700;
+          font-size: 2rem;
+          margin-bottom: 20px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .section-description {
+          opacity: 0.9;
+          line-height: 1.7;
+          margin-bottom: 40px;
+          position: relative;
+          z-index: 1;
         }
 
         .info-item {
           display: flex;
           align-items: flex-start;
           gap: 20px;
-          margin-bottom: 30px;
+          margin-bottom: 35px;
           transition: all 0.3s ease;
+          position: relative;
+          z-index: 1;
         }
 
         .info-item:hover {
-          transform: translateX(10px);
+          transform: translateX(8px);
         }
 
         .info-icon {
-          width: 50px;
-          height: 50px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 50%;
+          width: 56px;
+          height: 56px;
+          background: linear-gradient(135deg, #D4AF37, #F4D03F);
+          border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
-          font-size: 1.3rem;
+          font-size: 1.4rem;
+          color: #2C2C2C;
+          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
         }
 
         .info-content h5 {
           font-weight: 600;
           margin-bottom: 8px;
           font-size: 1.1rem;
+          color: #D4AF37;
         }
 
         .info-content p {
-          margin: 0;
+          margin: 4px 0;
           opacity: 0.95;
           line-height: 1.6;
+          color: #E8E8E8;
+          font-size: 0.95rem;
         }
 
         .contact-form-section {
-          padding: 50px 40px;
+          padding: 60px 50px;
+          background: #FFFFFF;
+        }
+
+        .form-title {
+          font-weight: 700;
+          font-size: 2rem;
+          color: #2C2C2C;
+          margin-bottom: 30px;
         }
 
         .form-label {
           font-weight: 600;
-          color: #2c3e50;
+          color: #2C2C2C;
           margin-bottom: 10px;
           font-size: 0.95rem;
         }
@@ -189,43 +235,46 @@ export default function ContactPage() {
         .form-control-custom {
           padding: 14px 18px;
           border-radius: 12px;
-          border: 2px solid #FFE5D9;
+          border: 2px solid #E8E8E8;
           font-size: 1rem;
           transition: all 0.3s ease;
+          background: #FAFAFA;
         }
 
         .form-control-custom:focus {
-          border-color: #FF8E53;
-          box-shadow: 0 0 0 3px rgba(255, 142, 83, 0.1);
+          border-color: #D4AF37;
+          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
           outline: none;
+          background: #FFFFFF;
         }
 
         .form-control-custom::placeholder {
-          color: #bbb;
+          color: #999;
         }
 
         textarea.form-control-custom {
-          min-height: 150px;
+          min-height: 160px;
           resize: vertical;
         }
 
         .btn-submit {
-          background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-          color: #fff;
+          background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+          color: #2C2C2C;
           border: none;
           padding: 16px 40px;
           border-radius: 12px;
-          font-weight: 600;
+          font-weight: 700;
           font-size: 1.05rem;
           letter-spacing: 0.5px;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+          box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
           width: 100%;
         }
 
         .btn-submit:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+          box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+          background: linear-gradient(135deg, #E5C046 0%, #F4D03F 100%);
         }
 
         .btn-submit:disabled {
@@ -235,50 +284,70 @@ export default function ContactPage() {
         }
 
         .alert-custom {
-          padding: 15px 20px;
+          padding: 16px 20px;
           border-radius: 12px;
           margin-bottom: 25px;
           display: flex;
           align-items: center;
           gap: 12px;
           font-weight: 500;
+          font-size: 0.95rem;
         }
 
         .alert-success {
-          background: linear-gradient(135deg, #d4edda, #c3e6cb);
-          color: #155724;
-          border: 2px solid #c3e6cb;
+          background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+          color: #2E7D32;
+          border: 2px solid #81C784;
         }
 
         .alert-error {
-          background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-          color: #721c24;
-          border: 2px solid #f5c6cb;
+          background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+          color: #C62828;
+          border: 2px solid #EF9A9A;
         }
 
         .social-links {
           display: flex;
           gap: 15px;
-          margin-top: 30px;
+          margin-top: 40px;
+          position: relative;
+          z-index: 1;
         }
 
         .social-link {
-          width: 45px;
-          height: 45px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 50%;
+          width: 48px;
+          height: 48px;
+          background: rgba(212, 175, 55, 0.15);
+          border: 2px solid rgba(212, 175, 55, 0.3);
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #fff;
-          font-size: 1.2rem;
+          color: #D4AF37;
+          font-size: 1.3rem;
           transition: all 0.3s ease;
         }
 
         .social-link:hover {
-          background: rgba(255, 255, 255, 0.3);
+          background: #D4AF37;
+          border-color: #D4AF37;
           transform: translateY(-3px);
-          color: #fff;
+          color: #2C2C2C;
+        }
+
+        .back-link {
+          color: #D4AF37;
+          font-weight: 500;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+          color: #C4A034;
+          gap: 12px;
         }
 
         @media (max-width: 768px) {
@@ -288,7 +357,12 @@ export default function ContactPage() {
 
           .contact-info-section,
           .contact-form-section {
-            padding: 30px 25px;
+            padding: 40px 25px;
+          }
+
+          .section-title,
+          .form-title {
+            font-size: 1.6rem;
           }
         }
       `}</style>
@@ -309,10 +383,10 @@ export default function ContactPage() {
               {/* Contact Info */}
               <div className="col-lg-5">
                 <div className="contact-info-section">
-                  <h3 className="mb-4" style={{ fontWeight: '700', fontSize: '1.8rem' }}>
+                  <h3 className="section-title">
                     Thông tin liên hệ
                   </h3>
-                  <p className="mb-4" style={{ opacity: 0.9, lineHeight: '1.7' }}>
+                  <p className="section-description">
                     Hãy liên hệ với chúng tôi qua các kênh dưới đây hoặc điền form bên cạnh
                   </p>
 
@@ -385,7 +459,7 @@ export default function ContactPage() {
               {/* Contact Form */}
               <div className="col-lg-7">
                 <div className="contact-form-section">
-                  <h3 className="mb-4" style={{ fontWeight: '700', fontSize: '1.8rem', color: '#2c3e50' }}>
+                  <h3 className="form-title">
                     Gửi tin nhắn cho chúng tôi
                   </h3>
 
@@ -503,13 +577,9 @@ export default function ContactPage() {
 
                   {/* Back to Home */}
                   <div className="text-center mt-4">
-                    <Link 
-                      href="/" 
-                      className="text-decoration-none"
-                      style={{ color: '#FF6B6B', fontWeight: '500' }}
-                    >
-                      <i className="bi bi-arrow-left me-2"></i>
-                      Quay về trang chủ
+                    <Link href="/" className="back-link">
+                      <i className="bi bi-arrow-left"></i>
+                      <span>Quay về trang chủ</span>
                     </Link>
                   </div>
                 </div>
@@ -521,4 +591,3 @@ export default function ContactPage() {
     </>
   );
 }
-

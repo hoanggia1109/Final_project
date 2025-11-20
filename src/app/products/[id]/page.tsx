@@ -23,8 +23,43 @@ interface ProductDetail {
   features: string[];
   specifications: Record<string, string>;
   images: string[];
-  colors: { id?: string; name: string; code: string }[];
+  colors: { id?: string; name: string; code: string; stock?: number }[];
   relatedProducts: number[];
+}
+
+interface RelatedProduct {
+  id: string;
+  tensp: string;
+  thumbnail?: string;
+  bienthe?: Array<{
+    gia: number;
+  }>;
+}
+
+interface Review {
+  id: string;
+  rating: number;
+  binhluan: string;
+  created_at: string;
+  user_id: string;
+  chitiet_donhang: {
+    bienthe: {
+      mausac?: string;
+      kichthuoc?: string;
+    };
+  };
+  hinhanh?: Array<{
+    id: string;
+    url: string;
+  }>;
+}
+
+interface ReviewData {
+  reviews: Review[];
+  rating: {
+    average_rating: number;
+    count: number;
+  };
 }
 
 export default function ProductDetailPage() {
@@ -42,6 +77,11 @@ export default function ProductDetailPage() {
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
   const [showLightbox, setShowLightbox] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [reviewData, setReviewData] = useState<ReviewData>({ reviews: [], rating: { average_rating: 0, count: 0 } });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     if (params?.id) {
@@ -63,14 +103,161 @@ export default function ProductDetailPage() {
     }
   }, [params?.id]);
 
+  // Fetch related products
+  useEffect(() => {
+    fetch('http://localhost:5000/api/sanpham')
+      .then(res => res.json())
+      .then(data => {
+        // Get random 4 products
+        const shuffled = data.sort(() => 0.5 - Math.random());
+        setRelatedProducts(shuffled.slice(0, 4));
+      })
+      .catch(err => console.error('Error fetching related products:', err));
+  }, []);
+
+  // Fetch reviews
+  useEffect(() => {
+    if (params?.id) {
+      fetch(`/api/reviews/${params.id}`)
+        .then(res => res.json())
+        .then(data => {
+          setReviewData(data);
+        })
+        .catch(err => console.error('Error fetching reviews:', err));
+    }
+  }, [params?.id]);
+
+  // Check if product is in wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      const token = localStorage.getItem('token');
+      if (!token || !params?.id) return;
+
+      try {
+        const response = await fetch(`/api/wishlist/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setIsWishlisted(data.isWishlisted);
+        }
+      } catch (error) {
+        console.error('Error checking wishlist:', error);
+      }
+    };
+
+    checkWishlist();
+  }, [params?.id]);
+
+  // Toggle wishlist
+  const handleToggleWishlist = async () => {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setToastMessage('Vui lòng đăng nhập để thêm vào yêu thích');
+      setToastType('error');
+      setShowToast(true);
+      setTimeout(() => router.push('/login'), 1500);
+      return;
+    }
+
+    if (!params?.id) return;
+
+    setWishlistLoading(true);
+
+    try {
+      if (isWishlisted) {
+        // Remove from wishlist
+        const response = await fetch(`/api/wishlist/${params.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setIsWishlisted(false);
+          setToastMessage('Đã xóa khỏi yêu thích');
+          setToastType('success');
+          setShowToast(true);
+        }
+      } else {
+        // Add to wishlist
+        const response = await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ sanpham_id: params.id }),
+        });
+
+        if (response.ok) {
+          setIsWishlisted(true);
+          setToastMessage('Đã thêm vào yêu thích');
+          setToastType('success');
+          setShowToast(true);
+        } else {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to add to wishlist');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      setToastMessage('Có lỗi xảy ra. Vui lòng thử lại.');
+      setToastType('error');
+      setShowToast(true);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
   const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 
+  // Lấy số lượng tồn kho của biến thể được chọn
+  const getCurrentStock = () => {
+    if (!product) return 0;
+    if (product.colors && product.colors.length > 0) {
+      return product.colors[selectedColor]?.stock || 0;
+    }
+    return product.stock;
+  };
+
+  const currentStock = getCurrentStock();
+
   const handleQuantityChange = (type: 'increase' | 'decrease') => {
-    if (type === 'increase' && product && quantity < product.stock) {
+    if (type === 'increase' && quantity < currentStock) {
       setQuantity(prev => prev + 1);
+    } else if (type === 'increase' && quantity >= currentStock) {
+      // Show toast when reaching max stock
+      setToastMessage(`Số lượng tối đa: ${currentStock} sản phẩm`);
+      setToastType('info');
+      setShowToast(true);
     } else if (type === 'decrease' && quantity > 1) {
       setQuantity(prev => prev - 1);
     }
+  };
+
+  const handleQuantityInput = (value: string) => {
+    const numValue = parseInt(value);
+    
+    if (isNaN(numValue) || numValue < 1) {
+      setQuantity(1);
+      return;
+    }
+    
+    if (numValue > currentStock) {
+      setQuantity(currentStock);
+      setToastMessage(`Chỉ còn ${currentStock} sản phẩm trong kho`);
+      setToastType('info');
+      setShowToast(true);
+      return;
+    }
+    
+    setQuantity(numValue);
   };
 
   const handleAddToCart = async () => {
@@ -173,6 +360,13 @@ export default function ProductDetailPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showLightbox, nextImage, prevImage]);
+
+  // Reset quantity khi thay đổi màu sắc (nếu quantity vượt quá stock của màu mới)
+  useEffect(() => {
+    if (quantity > currentStock) {
+      setQuantity(Math.min(quantity, currentStock) || 1);
+    }
+  }, [selectedColor, currentStock, quantity]);
 
   if (loading) {
     return (
@@ -493,11 +687,11 @@ export default function ProductDetailPage() {
           position: relative;
           width: 100%;
           height: 550px;
-          border: 1px solid #FFE5D9;
+          border: 1px solid rgba(212, 175, 55, 0.2);
           overflow: hidden;
-          background: #FFFFFF;
-          border-radius: 16px;
-          box-shadow: 0 4px 20px rgba(255, 107, 107, 0.08);
+          background: linear-gradient(135deg, #FAF8F3 0%, #F5F2E8 100%);
+          border-radius: 20px;
+          box-shadow: 0 8px 32px rgba(139, 115, 85, 0.1);
         }
 
         .image-gallery-thumbs {
@@ -645,15 +839,34 @@ export default function ProductDetailPage() {
           cursor: not-allowed;
         }
 
-        .quantity-value {
-          padding: 0 30px;
+        .quantity-input {
+          padding: 0 20px;
           font-weight: 600;
           font-size: 1.1rem;
-          min-width: 70px;
+          min-width: 100px;
+          max-width: 100px;
           text-align: center;
+          border: none;
           border-left: 1px solid #FFE5D9;
           border-right: 1px solid #FFE5D9;
           color: #FF6B6B;
+          background: #FFFFFF;
+          outline: none;
+        }
+
+        .quantity-input:focus {
+          background: #FFF9F5;
+        }
+
+        /* Hide spinner buttons on number input */
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        .quantity-input[type=number] {
+          -moz-appearance: textfield;
         }
 
         .btn-add-cart {
@@ -878,6 +1091,49 @@ export default function ProductDetailPage() {
             opacity: 1;
           }
         }
+
+        @keyframes shake {
+          0%, 100% { transform: rotate(0deg); }
+          10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+          20%, 40%, 60%, 80% { transform: rotate(10deg); }
+        }
+
+        @keyframes pulse {
+          0%, 100% { 
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+          }
+          50% { 
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.5);
+          }
+        }
+
+        .hotline-floating-btn {
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hotline-floating-btn::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s, height 0.6s;
+        }
+
+        .hotline-floating-btn:hover::before {
+          width: 300px;
+          height: 300px;
+        }
+
+        .hotline-floating-btn:active {
+          transform: scale(0.98) !important;
+        }
       `}</style>
 
       <div className="product-detail-container">
@@ -899,6 +1155,44 @@ export default function ProductDetailPage() {
                 onClick={() => openLightbox(selectedImage)}
                 style={{ cursor: 'pointer' }}
               >
+                {/* Discount Badge */}
+                {product.discount > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    left: '16px',
+                    background: 'linear-gradient(135deg, #D4AF37, #C4A855)',
+                    color: '#fff',
+                    padding: '8px 16px',
+                    borderRadius: '25px',
+                    fontWeight: '700',
+                    fontSize: '0.9rem',
+                    letterSpacing: '0.5px',
+                    boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)',
+                    zIndex: 2
+                  }}>
+                    -{product.discount}%
+                  </div>
+                )}
+
+                {/* Stock Badge */}
+                <div style={{
+                  position: 'absolute',
+                  top: '16px',
+                  left: product.discount > 0 ? '100px' : '16px',
+                  background: currentStock > 10 ? 'linear-gradient(135deg, #4CAF50, #45a049)' : 'linear-gradient(135deg, #FFA726, #FF9800)',
+                  color: '#fff',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontWeight: '600',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.3px',
+                  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
+                  zIndex: 2
+                }}>
+                  {currentStock > 10 ? `Còn ${currentStock}` : 'Sắp hết'}
+                </div>
+
                 <Image 
                   src={product.images?.[selectedImage] || product.images?.[0] || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'} 
                   alt={product.name}
@@ -906,13 +1200,15 @@ export default function ProductDetailPage() {
                   style={{ objectFit: 'cover' }}
                   priority
                 />
+                
+                {/* Zoom Icon */}
                 <div 
                   className="zoom-icon"
                   style={{
                     position: 'absolute',
                     top: '16px',
                     right: '16px',
-                    background: 'linear-gradient(135deg, #FF8E53, #FFA726)',
+                    background: 'linear-gradient(135deg, #D4AF37, #C4A855)',
                     color: '#fff',
                     width: '48px',
                     height: '48px',
@@ -921,16 +1217,17 @@ export default function ProductDetailPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '20px',
-                    boxShadow: '0 4px 12px rgba(255, 142, 83, 0.3)',
+                    boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)',
                     transition: 'all 0.3s ease',
+                    zIndex: 2
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 142, 83, 0.4)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(212, 175, 55, 0.4)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 142, 83, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(212, 175, 55, 0.3)';
                   }}
                 >
                   <i className="bi bi-zoom-in"></i>
@@ -952,6 +1249,66 @@ export default function ProductDetailPage() {
                     />
                   </div>
                 )) || null}
+              </div>
+
+              {/* Quick Info Cards */}
+              <div className="row g-3 mt-3">
+                <div className="col-6">
+                  <div className="p-3 rounded text-center" style={{ 
+                    background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  >
+                    <i className="bi bi-shield-check" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Bảo hành chính hãng</p>
+                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>12 tháng</p>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="p-3 rounded text-center" style={{ 
+                    background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  >
+                    <i className="bi bi-truck" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Giao hàng nhanh</p>
+                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Miễn phí 5tr</p>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="p-3 rounded text-center" style={{ 
+                    background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  >
+                    <i className="bi bi-arrow-counterclockwise" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Đổi trả 7 ngày</p>
+                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Miễn phí</p>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="p-3 rounded text-center" style={{ 
+                    background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  >
+                    <i className="bi bi-star-fill" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Chất lượng cao</p>
+                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Hàng chính hãng</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -993,11 +1350,11 @@ export default function ProductDetailPage() {
                 {/* Rating & Reviews */}
                 <div className="d-flex align-items-center gap-3 mb-3">
                   <div className="rating-stars">
-                    {'★'.repeat(Math.floor(product.rating))}
-                    {'☆'.repeat(5 - Math.floor(product.rating))}
+                    {'★'.repeat(Math.floor(reviewData.rating.average_rating))}
+                    {'☆'.repeat(5 - Math.floor(reviewData.rating.average_rating))}
                   </div>
                   <span className="text-muted">
-                    {product.rating} ({product.reviews} đánh giá)
+                    {reviewData.rating.average_rating.toFixed(1)} ({reviewData.rating.count} đánh giá)
                   </span>
                 </div>
 
@@ -1012,8 +1369,8 @@ export default function ProductDetailPage() {
 
                 {/* Stock Status */}
                 <div className="mb-4">
-                  <span className={`stock-status ${product.stock > 10 ? 'in-stock' : 'low-stock'}`}>
-                    {product.stock > 10 ? `Còn hàng (${product.stock} sản phẩm)` : `Sắp hết (${product.stock} sản phẩm)`}
+                  <span className={`stock-status ${currentStock > 10 ? 'in-stock' : 'low-stock'}`}>
+                    {currentStock > 10 ? `Còn hàng (${currentStock} sản phẩm)` : `Sắp hết (${currentStock} sản phẩm)`}
                   </span>
                 </div>
 
@@ -1045,20 +1402,34 @@ export default function ProductDetailPage() {
 
                 {/* Quantity */}
                 <div className="mb-4">
-                  <h6 className="mb-3 fw-semibold" style={{ color: '#2c3e50', letterSpacing: '0.5px', fontSize: '1.05rem' }}>Số lượng</h6>
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <h6 className="mb-0 fw-semibold" style={{ color: '#2c3e50', letterSpacing: '0.5px', fontSize: '1.05rem' }}>Số lượng</h6>
+                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>
+                      Còn lại: <strong style={{ color: '#FF6B6B' }}>{currentStock}</strong> sản phẩm
+                    </span>
+                  </div>
                   <div className="quantity-control">
                     <button 
                       className="quantity-btn" 
                       onClick={() => handleQuantityChange('decrease')}
                       disabled={quantity <= 1}
+                      title="Giảm số lượng"
                     >
                       −
                     </button>
-                    <div className="quantity-value">{quantity}</div>
+                    <input
+                      type="number"
+                      className="quantity-input"
+                      value={quantity}
+                      onChange={(e) => handleQuantityInput(e.target.value)}
+                      min="1"
+                      max={currentStock}
+                    />
                     <button 
                       className="quantity-btn" 
                       onClick={() => handleQuantityChange('increase')}
-                      disabled={quantity >= product.stock}
+                      disabled={quantity >= currentStock}
+                      title={quantity >= currentStock ? `Tối đa ${currentStock} sản phẩm` : 'Tăng số lượng'}
                     >
                       +
                     </button>
@@ -1070,7 +1441,7 @@ export default function ProductDetailPage() {
                   <button 
                     className="btn btn-add-cart w-100"
                     onClick={handleAddToCart}
-                    disabled={addingToCart || product.stock === 0}
+                    disabled={addingToCart || currentStock === 0}
                   >
                     {addingToCart ? (
                       <>
@@ -1080,77 +1451,117 @@ export default function ProductDetailPage() {
                     ) : (
                       <>
                         <i className="bi bi-cart-plus me-2"></i>
-                        Thêm vào giỏ hàng
+                        {currentStock === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
                       </>
                     )}
                   </button>
                   <button 
                     className="btn btn-buy-now w-100"
                     onClick={handleBuyNow}
-                    disabled={product.stock === 0}
+                    disabled={currentStock === 0}
                   >
                     <i className="bi bi-lightning-charge me-2"></i>
-                    Mua ngay
+                    {currentStock === 0 ? 'Hết hàng' : 'Mua ngay'}
                   </button>
                 </div>
 
-                {/* Additional Info */}
-                <div className="mt-4 pt-4" style={{ borderTop: '2px solid #FFE5D9' }}>
-                  <div className="d-flex align-items-center gap-3 mb-3 p-2 rounded" style={{ background: 'linear-gradient(135deg, #FFF9F5, #FFE5E0)', transition: 'all 0.3s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(5px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
-                  >
-                    <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%', 
-                      background: 'linear-gradient(135deg, #FF8E53, #FFA726)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(255, 142, 83, 0.3)'
-                    }}>
-                      <i className="bi bi-truck" style={{ fontSize: '1.1rem', color: '#fff' }}></i>
+                {/* Social Share & Wishlist */}
+                <div className="mt-3 pt-3 pb-3" style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)', borderBottom: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                    <div className="d-flex flex-wrap align-items-center gap-2">
+                      <span style={{ fontSize: '0.85rem', color: '#5A5A5A', fontWeight: '600', letterSpacing: '0.3px' }}>Chia sẻ:</span>
+                      <button className="btn btn-sm" style={{ background: '#3b5998', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
+                        <i className="bi bi-facebook me-1"></i> Facebook
+                      </button>
+                      <button className="btn btn-sm" style={{ background: '#1DA1F2', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
+                        <i className="bi bi-twitter me-1"></i> Twitter
+                      </button>
+                      <button className="btn btn-sm" style={{ background: '#25D366', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
+                        <i className="bi bi-whatsapp me-1"></i> WhatsApp
+                      </button>
                     </div>
-                    <span style={{ fontSize: '0.9rem', color: '#666', fontWeight: '500' }}>Miễn phí vận chuyển cho đơn hàng trên 5 triệu</span>
-                  </div>
-                  <div className="d-flex align-items-center gap-3 mb-3 p-2 rounded" style={{ background: 'linear-gradient(135deg, #FFF9F5, #FFE5E0)', transition: 'all 0.3s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(5px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
-                  >
-                    <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%', 
-                      background: 'linear-gradient(135deg, #FF6B6B, #FF5252)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)'
-                    }}>
-                      <i className="bi bi-shield-check" style={{ fontSize: '1.1rem', color: '#fff' }}></i>
-                    </div>
-                    <span style={{ fontSize: '0.9rem', color: '#666', fontWeight: '500' }}>Bảo hành chính hãng {product.specifications?.['Bảo hành'] || '12 tháng'}</span>
-                  </div>
-                  <div className="d-flex align-items-center gap-3 p-2 rounded" style={{ background: 'linear-gradient(135deg, #FFF9F5, #FFE5E0)', transition: 'all 0.3s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(5px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
-                  >
-                    <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%', 
-                      background: 'linear-gradient(135deg, #FFA726, #FFB74D)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(255, 167, 38, 0.3)'
-                    }}>
-                      <i className="bi bi-arrow-counterclockwise" style={{ fontSize: '1.1rem', color: '#fff' }}></i>
-                    </div>
-                    <span style={{ fontSize: '0.9rem', color: '#666', fontWeight: '500' }}>Đổi trả trong 7 ngày nếu có lỗi từ nhà sản xuất</span>
+                    <button 
+                      className="btn btn-sm"
+                      onClick={handleToggleWishlist}
+                      disabled={wishlistLoading}
+                      style={{
+                        borderRadius: '10px',
+                        padding: '8px 18px',
+                        fontWeight: '600',
+                        borderWidth: '2px',
+                        borderStyle: 'solid',
+                        borderColor: isWishlisted ? '#dc3545' : '#D4AF37',
+                        color: isWishlisted ? '#fff' : '#D4AF37',
+                        background: isWishlisted ? '#dc3545' : 'transparent',
+                        transition: 'all 0.3s ease',
+                        fontSize: '0.85rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isWishlisted) {
+                          e.currentTarget.style.background = '#D4AF37';
+                          e.currentTarget.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isWishlisted) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = '#D4AF37';
+                        }
+                      }}
+                    >
+                      {wishlistLoading ? (
+                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                      ) : (
+                        <i className={`bi bi-heart${isWishlisted ? '-fill' : ''} me-1`}></i>
+                      )}
+                      {isWishlisted ? 'Đã yêu thích' : 'Yêu thích'}
+                    </button>
                   </div>
                 </div>
+
+                {/* Contact Hotline Button */}
+                <a 
+                  href="tel:1900xxxx" 
+                  className="hotline-floating-btn d-flex align-items-center justify-content-between gap-3 text-decoration-none mt-3 p-3 rounded"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #D4AF37, #C4A855)', 
+                    color: '#fff',
+                    boxShadow: '0 4px 16px rgba(212, 175, 55, 0.3)',
+                    transition: 'all 0.3s ease',
+                    animation: 'pulse 2s ease-in-out infinite',
+                    border: '2px solid rgba(255, 255, 255, 0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(212, 175, 55, 0.4)';
+                    e.currentTarget.style.animation = 'none';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(212, 175, 55, 0.3)';
+                    e.currentTarget.style.animation = 'pulse 2s ease-in-out infinite';
+                  }}
+                >
+                  <div className="d-flex align-items-center gap-3" style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ 
+                      width: '48px', 
+                      height: '48px', 
+                      borderRadius: '12px', 
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <i className="bi bi-telephone-fill" style={{ fontSize: '1.3rem', animation: 'shake 0.5s ease-in-out infinite' }}></i>
+                    </div>
+                    <div>
+                      <p className="mb-0 fw-bold" style={{ fontSize: '1rem', letterSpacing: '0.5px' }}>Cần tư vấn ngay?</p>
+                      <p className="mb-0" style={{ fontSize: '0.8rem', opacity: '0.95' }}>Hotline: <strong style={{ fontSize: '0.95rem' }}>1900 xxxx</strong></p>
+                    </div>
+                  </div>
+                  <i className="bi bi-chevron-right" style={{ fontSize: '1.5rem', opacity: '0.8', position: 'relative', zIndex: 1 }}></i>
+                </a>
               </div>
             </div>
           </div>
@@ -1174,7 +1585,7 @@ export default function ProductDetailPage() {
                 className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
                 onClick={() => setActiveTab('reviews')}
               >
-                Đánh giá ({product.reviews})
+                Đánh giá ({reviewData.rating.count})
               </button>
             </div>
 
@@ -1217,37 +1628,329 @@ export default function ProductDetailPage() {
 
             {activeTab === 'reviews' && (
               <div className="tab-content-reviews">
-                <h4 className="section-title">Đánh giá từ khách hàng</h4>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h4 className="section-title mb-0">Đánh giá từ khách hàng</h4>
+                  <button 
+                    className="btn btn-warning"
+                    onClick={() => setShowReviewForm(true)}
+                    style={{
+                      fontWeight: '600',
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(255, 193, 7, 0.3)'
+                    }}
+                  >
+                    <i className="bi bi-pencil-square me-2"></i>
+                    Viết đánh giá
+                  </button>
+                </div>
+
+                {/* Review Summary */}
+                {reviewData.rating.count > 0 && (
+                  <div className="review-summary p-4 mb-4" style={{
+                    background: 'linear-gradient(135deg, #FFF9F0 0%, #FFE5E0 100%)',
+                    borderRadius: '12px',
+                    border: '1px solid #FFE5D9'
+                  }}>
+                    <div className="row align-items-center">
+                      <div className="col-md-4 text-center border-end">
+                        <div style={{ fontSize: '3rem', fontWeight: '700', color: '#FF6B6B' }}>
+                          {reviewData.rating.average_rating.toFixed(1)}
+                        </div>
+                        <div className="rating-stars mb-2" style={{ fontSize: '1.5rem' }}>
+                          {'★'.repeat(Math.floor(reviewData.rating.average_rating))}
+                          {'☆'.repeat(5 - Math.floor(reviewData.rating.average_rating))}
+                        </div>
+                        <div className="text-muted">{reviewData.rating.count} đánh giá</div>
+                      </div>
+                      <div className="col-md-8">
+                        <div className="ps-4">
+                          {[5, 4, 3, 2, 1].map((star) => {
+                            const count = reviewData.reviews.filter(r => r.rating === star).length;
+                            const percentage = reviewData.rating.count > 0 ? (count / reviewData.rating.count) * 100 : 0;
+                            return (
+                              <div key={star} className="d-flex align-items-center mb-2">
+                                <span className="me-2" style={{ minWidth: '60px' }}>{star} ★</span>
+                                <div className="progress flex-grow-1 me-2" style={{ height: '8px' }}>
+                                  <div 
+                                    className="progress-bar bg-warning" 
+                                    style={{ width: `${percentage}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-muted" style={{ minWidth: '40px' }}>{count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviews List */}
+                {reviewData.reviews.length === 0 ? (
                 <div className="text-center py-5">
-                  <i className="bi bi-star-fill" style={{ fontSize: '3.5rem', color: '#FFA726' }}></i>
+                    <i className="bi bi-star-fill" style={{ fontSize: '3.5rem', color: '#FFA726', opacity: 0.3 }}></i>
                   <h5 className="mt-4" style={{ color: '#666' }}>Chưa có đánh giá nào</h5>
                   <p style={{ color: '#999' }}>Hãy là người đầu tiên đánh giá sản phẩm này</p>
-                  <button className="btn mt-3" style={{ 
-                    background: 'linear-gradient(135deg, #FF8E53, #FFA726)', 
-                    color: '#FFF', 
-                    border: 'none',
-                    padding: '14px 35px',
-                    fontWeight: '600',
-                    letterSpacing: '0.5px',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 15px rgba(255, 142, 83, 0.3)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 142, 83, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 142, 83, 0.3)';
-                  }}
-                  >Viết đánh giá</button>
                 </div>
+                ) : (
+                  <div className="reviews-list">
+                    {reviewData.reviews.map((review) => (
+                      <div key={review.id} className="review-item p-4 mb-3" style={{
+                        background: '#fff',
+                        borderRadius: '12px',
+                        border: '1px solid #e0e0e0'
+                      }}>
+                        <div className="d-flex justify-content-between mb-3">
+                          <div className="d-flex align-items-center gap-3">
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #FF6B6B, #FF8E53)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#fff',
+                              fontSize: '1.2rem',
+                              fontWeight: '600'
+                            }}>
+                              {review.user_id.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="fw-semibold">Khách hàng</div>
+                              <div className="rating-stars text-warning">
+                                {'★'.repeat(review.rating)}
+                                {'☆'.repeat(5 - review.rating)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-muted small">
+                            {new Date(review.created_at).toLocaleDateString('vi-VN')}
+                          </div>
+                        </div>
+                        
+                        {/* Variant info */}
+                        {review.chitiet_donhang?.bienthe && (
+                          <div className="mb-2">
+                            <small className="text-muted">
+                              Phân loại: {review.chitiet_donhang.bienthe.mausac || ''} 
+                              {review.chitiet_donhang.bienthe.kichthuoc ? ` - ${review.chitiet_donhang.bienthe.kichthuoc}` : ''}
+                            </small>
+                          </div>
+                        )}
+
+                        <p className="mb-3">{review.binhluan}</p>
+
+                        {/* Review Images */}
+                        {review.hinhanh && review.hinhanh.length > 0 && (
+                          <div className="review-images d-flex gap-2 flex-wrap">
+                            {review.hinhanh.map((img) => (
+                              <div key={img.id} style={{
+                                position: 'relative',
+                                width: '100px',
+                                height: '100px',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                cursor: 'pointer',
+                                border: '1px solid #e0e0e0'
+                              }}>
+                                <Image 
+                                  src={img.url}
+                                  alt="Review"
+                                  fill
+                                  style={{ objectFit: 'cover' }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
+
+          {/* Review Form Modal */}
+          {showReviewForm && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <div className="modal-dialog modal-lg">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="bi bi-pencil-square me-2"></i>
+                      Viết đánh giá
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setShowReviewForm(false)}
+                    />
+                  </div>
+                  <div className="modal-body">
+                    <div className="alert alert-info">
+                      <i className="bi bi-info-circle me-2"></i>
+                      Bạn cần mua sản phẩm và đơn hàng đã giao thành công mới có thể đánh giá.
+                    </div>
+                    <p className="text-muted">
+                      Vui lòng vào trang <Link href="/orders" className="text-primary fw-semibold">Đơn hàng của tôi</Link> để đánh giá sản phẩm đã mua.
+                    </p>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setShowReviewForm(false)}
+                    >
+                      Đóng
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setShowReviewForm(false);
+                        router.push('/orders');
+                      }}
+                    >
+                      Xem đơn hàng
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Related Products Section */}
+          {relatedProducts.length > 0 && (
+            <div className="related-products-section mt-5">
+              <h3 className="section-title mb-4">Sản phẩm liên quan</h3>
+              <div className="row g-4">
+                {relatedProducts.map((item) => (
+                  <div key={item.id} className="col-6 col-md-3">
+                    <div 
+                      className="related-product-card"
+                      onClick={() => router.push(`/products/${item.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="related-product-image">
+                        <Image
+                          src={item.thumbnail || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'}
+                          alt={item.tensp}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </div>
+                      <div className="related-product-info p-3">
+                        <h6 className="fw-semibold mb-2" style={{ 
+                          fontSize: '0.95rem', 
+                          color: '#3D3D3D',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          minHeight: '2.8rem',
+                          letterSpacing: '0.3px'
+                        }}>
+                          {item.tensp}
+                        </h6>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span style={{ 
+                            color: '#D4AF37',
+                            fontWeight: '600',
+                            fontSize: '1.1rem',
+                            letterSpacing: '0.5px'
+                          }}>
+                            {item.bienthe && item.bienthe.length > 0
+                              ? `${Number(item.bienthe[0].gia).toLocaleString('vi-VN')}₫`
+                              : 'Liên hệ'}
+                          </span>
+                          <button 
+                            className="btn btn-sm"
+                            style={{
+                              background: 'linear-gradient(135deg, #D4AF37, #C4A855)',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              padding: '8px 18px',
+                              borderRadius: '24px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              letterSpacing: '1px',
+                              textTransform: 'uppercase',
+                              transition: 'all 0.3s ease',
+                              boxShadow: '0 2px 8px rgba(212, 175, 55, 0.25)'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #C4A855, #D4AF37)';
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(212, 175, 55, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #D4AF37, #C4A855)';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(212, 175, 55, 0.25)';
+                            }}
+                          >
+                            Xem
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <style jsx global>{`
+        .related-products-section {
+          background: #FFFFFF;
+          padding: 50px;
+          border-radius: 20px;
+          box-shadow: 0 8px 32px rgba(139, 115, 85, 0.08);
+          border: 1px solid rgba(139, 115, 85, 0.08);
+        }
+
+        .related-product-card {
+          background: #FFFFFF;
+          border-radius: 16px;
+          overflow: hidden;
+          transition: all 0.4s ease;
+          box-shadow: 0 4px 16px rgba(139, 115, 85, 0.08);
+          border: 1px solid rgba(139, 115, 85, 0.08);
+        }
+
+        .related-product-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 12px 32px rgba(139, 115, 85, 0.16);
+          border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        .related-product-image {
+          position: relative;
+          width: 100%;
+          height: 200px;
+          overflow: hidden;
+          background: linear-gradient(135deg, #FAF8F3 0%, #F5F2E8 100%);
+        }
+
+        .related-product-card:hover .related-product-image img {
+          transform: scale(1.08);
+        }
+
+        .related-product-image img {
+          transition: transform 0.5s ease;
+        }
+
+        .related-product-info {
+          background: #FFFFFF;
+        }
+      `}</style>
     </>
   );
 }

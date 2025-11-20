@@ -3,31 +3,79 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+interface UserData {
+  id: string;
+  email: string;
+  ho_ten: string;
+  sdt: string;
+  ngaysinh: string;
+  gioitinh: string;
+  avatar: string;
+  role: string;
+}
+
+interface Stats {
+  orderCount: number;
+  wishlistCount: number;
+  addressCount: number;
+}
+
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [userData, setUserData] = useState({
-    fullName: '',
+  const [userData, setUserData] = useState<UserData>({
+    id: '',
     email: '',
-    phone: '',
-    birthday: '',
-    gender: 'male',
-    avatar: '/default-avatar.jpg'
+    ho_ten: '',
+    sdt: '',
+    ngaysinh: '',
+    gioitinh: 'male',
+    avatar: '',
+    role: 'customer',
+  });
+  const [stats, setStats] = useState<Stats>({
+    orderCount: 0,
+    wishlistCount: 0,
+    addressCount: 0,
   });
 
   useEffect(() => {
-    // Load user data từ localStorage
-    const email = localStorage.getItem('userEmail') || '';
-    const name = localStorage.getItem('userName') || '';
-    const role = localStorage.getItem('userRole') || 'customer';
-
-    setUserData(prev => ({
-      ...prev,
-      email,
-      fullName: name,
-    }));
-    setLoading(false);
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    try {
+      // Lấy token từ localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
+        window.location.href = '/login';
+        return;
+      }
+
+      const response = await fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile');
+      }
+
+      const data = await response.json();
+      setUserData(data.user);
+      setStats(data.stats);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      alert('Không thể tải thông tin người dùng');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setUserData({
@@ -36,12 +84,101 @@ export default function ProfilePage() {
     });
   };
 
-  const handleSave = () => {
-    // Save to localStorage (hoặc call API)
-    localStorage.setItem('userName', userData.fullName);
-    alert('Cập nhật thông tin thành công!');
-    setEditing(false);
-    window.dispatchEvent(new Event('loginSuccess'));
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = '/login';
+        return;
+      }
+
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ho_ten: userData.ho_ten,
+          sdt: userData.sdt,
+          ngaysinh: userData.ngaysinh,
+          gioitinh: userData.gioitinh,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const data = await response.json();
+      setUserData(data.user);
+      alert('Cập nhật thông tin thành công!');
+      setEditing(false);
+      
+      // Update localStorage for header display
+      localStorage.setItem('userName', userData.ho_ten);
+      window.dispatchEvent(new Event('loginSuccess'));
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Không thể cập nhật thông tin');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File ảnh không được vượt quá 5MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Chỉ chấp nhận file ảnh');
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+        window.location.href = '/login';
+        return;
+      }
+
+      const response = await fetch('/api/profile/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload avatar');
+      }
+
+      const data = await response.json();
+      setUserData(prev => ({ ...prev, avatar: data.avatar }));
+      alert('Upload avatar thành công!');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Không thể upload avatar');
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -67,25 +204,45 @@ export default function ProfilePage() {
                       style={{
                         width: '100px',
                         height: '100px',
-                        border: '4px solid #FFC107'
+                        border: '4px solid #FFC107',
+                        backgroundColor: '#f8f9fa'
                       }}
                     >
-                      <Image
-                        src={userData.avatar}
-                        alt="Avatar"
-                        width={100}
-                        height={100}
-                        style={{ objectFit: 'cover' }}
-                      />
+                      {userData.avatar ? (
+                        <Image
+                          src={`http://localhost:5000${userData.avatar}`}
+                          alt="Avatar"
+                          width={100}
+                          height={100}
+                          style={{ objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div className="w-100 h-100 d-flex align-items-center justify-content-center">
+                          <i className="bi bi-person-circle text-muted" style={{ fontSize: '60px' }}></i>
+                        </div>
+                      )}
                     </div>
-                    <button
+                    <label
+                      htmlFor="avatar-upload"
                       className="btn btn-warning btn-sm position-absolute bottom-0 end-0 rounded-circle"
-                      style={{ width: '32px', height: '32px', padding: 0 }}
+                      style={{ width: '32px', height: '32px', padding: 0, cursor: 'pointer' }}
                     >
-                      <i className="bi bi-camera text-white"></i>
-                    </button>
+                      {uploading ? (
+                        <span className="spinner-border spinner-border-sm text-white" role="status"></span>
+                      ) : (
+                        <i className="bi bi-camera text-white"></i>
+                      )}
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      style={{ display: 'none' }}
+                      disabled={uploading}
+                    />
                   </div>
-                  <h5 className="fw-bold mb-1">{userData.fullName || 'User'}</h5>
+                  <h5 className="fw-bold mb-1">{userData.ho_ten || 'User'}</h5>
                   <p className="text-muted small mb-0">{userData.email}</p>
                 </div>
 
@@ -171,9 +328,19 @@ export default function ProfilePage() {
                         onClick={handleSave}
                         className="btn btn-warning text-white"
                         style={{ borderRadius: '12px' }}
+                        disabled={saving}
                       >
-                        <i className="bi bi-check2 me-2"></i>
-                        Lưu
+                        {saving ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-check2 me-2"></i>
+                            Lưu
+                          </>
+                        )}
                       </button>
                     </div>
                   )}
@@ -184,9 +351,9 @@ export default function ProfilePage() {
                     <label className="form-label fw-semibold">Họ và tên</label>
                     <input
                       type="text"
-                      name="fullName"
+                      name="ho_ten"
                       className="form-control"
-                      value={userData.fullName}
+                      value={userData.ho_ten || ''}
                       onChange={handleChange}
                       disabled={!editing}
                       style={{
@@ -220,10 +387,10 @@ export default function ProfilePage() {
                     <label className="form-label fw-semibold">Số điện thoại</label>
                     <input
                       type="tel"
-                      name="phone"
+                      name="sdt"
                       className="form-control"
                       placeholder="0123456789"
-                      value={userData.phone}
+                      value={userData.sdt || ''}
                       onChange={handleChange}
                       disabled={!editing}
                       style={{
@@ -239,9 +406,9 @@ export default function ProfilePage() {
                     <label className="form-label fw-semibold">Ngày sinh</label>
                     <input
                       type="date"
-                      name="birthday"
+                      name="ngaysinh"
                       className="form-control"
-                      value={userData.birthday}
+                      value={userData.ngaysinh || ''}
                       onChange={handleChange}
                       disabled={!editing}
                       style={{
@@ -256,9 +423,9 @@ export default function ProfilePage() {
                   <div className="col-md-6">
                     <label className="form-label fw-semibold">Giới tính</label>
                     <select
-                      name="gender"
+                      name="gioitinh"
                       className="form-select"
-                      value={userData.gender}
+                      value={userData.gioitinh || 'male'}
                       onChange={handleChange}
                       disabled={!editing}
                       style={{
@@ -298,21 +465,21 @@ export default function ProfilePage() {
                     <div className="col-md-4">
                       <div className="card border-0 bg-light text-center p-3" style={{ borderRadius: '12px' }}>
                         <i className="bi bi-bag-check text-warning" style={{ fontSize: '32px' }}></i>
-                        <h4 className="fw-bold mt-2 mb-0">0</h4>
+                        <h4 className="fw-bold mt-2 mb-0">{stats.orderCount}</h4>
                         <small className="text-muted">Đơn hàng</small>
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="card border-0 bg-light text-center p-3" style={{ borderRadius: '12px' }}>
                         <i className="bi bi-heart text-danger" style={{ fontSize: '32px' }}></i>
-                        <h4 className="fw-bold mt-2 mb-0">0</h4>
+                        <h4 className="fw-bold mt-2 mb-0">{stats.wishlistCount}</h4>
                         <small className="text-muted">Yêu thích</small>
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="card border-0 bg-light text-center p-3" style={{ borderRadius: '12px' }}>
                         <i className="bi bi-geo-alt text-success" style={{ fontSize: '32px' }}></i>
-                        <h4 className="fw-bold mt-2 mb-0">0</h4>
+                        <h4 className="fw-bold mt-2 mb-0">{stats.addressCount}</h4>
                         <small className="text-muted">Địa chỉ</small>
                       </div>
                     </div>

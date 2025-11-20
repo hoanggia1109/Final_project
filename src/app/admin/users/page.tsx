@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Trash2, Shield, User, Mail, Phone, Calendar, Search, Filter } from 'lucide-react';
+import { Users, Trash2, Shield, User, Mail, Phone, Calendar, Search, Filter, Edit } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -23,6 +23,13 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'customer'>('all');
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const [editForm, setEditForm] = useState({
+    ho_ten: '',
+    sdt: '',
+    role: 'customer' as 'admin' | 'customer',
+    trangthai: 1,
+  });
 
   useEffect(() => {
     // Kiểm tra quyền admin
@@ -72,6 +79,51 @@ export default function UserManagement() {
       alert('Có lỗi xảy ra khi tải dữ liệu! Kiểm tra console để biết chi tiết.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = (user: UserData) => {
+    setEditingUser(user);
+    setEditForm({
+      ho_ten: user.ho_ten || '',
+      sdt: user.sdt || '',
+      role: user.role,
+      trangthai: user.trangthai,
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingUser) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Vui lòng đăng nhập!');
+        router.push('/auth');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (response.ok) {
+        alert('Cập nhật người dùng thành công!');
+        setEditingUser(null);
+        loadUsers();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Không thể cập nhật người dùng! ${errorData.message || ''}`);
+      }
+    } catch (error) {
+      console.error('Lỗi cập nhật người dùng:', error);
+      alert('Có lỗi xảy ra!');
     }
   };
 
@@ -392,6 +444,26 @@ export default function UserManagement() {
           color: #721c24;
         }
 
+        .btn-edit {
+          background: linear-gradient(135deg, #4CAF50, #45a049);
+          color: #fff;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-size: 0.85rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-edit:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
         .btn-delete {
           background: linear-gradient(135deg, #FF6B6B, #FF5252);
           color: #fff;
@@ -415,6 +487,134 @@ export default function UserManagement() {
         .btn-delete:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+        }
+
+        .modal-content {
+          background: #fff;
+          border-radius: 16px;
+          width: 90%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+          padding: 20px 24px;
+          border-bottom: 2px solid #FFE5D9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .modal-title {
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: #2c3e50;
+          margin: 0;
+        }
+
+        .modal-close {
+          background: none;
+          border: none;
+          font-size: 2rem;
+          color: #999;
+          cursor: pointer;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+          background: #FFE5D9;
+          color: #FF6B6B;
+        }
+
+        .modal-body {
+          padding: 24px;
+        }
+
+        .form-label {
+          font-weight: 600;
+          color: #2c3e50;
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        .form-control, .form-select {
+          width: 100%;
+          padding: 10px 14px;
+          border: 2px solid #FFE5D9;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+          outline: none;
+          border-color: #FF8E53;
+          box-shadow: 0 0 0 3px rgba(255, 142, 83, 0.1);
+        }
+
+        .form-control:disabled {
+          background: #f5f5f5;
+          cursor: not-allowed;
+        }
+
+        .modal-footer {
+          padding: 20px 24px;
+          border-top: 2px solid #FFE5D9;
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+        }
+
+        .btn-cancel {
+          background: #f5f5f5;
+          color: #666;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+          background: #e0e0e0;
+        }
+
+        .btn-save {
+          background: linear-gradient(135deg, #4CAF50, #45a049);
+          color: #fff;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
 
         .btn-back {
@@ -635,24 +835,34 @@ export default function UserManagement() {
                           </div>
                         </td>
                         <td>
-                          <button
-                            className="btn-delete"
-                            onClick={() => handleDelete(user.id, user.email)}
-                            disabled={deleteLoading === user.id || user.role === 'admin'}
-                            title={user.role === 'admin' ? 'Không thể xóa Admin' : 'Xóa người dùng'}
-                          >
-                            {deleteLoading === user.id ? (
-                              <>
-                                <span className="spinner-border spinner-border-sm"></span>
-                                Đang xóa...
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 size={16} />
-                                Xóa
-                              </>
-                            )}
-                          </button>
+                          <div className="d-flex gap-2">
+                            <button
+                              className="btn-edit"
+                              onClick={() => handleEdit(user)}
+                              title="Chỉnh sửa người dùng"
+                            >
+                              <Edit size={16} />
+                              Sửa
+                            </button>
+                            <button
+                              className="btn-delete"
+                              onClick={() => handleDelete(user.id, user.email)}
+                              disabled={deleteLoading === user.id || user.role === 'admin'}
+                              title={user.role === 'admin' ? 'Không thể xóa Admin' : 'Xóa người dùng'}
+                            >
+                              {deleteLoading === user.id ? (
+                                <>
+                                  <span className="spinner-border spinner-border-sm"></span>
+                                  Đang xóa...
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 size={16} />
+                                  Xóa
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -672,6 +882,68 @@ export default function UserManagement() {
               )}
             </div>
           </div>
+
+          {/* Edit Modal */}
+          {editingUser && (
+            <div className="modal-overlay" onClick={() => setEditingUser(null)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h4 className="modal-title">Chỉnh sửa người dùng</h4>
+                  <button className="modal-close" onClick={() => setEditingUser(null)}>×</button>
+                </div>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Email (không thể thay đổi)</label>
+                    <input type="text" className="form-control" value={editingUser.email} disabled />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Họ tên</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={editForm.ho_ten}
+                      onChange={(e) => setEditForm({...editForm, ho_ten: e.target.value})}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Số điện thoại</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      value={editForm.sdt}
+                      onChange={(e) => setEditForm({...editForm, sdt: e.target.value})}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Vai trò</label>
+                    <select 
+                      className="form-select" 
+                      value={editForm.role}
+                      onChange={(e) => setEditForm({...editForm, role: e.target.value as 'admin' | 'customer'})}
+                    >
+                      <option value="customer">Khách hàng</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Trạng thái</label>
+                    <select 
+                      className="form-select" 
+                      value={editForm.trangthai}
+                      onChange={(e) => setEditForm({...editForm, trangthai: parseInt(e.target.value)})}
+                    >
+                      <option value={1}>Hoạt động</option>
+                      <option value={0}>Vô hiệu</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn-cancel" onClick={() => setEditingUser(null)}>Hủy</button>
+                  <button className="btn-save" onClick={handleUpdate}>Lưu thay đổi</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
