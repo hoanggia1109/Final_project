@@ -36,7 +36,7 @@ router.get("/", auth, async (req, res) => {
       san_pham: list,
     });
   } catch (err) {
-    console.error("❌ Lỗi GET /api/giohang:", err);
+    console.error(" Lỗi GET /api/giohang:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -76,7 +76,7 @@ router.post("/", auth, async (req, res) => {
 
     res.json({ message: "Thêm sản phẩm vào giỏ hàng thành công", result });
   } catch (err) {
-    console.error("❌ Lỗi POST /api/giohang:", err);
+    console.error(" Lỗi POST /api/giohang:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -95,7 +95,7 @@ router.put("/:id", auth, async (req, res) => {
 
     res.json({ message: "Cập nhật số lượng thành công" });
   } catch (err) {
-    console.error("❌ Lỗi PUT /api/giohang/:id:", err);
+    console.error(" Lỗi PUT /api/giohang/:id:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -110,7 +110,7 @@ router.delete("/:id", auth, async (req, res) => {
 
     res.json({ message: "Đã xóa sản phẩm khỏi giỏ hàng" });
   } catch (err) {
-    console.error("❌ Lỗi DELETE /api/giohang/:id:", err);
+    console.error(" Lỗi DELETE /api/giohang/:id:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });

@@ -7,11 +7,13 @@ const {
   GioHangModel,
   SanPhamBienTheModel,
   SanPhamModel,
+  UserModel, // CHANGED: Import UserModel để lấy email user
 } = require("../database");
 const { auth } = require("../middleware/auth");
 const router = express.Router();
-    const { tinhPhiVanChuyen } = require("./utils/shipping");
-    const { apDungMaGiamGia } = require("./utils/discount");
+const { tinhPhiVanChuyen } = require("./utils/shipping");
+const { apDungMaGiamGia } = require("./utils/discount");
+// CHANGED: Không import email function, chỉ gửi email khi thanh toán thành công
 /**
  * POST /api/donhang/tinh-tong-tien
  * Tính tạm tổng tiền, giảm giá và phí vận chuyển (không tạo đơn hàng)
@@ -123,6 +125,10 @@ router.post("/", auth, async (req, res) => {
     const tong_sau_giam = Math.max(0, total - giamgia) + (phiSauGiam || 0);
 
     // ====== Tạo đơn hàng ======
+    // CHANGED: Lưu phương thức thanh toán từ request (cod, stripe, banking)
+    const phuongthucthanhtoan = req.body.phuongthucthanhtoan || 'cod';
+    
+    // CHANGED: Lưu thông tin địa chỉ nếu có (cho banking và các phương thức khác)
     const dh = await DonHangModel.create({
       id: uuidv4(),
       code: "OD" + Date.now(),
@@ -137,6 +143,14 @@ router.post("/", auth, async (req, res) => {
       ghichu: req.body.ghichu || null,
       trangthai: "pending",
       trangthaithanhtoan: "pending",
+      phuongthucthanhtoan: phuongthucthanhtoan, // CHANGED: Lưu phương thức thanh toán (cod, stripe, banking)
+      // CHANGED: Lưu thông tin địa chỉ chi tiết nếu có (cho banking)
+      diachichitiet: req.body.address || null,
+      phuong_xa: req.body.ward || null,
+      quan_huyen: req.body.district || null,
+      tinh_thanh: req.body.tinh_thanh || req.body.city || null,
+      hoten: req.body.fullName || null,
+      sdt: req.body.phone || null,
     });
 
     // ====== Lưu chi tiết đơn hàng ======
@@ -152,6 +166,9 @@ router.post("/", auth, async (req, res) => {
 
     // ====== Xóa giỏ hàng sau khi đặt ======
     await GioHangModel.destroy({ where: { user_id: req.user.id } });
+
+    // CHANGED: Không gửi email khi tạo đơn hàng, chỉ gửi khi thanh toán thành công
+    // Email sẽ được gửi ở thanhtoan.js khi thanh toán thành công
 
     // ====== Trả về kết quả ======
     res.json({
@@ -183,6 +200,7 @@ module.exports = router;
  * Lấy danh sách đơn hàng người dùng
  */
 router.get("/", auth, async (req, res) => {
+  const { DiaChiModel } = require("../database");
   const dh = await DonHangModel.findAll({
     where: { user_id: req.user.id },
     include: [
@@ -197,6 +215,11 @@ router.get("/", auth, async (req, res) => {
           },
         ],
       },
+      {
+        model: DiaChiModel,
+        as: "diachi",
+        required: false
+      }
     ],
     order: [["created_at", "DESC"]],
   });
@@ -208,6 +231,7 @@ router.get("/", auth, async (req, res) => {
  * Chi tiết 1 đơn hàng
  */
 router.get("/:id", auth, async (req, res) => {
+  const { DiaChiModel } = require("../database");
   const dh = await DonHangModel.findByPk(req.params.id, {
     include: [
       {
@@ -221,6 +245,11 @@ router.get("/:id", auth, async (req, res) => {
           },
         ],
       },
+      {
+        model: DiaChiModel,
+        as: "diachi",
+        required: false
+      }
     ],
   });
   res.json(dh);

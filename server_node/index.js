@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { Op } = require("sequelize");
@@ -9,9 +10,18 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 const app = express();
-const port = 3000;
+const port = 5001; // ĐỔI PORT ĐỂ TRÁNH CONFLICT VỚI NEXT.JS (port 3000) và AirPlay (port 5000)
 app.use(cors());
 app.use(express.json());
+
+// LOGGING middleware - log mọi request
+app.use((req, res, next) => {
+  console.log(`\n📥 [${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  console.log('   Headers:', req.headers['content-type']);
+  console.log('   Body:', req.body);
+  next();
+});
+
 app.use("/uploads", express.static("uploads"));
 
 
@@ -24,13 +34,18 @@ app.use("/api/review", require("./routes/review"));
 app.use("/api/magiamgia", require("./routes/magiamgia"));
 app.use("/api/baiviet", require("./routes/baiviet"));
 app.use("/api/danhmuc", require("./routes/danhmuc"));
+app.use("/api/danhmucbaiviet", require("./routes/danhmucbaiviet"));
 app.use("/api/lienhe", require("./routes/lienhe"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/bienthe", require("./routes/bienthe"));
 app.use("/api/thuonghieu", require("./routes/thuonghieu"));
+app.use("/api/banner", require("./routes/banner"));
+app.use("/api/tonkho", require("./routes/tonkho"));
 app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
-app.use("/api/banner", require("./routes/banner"));
+app.use("/api/thanhtoan", require("./routes/thanhtoan"));
+app.use("/api/yeuthich", require("./routes/yeuthich"));
+app.use("/api/profile", require("./routes/profile"));
 
 // Import model từ file database
 const {
@@ -50,7 +65,7 @@ const {
   DanhGiaModel,
   DonHangChiTietModel,
   ReviewImageModel,
-  BannerModel
+  LienHeModel,
 } = require("./database");
 
 // kết nối DB
@@ -108,10 +123,40 @@ const upload = multer({ storage });
 
 app.post("/api/uploads", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ message: "Không có file" });
-  res.json({ url: `http://localhost:${port}/uploads/${req.file.filename}` });
+  res.json({ url: `http://localhost:5001/uploads/${req.file.filename}` });
 });
 
 
+
+/* ---------------- ERROR HANDLING TOÀN CỤC ---------------- */
+// Bắt lỗi unhandled promise rejection
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 UNHANDLED REJECTION:');
+  console.error('Reason:', reason);
+  console.error('Promise:', promise);
+  // KHÔNG tắt server để tiếp tục debug
+});
+
+// Bắt lỗi uncaught exception
+process.on('uncaughtException', (error) => {
+  console.error('🔥 UNCAUGHT EXCEPTION:');
+  console.error('Error:', error.message);
+  console.error('Stack:', error.stack);
+  // KHÔNG tắt server để tiếp tục debug
+});
+
+// Middleware bắt lỗi Express (phải đặt SAU tất cả routes)
+app.use((err, req, res, next) => {
+  console.error('🔥 EXPRESS ERROR HANDLER:');
+  console.error('URL:', req.url);
+  console.error('Method:', req.method);
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  res.status(500).json({ 
+    message: 'Server error', 
+    error: err.message 
+  });
+});
 
 /* ---------------- START SERVER ---------------- */
 app.listen(port, () => console.log(` Server chạy http://localhost:${port}`));

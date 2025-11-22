@@ -11,11 +11,13 @@ const {
   MaGiamGiaModel,
   BaiVietModel,
   DanhMucBaiVietModel,
+  LienHeModel,
+  DanhGiaModel,
 } = require("../database");
 
 const router = express.Router();
 
-/* ---------------- AUTH CHECK ---------------- */
+/*  AUTH CHECK  */
 const isAdmin = async (req, res, next) => {
   if (!req.user) return res.status(401).json({ message: "Chưa đăng nhập" });
   const user = await UserModel.findByPk(req.user.id);
@@ -25,7 +27,7 @@ const isAdmin = async (req, res, next) => {
   next();
 };
 
-/* ---------------- DASHBOARD ---------------- */
+/*  DASHBOARD  */
 router.get("/dashboard", auth, isAdmin, async (req, res) => {
   const sp = await SanPhamModel.count();
   const dh = await DonHangModel.count();
@@ -34,7 +36,7 @@ router.get("/dashboard", auth, isAdmin, async (req, res) => {
   res.json({ sanpham: sp, donhang: dh, nguoidung: nd, baiviet: bv });
 });
 
-/* ---------------- USER ---------------- */
+/*  USER  */
 router.get("/users", auth, isAdmin, async (_, res) => {
   const list = await UserModel.findAll();
   res.json(list);
@@ -45,25 +47,25 @@ router.delete("/users/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa người dùng" });
 });
 
-/* ---------------- SẢN PHẨM ---------------- */
-router.post("/sanpham", auth, isAdmin, async (req, res) => {
+/*  SẢN PHẨM  */
+router.post("/admin/sanpham", auth, isAdmin, async (req, res) => {
   const sp = await SanPhamModel.create({ id: uuidv4(), ...req.body });
   res.json({ message: "Thêm sản phẩm thành công", sp });
 });
 
-router.put("/sanpham/:id", auth, isAdmin, async (req, res) => {
+router.put("/admin/sanpham/:id", auth, isAdmin, async (req, res) => {
   await SanPhamModel.update(req.body, { where: { id: req.params.id } });
   res.json({ message: "Cập nhật sản phẩm thành công" });
 });
 
-router.delete("/sanpham/:id", auth, isAdmin, async (req, res) => {
+router.delete("/admin/sanpham/:id", auth, isAdmin, async (req, res) => {
   await SanPhamModel.destroy({ where: { id: req.params.id } });
   res.json({ message: "Đã xóa sản phẩm" });
 });
 
 
-/*-----------------Biến thể ----------------- */
-router.post("/bienthe", auth, async (req, res) => {
+/* Biến thể  */
+router.post("/admin/bienthe", auth, async (req, res) => {
   try {
     const { sanpham_id, mausac, sl_tonkho, gia } = req.body;
     const bienthe = await SanPhamBienTheModel.create({
@@ -75,7 +77,7 @@ router.post("/bienthe", auth, async (req, res) => {
     });
     res.json({ message: "Thêm biến thể thành công", bienthe });
   } catch (err) {
-    console.error("Lỗi POST /admin/bienthe:", err);
+    console.error("Lỗi POST /api/bienthe:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -89,7 +91,7 @@ router.put("/bienthe/:id", auth, async (req, res) => {
     );
     res.json({ message: "Cập nhật biến thể thành công" });
   } catch (err) {
-    console.error("Lỗi PUT /admin/bienthe/:id:", err);
+    console.error("Lỗi PUT /api/bienthe/:id:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -100,12 +102,12 @@ router.delete("/bienthe/:id", auth, async (req, res) => {
     await SanPhamBienTheModel.destroy({ where: { id: req.params.id } });
     res.json({ message: "Đã xóa biến thể" });
   } catch (err) {
-    console.error("Lỗi DELETE /admin/bienthe/:id:", err);
+    console.error("Lỗi DELETE /api/bienthe/:id:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 
-/* ---------------- DANH MỤC ---------------- */
+/*  DANH MỤC  */
 router.post("/danhmuc", auth, isAdmin, async (req, res) => {
   const dm = await LoaiModel.create({ id: uuidv4(), ...req.body });
   res.json({ message: "Thêm danh mục thành công", dm });
@@ -121,7 +123,7 @@ router.delete("/danhmuc/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa danh mục" });
 });
 
-/* ---------------- THƯƠNG HIỆU ---------------- */
+/*  THƯƠNG HIỆU  */
 router.post("/thuonghieu", auth, isAdmin, async (req, res) => {
   const th = await ThuongHieuModel.create({ id: uuidv4(), ...req.body });
   res.json({ message: "Thêm thương hiệu thành công", th });
@@ -137,7 +139,7 @@ router.delete("/thuonghieu/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa thương hiệu" });
 });
 
-/* ---------------- ĐƠN HÀNG ---------------- */
+/*  ĐƠN HÀNG  */
 router.get("/donhang", auth, isAdmin, async (_, res) => {
   const list = await DonHangModel.findAll({ order: [["ngaymua", "DESC"]] });
   res.json(list);
@@ -148,7 +150,7 @@ router.put("/donhang/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Cập nhật trạng thái đơn hàng thành công" });
 });
 
-/* ---------------- MÃ GIẢM GIÁ ---------------- */
+/*  MÃ GIẢM GIÁ  */
 router.get("/magiamgia", auth, isAdmin, async (_, res) => {
   const mg = await MaGiamGiaModel.findAll();
   res.json(mg);
@@ -169,7 +171,7 @@ router.delete("/magiamgia/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa mã giảm giá" });
 });
 
-/* ---------------- BÀI VIẾT ---------------- */
+/*  BÀI VIẾT  */
 router.get("/baiviet", auth, isAdmin, async (_, res) => {
   const bv = await BaiVietModel.findAll();
   res.json(bv);
@@ -190,7 +192,7 @@ router.delete("/baiviet/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa bài viết" });
 });
 
-/* ---------------- DANH MỤC BÀI VIẾT ---------------- */
+/*  DANH MỤC BÀI VIẾT  */
 router.get("/danhmucbaiviet", auth, isAdmin, async (_, res) => {
   const list = await DanhMucBaiVietModel.findAll();
   res.json(list);
@@ -201,7 +203,7 @@ router.post("/danhmucbaiviet", auth, isAdmin, async (req, res) => {
   res.json({ message: "Thêm danh mục bài viết thành công", dm });
 });
 
-/* ---------------- LIÊN HỆ ---------------- */
+/*  LIÊN HỆ  */
 router.get("/lienhe", auth, isAdmin, async (_, res) => {
   const list = await LienHeModel.findAll({ order: [["created_at", "DESC"]] });
   res.json(list);
@@ -212,37 +214,46 @@ router.delete("/lienhe/:id", auth, isAdmin, async (req, res) => {
   res.json({ message: "Đã xóa góp ý" });
 });
 
-/* ---------------- REVIEW ---------------- */
+/*  REVIEW  */
 router.get("/review", auth, isAdmin, async (_, res) => {
-  const rv = await ReviewModel.findAll();
+  const rv = await DanhGiaModel.findAll();
   res.json(rv);
 });
 
 router.delete("/review/:id", auth, isAdmin, async (req, res) => {
-  await ReviewModel.destroy({ where: { id: req.params.id } });
+  await DanhGiaModel.destroy({ where: { id: req.params.id } });
   res.json({ message: "Đã xóa đánh giá" });
 });
 
+module.exports = router;
+module.exports.isAdmin = isAdmin;
 
-/* ---------------- USER: CẬP NHẬT ROLE / TRẠNG THÁI ---------------- */
-// PUT /admin/users/:id
+/* ---------------- USER: CẬP NHẬT THÔNG TIN ---------------- */
+// PUT /api/users/:id
 router.put("/users/:id", auth, isAdmin, async (req, res) => {
   try {
-    const { role, trangthai } = req.body;
+    const { ho_ten, sdt, role, trangthai } = req.body;
+    const updateData = {};
+    
+    if (ho_ten !== undefined) updateData.ho_ten = ho_ten;
+    if (sdt !== undefined) updateData.sdt = sdt;
+    if (role !== undefined) updateData.role = role;
+    if (trangthai !== undefined) updateData.trangthai = trangthai;
+    
     const [count] = await UserModel.update(
-      { role, trangthai },
+      updateData,
       { where: { id: req.params.id } }
     );
     if (count === 0) return res.status(404).json({ message: "Không tìm thấy người dùng" });
     res.json({ message: "Cập nhật người dùng thành công" });
   } catch (err) {
-    console.error(" Lỗi PUT /users/:id:", err);
-    res.status(500).json({ message: "Lỗi server" });
+    console.error("❌ Lỗi PUT /users/:id:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 
 /* ---------------- ADMIN: LẤY DANH SÁCH SẢN PHẨM ---------------- */
-// GET /admin/sanpham
+// GET /api/sanpham
 router.get("/sanpham", auth, isAdmin, async (req, res) => {
   try {
     const list = await SanPhamModel.findAll({
@@ -254,14 +265,14 @@ router.get("/sanpham", auth, isAdmin, async (req, res) => {
     });
     res.json(list);
   } catch (err) {
-    console.error(" Lỗi GET /sanpham:", err);
+    console.error("❌ Lỗi GET /sanpham:", err);
     res.status(500).json({ message: "Lỗi server" });
   }
 });
 
 /* ---------------- ADMIN: CHI TIẾT 1 ĐƠN HÀNG ---------------- */
-// GET admin/donhang/:id
-router.get("/donhang/:id", auth, isAdmin, async (req, res) => {
+// GET /api/donhang/:id
+router.get("/admin/donhang/:id", auth, isAdmin, async (req, res) => {
   try {
     const dh = await DonHangModel.findByPk(req.params.id, {
       include: [
@@ -280,8 +291,8 @@ router.get("/donhang/:id", auth, isAdmin, async (req, res) => {
 });
 
 /* ---------------- DANH MỤC BÀI VIẾT: CẬP NHẬT + XOÁ ---------------- */
-// PUT /admin/danhmucbaiviet/:id
-router.put("/danhmucbaiviet/:id", auth, isAdmin, async (req, res) => {
+// PUT /api/admin/danhmucbaiviet/:id
+router.put("/admin/danhmucbaiviet/:id", auth, isAdmin, async (req, res) => {
   try {
     const [count] = await DanhMucBaiVietModel.update(req.body, { where: { id: req.params.id } });
     if (count === 0) return res.status(404).json({ message: "Không tìm thấy danh mục bài viết" });
@@ -292,8 +303,8 @@ router.put("/danhmucbaiviet/:id", auth, isAdmin, async (req, res) => {
   }
 });
 
-// DELETE /admin/danhmucbaiviet/:id
-router.delete("/danhmucbaiviet/:id", auth, isAdmin, async (req, res) => {
+// DELETE /api/admin/danhmucbaiviet/:id
+router.delete("/admin/danhmucbaiviet/:id", auth, isAdmin, async (req, res) => {
   try {
     const count = await DanhMucBaiVietModel.destroy({ where: { id: req.params.id } });
     if (!count) return res.status(404).json({ message: "Không tìm thấy danh mục bài viết" });
@@ -303,65 +314,3 @@ router.delete("/danhmucbaiviet/:id", auth, isAdmin, async (req, res) => {
     res.status(500).json({ message: "Lỗi server" });
   }
 });
-
-/**
- * Thêm banner mới
- * POST /admin/banners
- */
-router.post("/",auth, isAdmin, async (req, res) => {
-  try {
-    const { tieude, url, linksp, anhien, mota, thutu } = req.body;
-    if (!url) return res.status(400).json({ message: "Thiếu trường url" });
-
-    const newBanner = await BannerModel.create({
-      tieude,
-      url,
-      linksp,
-      anhien,
-      mota,
-      thutu,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
-
-    res.status(201).json({ message: "Thêm banner thành công", banner: newBanner });
-  } catch (error) {
-    console.error("Lỗi thêm banner:", error);
-    res.status(500).json({ message: "Lỗi server khi thêm banner", error: error.message });
-  }
-});
-
-/**
- * Cập nhật banner
- * PUT /admin/banners/:id
- */
-router.put("/:id",auth, isAdmin, async (req, res) => {
-  try {
-    const banner = await BannerModel.findByPk(req.params.id);
-    if (!banner) return res.status(404).json({ message: "Không tìm thấy banner" });
-
-    await banner.update({ ...req.body, updated_at: new Date() });
-    res.json({ message: "Cập nhật banner thành công", banner });
-  } catch (error) {
-    console.error("Lỗi cập nhật banner:", error);
-    res.status(500).json({ message: "Lỗi server khi cập nhật banner", error: error.message });
-  }
-});
-
-/**
- * Xóa banner
- * DELETE /admin/banners/:id
- */
-router.delete("/:id",auth, isAdmin, async (req, res) => {
-  try {
-    const banner = await BannerModel.findByPk(req.params.id);
-    if (!banner) return res.status(404).json({ message: "Không tìm thấy banner" });
-
-    await banner.destroy();
-    res.json({ message: "Xóa banner thành công" });
-  } catch (error) {
-    console.error("Lỗi xóa banner:", error);
-    res.status(500).json({ message: "Lỗi server khi xóa banner", error: error.message });
-  }
-});
-module.exports = router;

@@ -1,11 +1,8 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,15 +18,105 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login:', formData);
-    alert('Đăng nhập thành công!');
-    router.push('/');
+    
+    try {
+      //  GỌI API THẬT
+      const response = await fetch('http://localhost:5001/api/auth/dangnhap', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng nhập thất bại');
+      }
+
+      console.log(' Đăng nhập thành công:', data);
+      
+      // Lưu token và user info vào localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        
+        // Kiểm tra xem có user object không
+        if (data.user) {
+          const userName = data.user.fullName || data.user.email.split('@')[0];
+          localStorage.setItem('userEmail', data.user.email);
+          localStorage.setItem('userName', userName);
+          localStorage.setItem('userRole', data.user.role || 'customer');
+          
+          console.log(' Login Page - Đã lưu localStorage:', {
+            token: data.token.substring(0, 20) + '...',
+            email: data.user.email,
+            name: userName,
+            role: data.user.role || 'customer'
+          });
+        } else {
+          // Fallback nếu backend không trả về user object
+          const userName = formData.email.split('@')[0];
+          localStorage.setItem('userEmail', formData.email);
+          localStorage.setItem('userName', userName);
+          localStorage.setItem('userRole', 'customer');
+          
+          console.log(' Login Page - Đã lưu localStorage (fallback):', {
+            token: data.token.substring(0, 20) + '...',
+            email: formData.email,
+            name: userName,
+            role: 'customer'
+          });
+        }
+        
+        // Verify localStorage đã được lưu
+        console.log(' Verify localStorage:', {
+          token: localStorage.getItem('token') ? 'CÓ' : 'KHÔNG',
+          email: localStorage.getItem('userEmail'),
+          name: localStorage.getItem('userName'),
+          role: localStorage.getItem('userRole')
+        });
+      }
+      
+      console.log(' Đăng nhập thành công!');
+      
+      // Thông báo Header cập nhật ngay trong cùng tab
+      try { 
+        window.dispatchEvent(new Event('loginSuccess'));
+        window.dispatchEvent(new Event('storage'));
+      } catch {}
+      
+      alert('Đăng nhập thành công!');
+      
+      // Redirect theo role
+      const userRole = localStorage.getItem('userRole');
+      console.log(' Redirect...', { role: userRole });
+      setTimeout(() => {
+        if (userRole === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/';
+        }
+      }, 200);
+    } catch (error) {
+      console.error(' Lỗi đăng nhập:', error);
+      alert((error as Error).message || 'Email hoặc mật khẩu không đúng!');
+    }
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden">
+    <div 
+      className="min-vh-100 d-flex align-items-center justify-content-center position-relative"
+      style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        overflow: 'hidden'
+      }}
+    >
       {/* Background Image with Overlay */}
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
@@ -37,19 +124,18 @@ export default function LoginPage() {
           backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.4)',
-          zIndex: 0,
+          opacity: 0.1,
         }}
       ></div>
 
       {/* Animated Shapes */}
-      <div className="position-absolute top-0 start-0 w-100 h-100" style={{ zIndex: 1 }}>
+      <div className="position-absolute top-0 start-0 w-100 h-100">
         <div
           className="position-absolute rounded-circle"
           style={{
             width: '300px',
             height: '300px',
-            background: 'linear-gradient(135deg, rgba(255,193,7,0.3) 0%, rgba(255,193,7,0.1) 100%)',
+            background: 'rgba(255, 255, 255, 0.1)',
             top: '-150px',
             right: '-150px',
             animation: 'float 6s ease-in-out infinite',
@@ -60,7 +146,7 @@ export default function LoginPage() {
           style={{
             width: '200px',
             height: '200px',
-            background: 'linear-gradient(135deg, rgba(255,193,7,0.2) 0%, rgba(255,193,7,0.05) 100%)',
+            background: 'rgba(255, 255, 255, 0.08)',
             bottom: '-100px',
             left: '-100px',
             animation: 'float 8s ease-in-out infinite',
@@ -69,10 +155,10 @@ export default function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <div className="container position-relative" style={{ zIndex: 2 }}>
-        <div className="row justify-content-center">
-          <div className="col-md-10 col-lg-8">
-            <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
+      <div className="container position-relative" style={{ zIndex: 10, padding: '20px' }}>
+          <div className="row justify-content-center">
+            <div className="col-md-10 col-lg-8">
+              <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
               <div className="row g-0">
                 {/* Left Side - Branding */}
                 <div
@@ -291,7 +377,7 @@ export default function LoginPage() {
       </div>
 
       {/* Animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% {
             transform: translateY(0) rotate(0deg);
@@ -304,4 +390,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

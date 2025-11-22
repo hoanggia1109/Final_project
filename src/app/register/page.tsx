@@ -24,7 +24,7 @@ export default function RegisterPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -37,13 +37,44 @@ export default function RegisterPage() {
       return;
     }
     
-    console.log('Register:', formData);
-    alert('Đăng ký thành công!');
-    router.push('/login');
+    try {
+      // ✅ GỌI API THẬT
+      const response = await fetch('http://localhost:5001/api/auth/dangky', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng ký thất bại');
+      }
+
+      console.log('✅ Đăng ký thành công:', data);
+      alert('Đăng ký thành công! Vui lòng đăng nhập.');
+      router.push('/login');
+    } catch (error) {
+      console.error('❌ Lỗi đăng ký:', error);
+      alert((error as Error).message || 'Có lỗi xảy ra khi đăng ký!');
+    }
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden py-5">
+    <div 
+      className="min-vh-100 d-flex align-items-center justify-content-center position-relative"
+      style={{
+        background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        overflow: 'hidden'
+      }}
+    >
       {/* Background Image with Overlay */}
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
@@ -51,19 +82,18 @@ export default function RegisterPage() {
           backgroundImage: 'url("https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.4)',
-          zIndex: 0,
+          opacity: 0.1,
         }}
       ></div>
 
       {/* Animated Shapes */}
-      <div className="position-absolute top-0 start-0 w-100 h-100" style={{ zIndex: 1 }}>
+      <div className="position-absolute top-0 start-0 w-100 h-100">
         <div
           className="position-absolute rounded-circle"
           style={{
             width: '400px',
             height: '400px',
-            background: 'linear-gradient(135deg, rgba(255,193,7,0.3) 0%, rgba(255,193,7,0.1) 100%)',
+            background: 'rgba(255, 255, 255, 0.1)',
             top: '-200px',
             left: '-200px',
             animation: 'float 7s ease-in-out infinite',
@@ -74,7 +104,7 @@ export default function RegisterPage() {
           style={{
             width: '250px',
             height: '250px',
-            background: 'linear-gradient(135deg, rgba(255,193,7,0.2) 0%, rgba(255,193,7,0.05) 100%)',
+            background: 'rgba(255, 255, 255, 0.08)',
             bottom: '-125px',
             right: '-125px',
             animation: 'float 9s ease-in-out infinite',
@@ -83,7 +113,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Register Card */}
-      <div className="container position-relative" style={{ zIndex: 2 }}>
+      <div className="container position-relative" style={{ zIndex: 10, padding: '20px' }}>
         <div className="row justify-content-center">
           <div className="col-md-10 col-lg-9">
             <div className="card border-0 shadow-lg overflow-hidden" style={{ borderRadius: '20px' }}>
@@ -353,7 +383,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% {
             transform: translateY(0) rotate(0deg);
@@ -366,4 +396,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
