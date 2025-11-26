@@ -1,0 +1,53 @@
+================================================================
+    COPY NỘI DUNG NÀY ĐỂ THAY THẾ TRONG FILE .ENV
+================================================================
+
+# ========================
+# EMAIL CONFIGURATION
+# ========================
+EMAIL_USER=dannydecor@gmail.com
+EMAIL_PASSWORD=abcd efgh ijkl mnop
+FRONTEND_URL=http://localhost:3000
+
+================================================================
+          HƯỚNG DẪN THAY ĐỔI
+================================================================
+
+1. Mở file .env trong thư mục server_node
+
+2. Tìm phần EMAIL CONFIGURATION (có thể duplicate, xóa hết đi)
+
+3. Thay thế bằng 3 dòng trên, nhưng SỬA LẠI:
+   
+   EMAIL_USER=your-real-email@gmail.com       ← Email Gmail của BẠN
+   EMAIL_PASSWORD=abcd efgh ijkl mnop         ← App Password 16 ký tự VỪA TẠO
+   FRONTEND_URL=http://localhost:3000         ← Giữ nguyên
+
+4. Lưu file (Ctrl+S)
+
+5. Restart server:
+   - Dừng server: Ctrl+C
+   - Chạy lại: npm start
+
+6. Đăng ký lại và CHECK EMAIL!
+
+================================================================
+        KIỂM TRA XEM ĐÃ ĐÚNG CHƯA
+================================================================
+
+Chạy lệnh này để kiểm tra:
+
+    node check-email-config.js
+
+Kết quả ĐÚNG:
+    ✅ EMAIL_USER: naotomi1404@gmail.com
+    ✅ EMAIL_PASSWORD: yild gzmi zabg xofk
+ (length: 16)    ← PHẢI 16 KÝ TỰ!
+    ✅ FRONTEND_URL: http://localhost:3000
+
+Kết quả SAI:
+    ❌ EMAIL_USER: your-email@gmail.com         ← Vẫn là placeholder
+    ❌ EMAIL_PASSWORD: your****word (length: 25) ← Sai length!
+
+================================================================
+

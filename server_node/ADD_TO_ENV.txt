@@ -1,0 +1,43 @@
+================================================================
+         THÊM NỘI DUNG NÀY VÀO FILE .ENV
+================================================================
+
+Copy 3 dòng này và paste vào cuối file .env:
+
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-16-char-app-password
+FRONTEND_URL=http://localhost:3000
+
+================================================================
+         CÁCH LẤY APP PASSWORD
+================================================================
+
+1. Vào: https://myaccount.google.com/security
+   → Bật "Xác minh 2 bước"
+
+2. Vào: https://myaccount.google.com/apppasswords
+   → Chọn App: Mail
+   → Chọn Device: Other → Nhập: "DANNYdecor"
+   → Click Generate
+   → Copy mật khẩu 16 ký tự (có thể có dấu cách)
+
+3. Thay thế:
+   EMAIL_USER=your-email@gmail.com         ← Email Gmail của bạn
+   EMAIL_PASSWORD=abcd efgh ijkl mnop      ← App Password vừa copy
+
+================================================================
+         SAU KHI SỬA XONG
+================================================================
+
+1. Lưu file .env (Ctrl+S)
+2. Đóng Notepad
+3. Chạy kiểm tra lại:
+   
+   node check-email-config.js
+
+4. Nếu thấy ✅ là OK, restart server:
+   
+   npm start
+
+================================================================
+
