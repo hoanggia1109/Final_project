@@ -1,36 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const express = require("express");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const jwt = require("jsonwebtoken");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { UserModel, DonHangModel, YeuThichModel, DiaChiModel } = require("../database");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const multer = require("multer");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require("path");
+// CHANGED: Sử dụng auth middleware từ middleware/auth.js thay vì tự định nghĩa
+const { auth } = require("../middleware/auth");
 
 const router = express.Router();
-
-// Middleware xác thực token
-const auth = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: "Thiếu header Authorization" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "Token không hợp lệ" });
-    }
-
-    const decoded = jwt.verify(token, "SECRET_KEY");
-    req.userId = decoded.id;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Token không hợp lệ" });
-  }
-};
 
 // Cấu hình multer cho upload avatar
 const storage = multer.diskStorage({
@@ -62,7 +41,8 @@ const upload = multer({
 // GET /api/profile - Lấy thông tin profile
 router.get("/", auth, async (req, res) => {
   try {
-    const user = await UserModel.findByPk(req.userId, {
+    // CHANGED: Sử dụng req.user.id thay vì req.userId (từ auth middleware mới)
+    const user = await UserModel.findByPk(req.user.id, {
       attributes: [
         "id",
         "email",
@@ -82,17 +62,17 @@ router.get("/", auth, async (req, res) => {
 
     // Đếm số đơn hàng
     const orderCount = await DonHangModel.count({
-      where: { user_id: req.userId },
+      where: { user_id: req.user.id },
     });
 
     // Đếm số sản phẩm yêu thích
     const wishlistCount = await YeuThichModel.count({
-      where: { user_id: req.userId },
+      where: { user_id: req.user.id },
     });
 
     // Đếm số địa chỉ
     const addressCount = await DiaChiModel.count({
-      where: { user_id: req.userId },
+      where: { user_id: req.user.id },
     });
 
     res.json({
@@ -124,7 +104,8 @@ router.put("/", auth, async (req, res) => {
   try {
     const { ho_ten, sdt, ngaysinh, gioitinh } = req.body;
 
-    const user = await UserModel.findByPk(req.userId);
+    // CHANGED: Sử dụng req.user.id thay vì req.userId
+    const user = await UserModel.findByPk(req.user.id);
 
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy user" });
@@ -164,7 +145,8 @@ router.post("/avatar", auth, upload.single("avatar"), async (req, res) => {
       return res.status(400).json({ message: "Không có file được upload" });
     }
 
-    const user = await UserModel.findByPk(req.userId);
+    // CHANGED: Sử dụng req.user.id thay vì req.userId
+    const user = await UserModel.findByPk(req.user.id);
 
     if (!user) {
       return res.status(404).json({ message: "Không tìm thấy user" });

@@ -87,10 +87,10 @@ export default function StripePaymentForm({ onSuccess, onError }: StripePaymentF
         }}
       >
         {isReady ? (
-          <PaymentElement
-            options={{
-              layout: 'tabs',
-            }}
+        <PaymentElement
+          options={{
+            layout: 'tabs',
+          }}
             onReady={() => {
               // CHANGED: Đã xóa emoji/sticker khỏi console logs
               console.log('PaymentElement ready');

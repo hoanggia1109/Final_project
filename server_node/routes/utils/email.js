@@ -1,12 +1,21 @@
-// CHANGED: Helper function để gửi email xác nhận đơn hàng
-const nodemailer = require("nodemailer");
+/**
+ * EMAIL.JS - Email Utility Functions
+ * 
+ * Cung cấp các hàm gửi email:
+ * - sendOrderConfirmationEmail: Email xác nhận đơn hàng
+ * - sendPaymentSuccessEmail: Email thanh toán thành công
+ * - sendOrderStatusUpdateEmail: Email cập nhật trạng thái đơn hàng
+ */
 
-// CHANGED: Tạo transporter cho email (sử dụng cùng config với quên mật khẩu)
+const nodemailer = require("nodemailer");
+const constants = require("../../config/constants");
+
+// Tạo transporter cho email từ config
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: constants.EMAIL.SERVICE || "gmail",
   auth: {
-    user: process.env.EMAIL_USER || "tnpv2709@gmail.com",
-    pass: process.env.EMAIL_PASSWORD || "anvb vlod twoq xvvy",
+    user: constants.EMAIL.USER || process.env.EMAIL_USER,
+    pass: constants.EMAIL.PASSWORD || process.env.EMAIL_PASSWORD,
   },
 });
 
@@ -141,7 +150,7 @@ async function sendOrderConfirmationEmail(to, orderData) {
     `;
 
     await transporter.sendMail({
-      from: "Shop Nội Thất <tnpv2709@gmail.com>",
+      from: constants.EMAIL.FROM || `Shop Nội Thất <${constants.EMAIL.USER}>`,
       to: to,
       subject: `Xác nhận đơn hàng #${code}`,
       html: html,
@@ -279,7 +288,7 @@ async function sendPaymentSuccessEmail(to, orderData) {
     `;
 
     await transporter.sendMail({
-      from: "Shop Nội Thất <tnpv2709@gmail.com>",
+      from: constants.EMAIL.FROM || `Shop Nội Thất <${constants.EMAIL.USER}>`,
       to: to,
       subject: `Thanh toán thành công - Đơn hàng #${code}`,
       html: html,
@@ -293,8 +302,179 @@ async function sendPaymentSuccessEmail(to, orderData) {
   }
 }
 
+/**
+ * Gửi email cập nhật trạng thái đơn hàng
+ * @param {string} to - Email người nhận
+ * @param {Object} orderData - Thông tin đơn hàng
+ * @param {string} orderData.code - Mã đơn hàng
+ * @param {string} orderData.trangthai - Trạng thái đơn hàng mới (pending, confirmed, shipping, delivered, cancelled, returned)
+ * @param {string} orderData.trangthai_cu - Trạng thái đơn hàng cũ (optional)
+ * @param {number} orderData.tongtien_sau_giam - Tổng tiền
+ * @param {Array} orderData.chitiet - Chi tiết đơn hàng (optional)
+ */
+async function sendOrderStatusUpdateEmail(to, orderData) {
+  try {
+    const { code, trangthai, trangthai_cu, tongtien_sau_giam, chitiet } = orderData;
+    
+    // Mapping trạng thái sang tiếng Việt
+    const statusLabels = {
+      'pending': { label: 'Chờ xác nhận', color: '#ffc107', icon: '⏳' },
+      'confirmed': { label: 'Đã xác nhận', color: '#17a2b8', icon: '✓' },
+      'shipping': { label: 'Đang giao hàng', color: '#007bff', icon: '🚚' },
+      'delivered': { label: 'Đã giao hàng', color: '#28a745', icon: '✅' },
+      'cancelled': { label: 'Đã hủy', color: '#dc3545', icon: '❌' },
+      'returned': { label: 'Đã trả hàng', color: '#6c757d', icon: '↩️' }
+    };
+
+    const status = statusLabels[trangthai] || { label: trangthai, color: '#666', icon: '📦' };
+
+    // Tạo danh sách sản phẩm nếu có
+    let productsList = '';
+    if (chitiet && chitiet.length > 0) {
+      productsList = chitiet.map((item, index) => {
+        const productName = item.bienthe?.sanpham?.tensp || 'Sản phẩm';
+        const quantity = item.soluong || 0;
+        const price = Number(item.gia || 0);
+        const total = price * quantity;
+        return `
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${index + 1}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${productName}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${quantity}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${price.toLocaleString('vi-VN')}₫</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${total.toLocaleString('vi-VN')}₫</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Nội dung thông báo tùy theo trạng thái
+    let messageContent = '';
+    switch(trangthai) {
+      case 'confirmed':
+        messageContent = '<p>Đơn hàng của bạn đã được xác nhận và đang được chuẩn bị để giao hàng. Chúng tôi sẽ thông báo cho bạn khi đơn hàng được vận chuyển.</p>';
+        break;
+      case 'shipping':
+        messageContent = '<p>Đơn hàng của bạn đang được vận chuyển. Vui lòng chuẩn bị sẵn số tiền và kiểm tra hàng hóa khi nhận hàng.</p>';
+        break;
+      case 'delivered':
+        messageContent = '<p>Đơn hàng của bạn đã được giao thành công! Cảm ơn bạn đã tin tưởng và mua sắm tại Shop Nội Thất. Chúng tôi rất mong nhận được phản hồi từ bạn.</p>';
+        break;
+      case 'cancelled':
+        messageContent = '<p>Đơn hàng của bạn đã bị hủy. Nếu bạn đã thanh toán, tiền sẽ được hoàn lại trong 3-5 ngày làm việc. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.</p>';
+        break;
+      case 'returned':
+        messageContent = '<p>Đơn hàng của bạn đã được xử lý trả hàng. Chúng tôi sẽ kiểm tra và hoàn tiền cho bạn trong thời gian sớm nhất.</p>';
+        break;
+      default:
+        messageContent = '<p>Trạng thái đơn hàng của bạn đã được cập nhật. Vui lòng kiểm tra thông tin chi tiết bên dưới.</p>';
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, ${status.color} 0%, ${status.color}dd 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+          .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+          .status-badge { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: ${status.color}; 
+            color: white; 
+            border-radius: 20px; 
+            font-size: 18px; 
+            font-weight: bold;
+            margin: 15px 0;
+          }
+          .order-info { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }
+          .order-code { font-size: 24px; font-weight: bold; color: ${status.color}; text-align: center; margin: 10px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          th { background: #f5f5f5; padding: 10px; text-align: left; border-bottom: 2px solid #ddd; }
+          td { padding: 8px; }
+          .total { text-align: right; font-size: 18px; font-weight: bold; color: #FF6B6B; margin-top: 10px; }
+          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+          .icon { font-size: 48px; margin: 20px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="icon">${status.icon}</div>
+            <h1 style="margin: 10px 0;">Cập nhật trạng thái đơn hàng</h1>
+          </div>
+          <div class="content">
+            <p>Xin chào,</p>
+            ${messageContent}
+            
+            <div class="order-info">
+              <p style="text-align: center; margin: 10px 0;">
+                <strong>Mã đơn hàng:</strong>
+              </p>
+              <div class="order-code">${code}</div>
+              <div style="text-align: center; margin-top: 15px;">
+                <span class="status-badge">${status.label}</span>
+              </div>
+            </div>
+
+            ${chitiet && chitiet.length > 0 ? `
+            <div class="order-info">
+              <h3 style="margin-top: 0;">Chi tiết đơn hàng</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Tên sản phẩm</th>
+                    <th style="text-align: center;">Số lượng</th>
+                    <th style="text-align: right;">Đơn giá</th>
+                    <th style="text-align: right;">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${productsList}
+                </tbody>
+              </table>
+              ${tongtien_sau_giam ? `
+              <div class="total">
+                Tổng cộng: ${Number(tongtien_sau_giam || 0).toLocaleString('vi-VN')}₫
+              </div>
+              ` : ''}
+            </div>
+            ` : ''}
+
+            <p>Bạn có thể theo dõi trạng thái đơn hàng tại trang <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders">Đơn hàng của tôi</a>.</p>
+            <p>Nếu có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi.</p>
+          </div>
+          <div class="footer">
+            <p>© 2024 Shop Nội Thất. Tất cả các quyền được bảo lưu.</p>
+            <p>Email hỗ trợ: tnpv2709@gmail.com</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await transporter.sendMail({
+      from: constants.EMAIL.FROM || `Shop Nội Thất <${constants.EMAIL.USER}>`,
+      to: to,
+      subject: `Cập nhật trạng thái đơn hàng #${code} - ${status.label}`,
+      html: html,
+    });
+
+    console.log('Order status update email sent to:', to, '- Status:', trangthai);
+    return true;
+  } catch (error) {
+    console.error('Error sending order status update email:', error);
+    return false;
+  }
+}
+
 module.exports = {
   sendOrderConfirmationEmail,
   sendPaymentSuccessEmail,
+  sendOrderStatusUpdateEmail,
 };
 

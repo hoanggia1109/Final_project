@@ -28,11 +28,13 @@ interface Order {
   created_at: string;
   trangthai: 'pending' | 'confirmed' | 'shipping' | 'delivered' | 'cancelled' | 'returned';
   trangthaithanhtoan: string;
+  phuongthucthanhtoan?: string;
   tongtien: number;
   tongtien_sau_giam: number;
   giamgia: number;
   phi_van_chuyen: number;
   ghichu?: string;
+  ly_do_huy?: string; // Lý do hủy đơn hàng
   magiamgia_code?: string;
   chitiet: OrderItem[];
   diachi?: {
@@ -54,6 +56,9 @@ export default function OrderDetailPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
   const [copySuccess, setCopySuccess] = useState(false); // CHANGED: State để hiển thị thông báo copy mã đơn hàng
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     loadOrderDetail();
@@ -91,25 +96,39 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handleCancelOrder = async () => {
-    if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+  const handleCancelOrder = () => {
+    setCancelReason('');
+    setShowCancelModal(true);
+  };
 
+  const confirmCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      alert('Vui lòng nhập lý do hủy đơn hàng');
+      return;
+    }
+
+    setCancelling(true);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/orders/${order?.id}/cancel`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ly_do_huy: cancelReason.trim() })
       });
 
       if (response.ok) {
         setToastMessage('Đã hủy đơn hàng thành công');
         setToastType('success');
         setShowToast(true);
+        setShowCancelModal(false);
+        setCancelReason('');
         loadOrderDetail();
       } else {
-        setToastMessage('Không thể hủy đơn hàng');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setToastMessage(`Không thể hủy đơn hàng: ${errorData.error || 'Lỗi không xác định'}`);
         setToastType('error');
         setShowToast(true);
       }
@@ -118,6 +137,8 @@ export default function OrderDetailPage() {
       setToastMessage('Có lỗi xảy ra');
       setToastType('error');
       setShowToast(true);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -219,19 +240,18 @@ export default function OrderDetailPage() {
                         Đã copy mã đơn hàng!
                       </small>
                     )}
-                    {/* CHANGED: Thêm QR code cho mã đơn hàng */}
-                    <div className="text-center mt-3 pt-3 border-top">
-                      <small className="text-muted d-block mb-2">Quét QR code để lưu mã đơn hàng</small>
-                      <div className="d-inline-block p-2 bg-white rounded-3" style={{ border: '2px solid #e9ecef' }}>
-                        <Image
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(order.code)}`}
-                          alt="QR Code mã đơn hàng"
-                          width={150}
-                          height={150}
-                          style={{ borderRadius: '8px' }}
-                        />
+                    {/* Hiển thị lý do hủy nếu đơn hàng bị hủy */}
+                    {order.trangthai === 'cancelled' && order.ly_do_huy && (
+                      <div className="mt-3 p-3 bg-white rounded" style={{ borderRadius: '12px', border: '1px solid #dc3545' }}>
+                        <div className="d-flex align-items-start">
+                          <i className="bi bi-info-circle text-danger me-2 mt-1"></i>
+                          <div>
+                            <strong className="text-danger d-block mb-1">Lý do hủy đơn hàng:</strong>
+                            <p className="text-muted mb-0" style={{ whiteSpace: 'pre-wrap' }}>{order.ly_do_huy}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
                 <div className="col-md-4 text-md-end mt-3 mt-md-0">
@@ -252,7 +272,7 @@ export default function OrderDetailPage() {
 
           <div className="row">
             {/* Order Items */}
-            <div className="col-lg-8 mb-4">
+            <div className="col-lg-7 mb-4">
               <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
                 <div className="card-body p-4">
                   <h5 className="fw-bold mb-4">Sản phẩm đã đặt</h5>
@@ -313,7 +333,7 @@ export default function OrderDetailPage() {
             </div>
 
             {/* Order Summary & Info */}
-            <div className="col-lg-4">
+            <div className="col-lg-5">
               {/* Payment Summary */}
               <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
                 <div className="card-body p-4">
@@ -343,6 +363,37 @@ export default function OrderDetailPage() {
                     <span>{Number(order.phi_van_chuyen).toLocaleString('vi-VN')}₫</span>
                   </div>
 
+                  {/* CHANGED: Thêm thông tin hình thức thanh toán vào phần thông tin thanh toán */}
+                  {order.phuongthucthanhtoan && (
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">Hình thức thanh toán:</span>
+                      <strong>
+                        {order.phuongthucthanhtoan === 'cod' ? 'Thanh toán khi nhận hàng (COD)' :
+                         order.phuongthucthanhtoan === 'stripe' ? 'Thanh toán bằng thẻ (Stripe)' :
+                         order.phuongthucthanhtoan === 'banking' ? 'Chuyển khoản ngân hàng' :
+                         order.phuongthucthanhtoan}
+                      </strong>
+                    </div>
+                  )}
+
+                  {/* Thêm trạng thái thanh toán vào phần thông tin thanh toán */}
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted">Trạng thái thanh toán:</span>
+                    <span className="badge" style={{ 
+                      backgroundColor: (order.phuongthucthanhtoan === 'stripe' || order.trangthaithanhtoan === 'paid') ? '#28a74520' : order.trangthaithanhtoan === 'pending' ? '#ffc10720' : order.trangthaithanhtoan === 'refunded' ? '#dc354520' : '#6c757d20',
+                      color: (order.phuongthucthanhtoan === 'stripe' || order.trangthaithanhtoan === 'paid') ? '#28a745' : order.trangthaithanhtoan === 'pending' ? '#ffc107' : order.trangthaithanhtoan === 'refunded' ? '#dc3545' : '#6c757d',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      fontWeight: '600'
+                    }}>
+                      {order.phuongthucthanhtoan === 'stripe' ? 'Đã thanh toán' :
+                       order.trangthaithanhtoan === 'paid' ? 'Đã thanh toán' : 
+                       order.trangthaithanhtoan === 'pending' ? 'Chưa thanh toán' : 
+                       order.trangthaithanhtoan === 'refunded' ? 'Đã hoàn tiền' : 
+                       order.trangthaithanhtoan || 'Chưa xác định'}
+                    </span>
+                  </div>
+
                   <hr />
 
                   <div className="d-flex justify-content-between mb-3">
@@ -352,9 +403,56 @@ export default function OrderDetailPage() {
                     </span>
                   </div>
 
-                  <div className="alert alert-info mb-0" style={{ fontSize: '14px' }}>
-                    <i className="bi bi-info-circle me-2"></i>
-                    Trạng thái thanh toán: <strong>{order.trangthaithanhtoan === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}</strong>
+                  {/* CHANGED: Chỉ hiển thị button "Tiến hành thanh toán" khi:
+                      - Hình thức thanh toán là chuyển khoản (phuongthucthanhtoan === 'banking')
+                      - Trạng thái thanh toán là chưa thanh toán (trangthaithanhtoan === 'pending')
+                      - Đơn hàng chưa bị hủy (trangthai !== 'cancelled')
+                  */}
+                  {order.phuongthucthanhtoan === 'banking' && 
+                   order.trangthaithanhtoan === 'pending' && 
+                   order.trangthai !== 'cancelled' && (
+                    <button
+                      className="btn btn-warning text-white w-100 py-2 mb-3"
+                      style={{ borderRadius: '12px', fontWeight: '600' }}
+                      onClick={() => {
+                        router.push(`/checkout?orderId=${order.id}`);
+                      }}
+                    >
+                      <i className="bi bi-credit-card me-2"></i>
+                      Tiến hành thanh toán
+                    </button>
+                  )}
+
+                  {/* CHANGED: Di chuyển button "Tiếp tục mua sắm" vào trong box */}
+                  <div className="border-top pt-3 mt-3">
+                    <Link
+                      href="/products"
+                      className="btn btn-outline-warning w-100 py-2"
+                      style={{
+                        borderRadius: '12px',
+                        fontWeight: '600',
+                        border: '2px solid #FF8E53',
+                        color: '#FF8E53',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #FF8E53, #FFA726)';
+                        e.currentTarget.style.color = '#fff';
+                        e.currentTarget.style.borderColor = 'transparent';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 142, 83, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#FF8E53';
+                        e.currentTarget.style.borderColor = '#FF8E53';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <i className="bi bi-cart-plus me-2"></i>
+                      Tiếp tục mua sắm
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -397,10 +495,85 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal nhập lý do hủy đơn hàng */}
+      {showCancelModal && (
+        <div 
+          className="modal show d-block" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+          onClick={() => !cancelling && setShowCancelModal(false)}
+        >
+          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-exclamation-triangle text-danger me-2"></i>
+                  Xác nhận hủy đơn hàng
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => !cancelling && setShowCancelModal(false)}
+                  disabled={cancelling}
+                ></button>
+              </div>
+              <div className="modal-body pt-3">
+                <p className="mb-3">Bạn có chắc muốn hủy đơn hàng <strong>{order?.code}</strong>?</p>
+                <div className="mb-3">
+                  <label htmlFor="cancelReason" className="form-label fw-semibold">
+                    Lý do hủy đơn hàng <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    id="cancelReason"
+                    className="form-control"
+                    rows={4}
+                    placeholder="Vui lòng nhập lý do hủy đơn hàng (ví dụ: Đổi ý, không còn nhu cầu, ...)"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    disabled={cancelling}
+                    style={{ borderRadius: '12px' }}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={cancelling}
+                  style={{ borderRadius: '12px' }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmCancelOrder}
+                  disabled={cancelling || !cancelReason.trim()}
+                  style={{ borderRadius: '12px' }}
+                >
+                  {cancelling ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-x-circle me-2"></i>
+                      Xác nhận hủy đơn
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

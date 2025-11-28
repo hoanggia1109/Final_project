@@ -297,6 +297,20 @@ export default function StripeCheckoutPage() {
           </h1>
         </div>
 
+        {/* Thông báo nhắc nhở thanh toán */}
+        <div className="alert alert-warning border-0 shadow-sm mb-4" style={{ borderRadius: '16px' }}>
+          <div className="d-flex align-items-start">
+            <i className="bi bi-exclamation-triangle-fill me-2" style={{ fontSize: '20px', marginTop: '2px' }}></i>
+            <div>
+              <h6 className="fw-bold mb-1">Lưu ý quan trọng</h6>
+              <p className="mb-0 small">
+                Vui lòng hoàn tất thanh toán trong vòng <strong>24 giờ</strong>. 
+                Đơn hàng sẽ tự động hủy nếu không thanh toán sau thời hạn này.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* CHANGED: Chia thành 2 cột bằng nhau - Thông tin đơn hàng bên trái, Form thanh toán bên phải */}
         <div className="row g-4">
           {/* Cột trái: Thông tin đơn hàng */}
@@ -336,19 +350,6 @@ export default function StripeCheckoutPage() {
                         Đã copy mã đơn hàng!
                       </small>
                     )}
-                    {/* CHANGED: Thêm QR code cho mã đơn hàng */}
-                    <div className="text-center mt-3 pt-3 border-top">
-                      <small className="text-muted d-block mb-2">Quét QR code để lưu mã đơn hàng</small>
-                      <div className="d-inline-block p-2 bg-white rounded-3" style={{ border: '2px solid #e9ecef' }}>
-                        <Image
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(orderId)}`}
-                          alt="QR Code mã đơn hàng"
-                          width={150}
-                          height={150}
-                          style={{ borderRadius: '8px' }}
-                        />
-                      </div>
-                    </div>
                   </div>
                 )}
 

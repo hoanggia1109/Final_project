@@ -41,6 +41,10 @@ export default function OrdersPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   
   useEffect(() => {
     loadOrders();
@@ -64,7 +68,11 @@ export default function OrdersPage() {
         const data = await response.json();
         setOrders(data);
       } else {
-        console.error('Failed to load orders');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to load orders:', response.status, errorData);
+        setToastMessage(`Không thể tải danh sách đơn hàng: ${errorData.error || 'Lỗi không xác định'}`);
+        setToastType('error');
+        setShowToast(true);
       }
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -73,25 +81,43 @@ export default function OrdersPage() {
     }
   };
 
-  const handleCancelOrder = async (orderId: string) => {
-    if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+  const handleCancelOrder = (orderId: string) => {
+    setSelectedOrderId(orderId);
+    setCancelReason('');
+    setShowCancelModal(true);
+  };
 
+  const confirmCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      alert('Vui lòng nhập lý do hủy đơn hàng');
+      return;
+    }
+
+    if (!selectedOrderId) return;
+
+    setCancelling(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/orders/${orderId}/cancel`, {
+      const response = await fetch(`/api/orders/${selectedOrderId}/cancel`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ly_do_huy: cancelReason.trim() })
       });
 
       if (response.ok) {
         setToastMessage('Đã hủy đơn hàng thành công');
         setToastType('success');
         setShowToast(true);
+        setShowCancelModal(false);
+        setCancelReason('');
+        setSelectedOrderId(null);
         loadOrders();
       } else {
-        setToastMessage('Không thể hủy đơn hàng');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setToastMessage(`Không thể hủy đơn hàng: ${errorData.error || 'Lỗi không xác định'}`);
         setToastType('error');
         setShowToast(true);
       }
@@ -100,6 +126,8 @@ export default function OrdersPage() {
       setToastMessage('Có lỗi xảy ra');
       setToastType('error');
       setShowToast(true);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -433,6 +461,84 @@ export default function OrdersPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal nhập lý do hủy đơn hàng */}
+      {showCancelModal && selectedOrderId && (
+        <div 
+          className="modal show d-block" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+          onClick={() => !cancelling && setShowCancelModal(false)}
+        >
+          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-exclamation-triangle text-danger me-2"></i>
+                  Xác nhận hủy đơn hàng
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => !cancelling && setShowCancelModal(false)}
+                  disabled={cancelling}
+                ></button>
+              </div>
+              <div className="modal-body pt-3">
+                <p className="mb-3">Bạn có chắc muốn hủy đơn hàng này?</p>
+                <div className="mb-3">
+                  <label htmlFor="cancelReason" className="form-label fw-semibold">
+                    Lý do hủy đơn hàng <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    id="cancelReason"
+                    className="form-control"
+                    rows={4}
+                    placeholder="Vui lòng nhập lý do hủy đơn hàng (ví dụ: Đổi ý, không còn nhu cầu, ...)"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    disabled={cancelling}
+                    style={{ borderRadius: '12px' }}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setCancelReason('');
+                    setSelectedOrderId(null);
+                  }}
+                  disabled={cancelling}
+                  style={{ borderRadius: '12px' }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmCancelOrder}
+                  disabled={cancelling || !cancelReason.trim()}
+                  style={{ borderRadius: '12px' }}
+                >
+                  {cancelling ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-x-circle me-2"></i>
+                      Xác nhận hủy đơn
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

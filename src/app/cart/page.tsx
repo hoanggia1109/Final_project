@@ -553,9 +553,6 @@ export default function CartPage() {
         input[type='number'] {
           -moz-appearance: textfield;
         }
-        .modal {
-          z-index: 1055;
-        }
       `}</style>
     </div>
   );

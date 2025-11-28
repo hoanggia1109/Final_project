@@ -165,7 +165,7 @@ router.get("/:sanpham_id/average", async (req, res) => {
       count: reviews.length,
     });
   } catch (err) {
-    console.error("❌ Lỗi tính trung bình rating sản phẩm:", err);
+    console.error(" Lỗi tính trung bình rating sản phẩm:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });

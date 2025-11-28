@@ -164,15 +164,17 @@ router.post("/", auth, async (req, res) => {
       });
     }
 
-    // ====== Xóa giỏ hàng sau khi đặt ======
-    await GioHangModel.destroy({ where: { user_id: req.user.id } });
+    // CHANGED: KHÔNG xóa giỏ hàng ở đây - giữ giỏ hàng cho đến khi thanh toán thành công
+    // Giỏ hàng sẽ được xóa trong các trường hợp sau:
+    // - Khi thanh toán thành công (Stripe webhook, confirm-payment, banking confirm)
+    // - Khi admin xác nhận đơn COD đã được giao
 
     // CHANGED: Không gửi email khi tạo đơn hàng, chỉ gửi khi thanh toán thành công
     // Email sẽ được gửi ở thanhtoan.js khi thanh toán thành công
 
     // ====== Trả về kết quả ======
     res.json({
-      message: "Đặt hàng thành công",
+      message: "Đặt hàng thành công. Vui lòng hoàn tất thanh toán. Giỏ hàng sẽ được xóa sau khi thanh toán thành công.",
       donhang: {
         id: dh.id,
         code: dh.code,
@@ -200,30 +202,38 @@ module.exports = router;
  * Lấy danh sách đơn hàng người dùng
  */
 router.get("/", auth, async (req, res) => {
-  const { DiaChiModel } = require("../database");
-  const dh = await DonHangModel.findAll({
-    where: { user_id: req.user.id },
-    include: [
-      {
-        model: DonHangChiTietModel,
-        as: "chitiet",
-        include: [
-          {
-            model: SanPhamBienTheModel,
-            as: "bienthe",
-            include: [{ model: SanPhamModel, as: "sanpham" }],
-          },
-        ],
-      },
-      {
-        model: DiaChiModel,
-        as: "diachi",
-        required: false
-      }
-    ],
-    order: [["created_at", "DESC"]],
-  });
-  res.json(dh);
+  try {
+    const { DiaChiModel } = require("../database");
+    
+    const dh = await DonHangModel.findAll({
+      where: { user_id: req.user.id },
+      include: [
+        {
+          model: DonHangChiTietModel,
+          as: "chitiet",
+          include: [
+            {
+              model: SanPhamBienTheModel,
+              as: "bienthe",
+              include: [{ model: SanPhamModel, as: "sanpham" }],
+            },
+          ],
+        },
+        {
+          model: DiaChiModel,
+          as: "diachi",
+          required: false
+        }
+      ],
+      order: [["created_at", "DESC"]],
+    });
+    
+    console.log(`[GET /api/donhang] Found ${dh.length} orders for user ${req.user.id}`);
+    res.json(dh);
+  } catch (err) {
+    console.error("Lỗi GET /api/donhang:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 });
 
 /**
@@ -231,37 +241,135 @@ router.get("/", auth, async (req, res) => {
  * Chi tiết 1 đơn hàng
  */
 router.get("/:id", auth, async (req, res) => {
-  const { DiaChiModel } = require("../database");
-  const dh = await DonHangModel.findByPk(req.params.id, {
-    include: [
-      {
-        model: DonHangChiTietModel,
-        as: "chitiet",
-        include: [
-          {
-            model: SanPhamBienTheModel,
-            as: "bienthe",
-            include: [{ model: SanPhamModel, as: "sanpham" }],
-          },
-        ],
-      },
-      {
-        model: DiaChiModel,
-        as: "diachi",
-        required: false
-      }
-    ],
-  });
-  res.json(dh);
+  try {
+    const { DiaChiModel } = require("../database");
+    
+    const donhang = await DonHangModel.findByPk(req.params.id, {
+      include: [
+        {
+          model: DonHangChiTietModel,
+          as: "chitiet",
+          include: [
+            {
+              model: SanPhamBienTheModel,
+              as: "bienthe",
+              include: [{ model: SanPhamModel, as: "sanpham" }],
+            },
+          ],
+        },
+        {
+          model: DiaChiModel,
+          as: "diachi",
+          required: false
+        }
+      ],
+    });
+
+    if (!donhang) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // Kiểm tra quyền: user chỉ có thể xem đơn hàng của mình, trừ khi là admin
+    if (req.user.role !== 'admin' && donhang.user_id !== req.user.id) {
+      return res.status(403).json({ message: "Không có quyền xem đơn hàng này" });
+    }
+
+    res.json(donhang);
+  } catch (err) {
+    console.error("Lỗi GET /api/donhang/:id:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 });
 
 /**
  * PUT /api/donhang/:id/huy
  * Hủy đơn hàng
+ * Gửi email thông báo khi hủy đơn hàng
+ * 
+ * Route này phải đặt trước PUT /:id để tránh conflict
  */
 router.put("/:id/huy", auth, async (req, res) => {
-  await DonHangModel.update({ trangthai: "cancelled" }, { where: { id: req.params.id } });
-  res.json({ message: "Đã hủy đơn hàng" });
+  try {
+    // Lấy đơn hàng (không cần include user vì sẽ lấy trực tiếp sau)
+    const donhang = await DonHangModel.findByPk(req.params.id);
+
+    if (!donhang) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // Kiểm tra quyền: chỉ user sở hữu đơn hàng mới được hủy
+    if (donhang.user_id !== req.user.id) {
+      console.error(`Permission denied: User ${req.user.id} (${req.user.email}) tried to cancel order ${req.params.id} owned by ${donhang.user_id}`);
+      return res.status(403).json({ message: "Không có quyền hủy đơn hàng này" });
+    }
+
+    // CHANGED: Log để debug
+    console.log(`Cancelling order ${donhang.code} - Order user_id: ${donhang.user_id}, Request user_id: ${req.user.id}, Request email: ${req.user.email}`);
+
+    const trangthaiCu = donhang.trangthai;
+
+    // Chỉ cho phép hủy nếu đơn hàng chưa được xác nhận hoặc đang giao
+    if (trangthaiCu === "delivered") {
+      return res.status(400).json({ message: "Không thể hủy đơn hàng đã được giao" });
+    }
+
+    // Lấy lý do hủy từ request body (nếu có)
+    const ly_do_huy = req.body.ly_do_huy || null;
+
+    // Cập nhật trạng thái thành cancelled và lý do hủy
+    await DonHangModel.update(
+      { 
+        trangthai: "cancelled",
+        ly_do_huy: ly_do_huy || "Khách hàng hủy đơn hàng" // Mặc định nếu không có lý do
+      }, 
+      { where: { id: req.params.id } }
+    );
+
+    // Gửi email thông báo hủy đơn hàng
+    // CHANGED: Lấy user email trực tiếp từ user_id trong đơn hàng để đảm bảo đúng user
+    try {
+      const { sendOrderStatusUpdateEmail } = require("./utils/email");
+      
+      // Lấy thông tin user từ user_id trong đơn hàng (đảm bảo đúng user sở hữu đơn hàng)
+      const orderOwner = await UserModel.findByPk(donhang.user_id, {
+        attributes: ["id", "email", "ho_ten"],
+      });
+
+      if (orderOwner && orderOwner.email) {
+        const chitiet = await DonHangChiTietModel.findAll({
+          where: { donhang_id: req.params.id },
+          include: [
+            {
+              model: SanPhamBienTheModel,
+              as: "bienthe",
+              include: [{ model: SanPhamModel, as: "sanpham" }],
+            },
+          ],
+        });
+
+        console.log(`Sending cancellation email - Order: ${donhang.code}, User ID: ${donhang.user_id}, Email: ${orderOwner.email}`);
+        
+        await sendOrderStatusUpdateEmail(orderOwner.email, {
+          code: donhang.code,
+          trangthai: "cancelled",
+          trangthai_cu: trangthaiCu,
+          tongtien_sau_giam: donhang.tongtien_sau_giam,
+          chitiet: chitiet,
+        });
+
+        console.log(`Order cancellation email sent successfully to ${orderOwner.email} - Order: ${donhang.code}`);
+      } else {
+        console.warn(`Cannot send email: User ${donhang.user_id} not found or no email`);
+      }
+    } catch (emailError) {
+      console.error("Error sending order cancellation email:", emailError);
+    }
+
+    res.json({ message: "Đã hủy đơn hàng" });
+  } catch (err) {
+    console.error("Lỗi hủy đơn hàng:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 });
 
 module.exports = router;

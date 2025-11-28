@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 // CHANGED: Đã xóa import Stripe components vì chuyển sang trang riêng /checkout/stripe
@@ -27,10 +27,49 @@ interface CartItem {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [existingOrder, setExistingOrder] = useState<{
+    id: string;
+    code: string;
+    hoten?: string;
+    sdt?: string;
+    diachichitiet?: string;
+    tinh_thanh?: string;
+    quan_huyen?: string;
+    phuong_xa?: string;
+    ghichu?: string;
+    phuongthucthanhtoan?: string;
+    tongtien_sau_giam?: number;
+    chitiet?: Array<{
+      id: string;
+      bienthe_id: string;
+      soluong: number;
+      gia: number;
+      bienthe?: {
+        id: string;
+        mausac?: string;
+        kichthuoc?: string;
+        sanpham?: {
+          tensp: string;
+          thumbnail: string;
+        };
+        images?: Array<{ url: string }>;
+      };
+    }>;
+    diachi?: {
+      hoten?: string;
+      sdt?: string;
+      diachichitiet?: string;
+      tinh_thanh?: string;
+      quan_huyen?: string;
+      phuong_xa?: string;
+    };
+  } | null>(null);
   
   // Discount code states
   const [discountCode, setDiscountCode] = useState('');
@@ -57,10 +96,9 @@ export default function CheckoutPage() {
     paymentMethod: 'cod',
   });
 
-  // Check authentication and load cart
+  // Check authentication and load cart or existing order
   useEffect(() => {
-    // Load cart từ API backend
-    const loadCartFromAPI = async () => {
+    const loadData = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -69,6 +107,98 @@ export default function CheckoutPage() {
           return;
         }
 
+        // Kiểm tra xem có orderId trong URL không
+        const orderIdParam = searchParams.get('orderId');
+        
+        if (orderIdParam) {
+          // Nếu có orderId, load thông tin đơn hàng
+          setOrderId(orderIdParam);
+          
+          try {
+            console.log('Loading order:', orderIdParam);
+            const orderResponse = await fetch(`/api/orders/${orderIdParam}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+
+            console.log('Order response status:', orderResponse.status);
+
+            if (!orderResponse.ok) {
+              const errorData = await orderResponse.json().catch(() => ({ error: 'Failed to parse error' }));
+              console.error('Error loading order:', errorData);
+              
+              // Hiển thị thông báo lỗi và redirect về trang đơn hàng
+              alert(`Không thể tải thông tin đơn hàng: ${errorData.error || 'Lỗi không xác định'}`);
+              router.push(`/orders/${orderIdParam}`);
+              return;
+            }
+
+            const orderData = await orderResponse.json();
+            console.log('Order data loaded:', orderData);
+            setExistingOrder(orderData);
+            
+            // Điền form với thông tin đơn hàng
+            setFormData({
+              fullName: orderData.hoten || orderData.diachi?.hoten || '',
+              email: '',
+              phone: orderData.sdt || orderData.diachi?.sdt || '',
+              address: orderData.diachichitiet || orderData.diachi?.diachichitiet || '',
+              city: orderData.tinh_thanh || orderData.diachi?.tinh_thanh || '',
+              district: orderData.quan_huyen || orderData.diachi?.quan_huyen || '',
+              ward: orderData.phuong_xa || orderData.diachi?.phuong_xa || '',
+              note: orderData.ghichu || '',
+              paymentMethod: orderData.phuongthucthanhtoan || 'cod',
+            });
+            
+            // Load cart items từ đơn hàng
+            if (orderData.chitiet && orderData.chitiet.length > 0) {
+              const items = orderData.chitiet.map((item: {
+                id: string;
+                bienthe_id: string;
+                soluong: number;
+                gia: number;
+                bienthe?: {
+                  id: string;
+                  mausac?: string;
+                  kichthuoc?: string;
+                  sanpham?: {
+                    tensp: string;
+                    thumbnail: string;
+                  };
+                  images?: Array<{ url: string }>;
+                };
+              }) => ({
+                id: item.id,
+                user_id: '',
+                bienthe_id: item.bienthe_id,
+                soluong: item.soluong,
+                bienthe: {
+                  id: item.bienthe?.id || '',
+                  gia: item.gia,
+                  mausac: item.bienthe?.mausac,
+                  kichthuoc: item.bienthe?.kichthuoc,
+                  sanpham: item.bienthe?.sanpham,
+                  images: item.bienthe?.images || [],
+                },
+              }));
+              setCartItems(items);
+              setTotalAmount(Number(orderData.tongtien_sau_giam) || 0);
+            } else {
+              console.warn('Order has no items');
+            }
+          } catch (orderError) {
+            console.error('Error loading order:', orderError);
+            alert(`Lỗi khi tải đơn hàng: ${orderError instanceof Error ? orderError.message : 'Lỗi không xác định'}`);
+            router.push(`/orders/${orderIdParam}`);
+            return;
+          }
+          
+          setLoading(false);
+          return;
+        }
+
+        // Nếu không có orderId, load cart như bình thường
         const response = await fetch('http://localhost:5001/api/giohang', {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -85,30 +215,29 @@ export default function CheckoutPage() {
           throw new Error('Failed to load cart');
         }
 
-        // CHANGED: Đã xóa emoji/sticker khỏi console logs
         const data = await response.json();
         console.log('Cart data from checkout:', data);
         
         const items = data.san_pham || [];
         
         // Nếu giỏ hàng trống, redirect về trang cart
-          if (items.length === 0) {
-            router.push('/cart');
-            return;
-          }
+        if (items.length === 0) {
+          router.push('/cart');
+          return;
+        }
         
-          setCartItems(items);
+        setCartItems(items);
         setTotalAmount(data.tong_tien || 0);
       } catch (error) {
-        console.error('Error loading cart:', error);
+        console.error('Error loading data:', error);
         router.push('/cart');
       } finally {
         setLoading(false);
       }
     };
 
-    loadCartFromAPI();
-  }, [router]);
+    loadData();
+  }, [router, searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -129,7 +258,25 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Tạo đơn hàng
+      // Nếu có orderId (đơn hàng đã tồn tại), redirect trực tiếp đến trang thanh toán
+      if (orderId && existingOrder) {
+        const paymentMethod = formData.paymentMethod || existingOrder.phuongthucthanhtoan;
+        
+        if (paymentMethod === 'stripe') {
+          router.push(`/checkout/stripe?orderId=${orderId}`);
+          return;
+        } else if (paymentMethod === 'banking') {
+          router.push(`/checkout/banking?orderId=${orderId}`);
+          return;
+        } else if (paymentMethod === 'cod') {
+          // COD không cần thanh toán, chỉ cần xác nhận
+          alert('Đơn hàng COD đã được tạo. Vui lòng chờ xác nhận từ admin.');
+          router.push(`/orders/${orderId}`);
+          return;
+        }
+      }
+
+      // Tạo đơn hàng mới (nếu không có orderId)
       // CHANGED: Gửi đầy đủ thông tin địa chỉ để backend có thể lưu vào đơn hàng
       const orderData = {
         fullName: formData.fullName,
@@ -166,13 +313,13 @@ export default function CheckoutPage() {
 
       const data = await response.json();
       console.log('Order created:', data);
-      const orderId = data.donhang.id;
+      const newOrderId = data.donhang.id;
 
       // Xử lý theo phương thức thanh toán
       if (formData.paymentMethod === 'stripe') {
         // CHANGED: Đã xóa emoji/sticker khỏi console logs
         // Tạo payment intent với Stripe
-        console.log('Creating Stripe payment intent for order:', orderId);
+        console.log('Creating Stripe payment intent for order:', newOrderId);
         
         const paymentResponse = await fetch('http://localhost:5001/api/thanhtoan/stripe/create-payment-intent', {
           method: 'POST',
@@ -180,7 +327,7 @@ export default function CheckoutPage() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ donhang_id: orderId }),
+          body: JSON.stringify({ donhang_id: newOrderId }),
         });
 
         console.log('Payment response status:', paymentResponse.status);
@@ -227,7 +374,7 @@ export default function CheckoutPage() {
         
         // CHANGED: Redirect sang trang Stripe checkout thay vì hiển thị form inline
         setProcessing(false);
-        router.push(`/checkout/stripe?orderId=${orderId}`);
+        router.push(`/checkout/stripe?orderId=${newOrderId}`);
       } else if (formData.paymentMethod === 'cod') {
         // Thanh toán COD
         await fetch('http://localhost:5001/api/thanhtoan/cod', {
@@ -236,7 +383,7 @@ export default function CheckoutPage() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ donhang_id: orderId }),
+          body: JSON.stringify({ donhang_id: newOrderId }),
         });
 
       alert('Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
@@ -246,14 +393,14 @@ export default function CheckoutPage() {
         // CHANGED: Redirect sang trang banking payment thay vì alert
         console.log('=== BANKING PAYMENT SELECTED ===');
         console.log('Payment method:', formData.paymentMethod);
-        console.log('Order ID:', orderId);
+        console.log('Order ID:', newOrderId);
         console.log('Redirecting to banking checkout page...');
         
         // CHANGED: Set processing false trước khi redirect
         setProcessing(false);
         
         // CHANGED: Redirect sang trang banking
-        router.push(`/checkout/banking?orderId=${orderId}`);
+        router.push(`/checkout/banking?orderId=${newOrderId}`);
         return; // CHANGED: Return ngay để tránh xử lý tiếp và không chạy code phía dưới
       } else {
         // CHANGED: Xử lý các phương thức thanh toán khác (nếu có)

@@ -1,17 +1,34 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const { Op } = require("sequelize");
-const bcrypt = require("bcryptjs");
-const multer = require("multer");
-const path = require("path");
-const { v4: uuidv4 } = require("uuid");
-const nodemailer = require("nodemailer");
-const jwt = require("jsonwebtoken");
-const moment = require("moment-timezone");
-const app = express();
-const port = 5001; // ĐỔI PORT ĐỂ TRÁNH CONFLICT VỚI NEXT.JS (port 3000) và AirPlay (port 5000)
-app.use(cors());
+/**
+ * INDEX.JS - DEPRECATED
+ * 
+ * File này đã được refactor và không còn được sử dụng.
+ * 
+ * Để khởi động server, vui lòng sử dụng:
+ * - npm run dev (development mode với nodemon - tự động restart khi có thay đổi)
+ * - npm start (production mode)
+ * 
+ * Cấu trúc mới:
+ * - server.js: Khởi động HTTP server và xử lý process signals
+ * - app.js: Cấu hình Express app (middleware, routes, error handling)
+ * 
+ * File này được giữ lại để backward compatibility.
+ * Tự động redirect đến server.js mới.
+ */
+
+console.warn('WARNING: index.js is deprecated. Please use server.js instead.');
+console.warn('   Run: npm run dev (development) or npm start (production)');
+
+// Redirect to new server.js
+require('./server.js');
+
+// Cấu hình CORS chi tiết để Swagger UI hoạt động
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:5001", "http://127.0.0.1:5001"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 app.use(express.json());
 
 // LOGGING middleware - log mọi request
@@ -101,17 +118,35 @@ const swaggerOptions = {
 },
     servers: [
       {
-        url: "http://localhost:3000",
+        url: `http://localhost:${port}`,
+        description: "Development server",
+      },
+      {
+        url: "http://localhost:5001",
+        description: "Backend API server",
       },
     ],
   },
   apis: ["./index.js", "./swagger-docs.js"], 
-};
+};         
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 console.log("Swagger Docs Loaded:", Object.keys(swaggerDocs.paths || {}));
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// Cấu hình Swagger UI với options để hỗ trợ CORS và testing
+const swaggerOptionsUI = {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Shop Nội Thất API Documentation",
+  swaggerOptions: {
+    persistAuthorization: true, // Lưu token sau khi authorize
+    displayRequestDuration: true,
+    filter: true,
+    tryItOutEnabled: true,
+  },
+};
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerOptionsUI));
 console.log(`Swagger UI đã được khởi tạo tại: http://localhost:${port}/api-docs`);
+console.log(`API Server: http://localhost:${port}`);
 
 
 /* ---------------- UPLOAD ẢNH ---------------- */
@@ -131,7 +166,7 @@ app.post("/api/uploads", upload.single("file"), (req, res) => {
 /* ---------------- ERROR HANDLING TOÀN CỤC ---------------- */
 // Bắt lỗi unhandled promise rejection
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('🔥 UNHANDLED REJECTION:');
+  console.error('UNHANDLED REJECTION:');
   console.error('Reason:', reason);
   console.error('Promise:', promise);
   // KHÔNG tắt server để tiếp tục debug
@@ -139,7 +174,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Bắt lỗi uncaught exception
 process.on('uncaughtException', (error) => {
-  console.error('🔥 UNCAUGHT EXCEPTION:');
+  console.error(' UNCAUGHT EXCEPTION:');
   console.error('Error:', error.message);
   console.error('Stack:', error.stack);
   // KHÔNG tắt server để tiếp tục debug
@@ -147,7 +182,7 @@ process.on('uncaughtException', (error) => {
 
 // Middleware bắt lỗi Express (phải đặt SAU tất cả routes)
 app.use((err, req, res, next) => {
-  console.error('🔥 EXPRESS ERROR HANDLER:');
+  console.error(' EXPRESS ERROR HANDLER:');
   console.error('URL:', req.url);
   console.error('Method:', req.method);
   console.error('Error:', err.message);

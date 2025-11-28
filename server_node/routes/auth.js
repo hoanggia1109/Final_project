@@ -12,6 +12,7 @@ const nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
 
 const router = express.Router();
+const constants = require("../config/constants");
 
 /* -------- Đăng ký -------- */
 router.post("/dangky", async (req, res) => {
@@ -25,8 +26,10 @@ router.post("/dangky", async (req, res) => {
       return res.status(400).json({ message: "Email và mật khẩu là bắt buộc" });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ message: "Mật khẩu phải có ít nhất 6 ký tự" });
+    if (password.length < constants.PASSWORD.MIN_LENGTH) {
+      return res.status(400).json({ 
+        message: `Mật khẩu phải có ít nhất ${constants.PASSWORD.MIN_LENGTH} ký tự` 
+      });
     }
     
     console.log(" Checking email:", email);
@@ -39,7 +42,7 @@ router.post("/dangky", async (req, res) => {
     }
 
     console.log(" Hashing password...");
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, constants.PASSWORD.BCRYPT_ROUNDS);
     
     console.log(" Creating user...");
     const newUser = await UserModel.create({ 
@@ -69,7 +72,11 @@ router.post("/dangnhap", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: "Sai mật khẩu" });
 
-    const token = jwt.sign({ id: user.id, email, role: user.role }, "SECRET_KEY", { expiresIn: "7d" });
+    const token = jwt.sign(
+      { id: user.id, email, role: user.role },
+      constants.JWT.SECRET,
+      { expiresIn: constants.JWT.EXPIRES_IN }
+    );
     
     // Trả về thông tin user đầy đủ
     res.json({ 
@@ -130,7 +137,7 @@ router.post("/doipass", async (req, res) => {
     if (!token)
       return res.status(401).json({ message: "Token không hợp lệ" });
 
-    const decoded = jwt.verify(token, "SECRET_KEY");
+    const decoded = jwt.verify(token, constants.JWT.SECRET);
 
     const { pass_old, pass_new1, pass_new2 } = req.body;
     if (pass_new1 !== pass_new2)
@@ -142,7 +149,7 @@ router.post("/doipass", async (req, res) => {
     const match = await bcrypt.compare(pass_old, user.password);
     if (!match) return res.status(400).json({ message: "Sai mật khẩu cũ" });
 
-    const hashed = await bcrypt.hash(pass_new1, 10);
+    const hashed = await bcrypt.hash(pass_new1, constants.PASSWORD.BCRYPT_ROUNDS);
     await user.update({ password: hashed });
 
     res.json({ message: "Đổi mật khẩu thành công" });

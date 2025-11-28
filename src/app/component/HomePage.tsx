@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import PromoModal from './PromoModal';
 import ChatBox from './ChatBox';
 
+
 //INTERFACES
 interface Product {
   id: number;
@@ -25,9 +26,22 @@ interface Category {
 // (removed unused Partner interface)
 
 //Banner 
+// Định nghĩa interface cho Banner
+interface BannerType {
+  id: number;
+  tieude: string;
+  mota: string;
+  url: string;
+  anhien: number;
+  thutu: number;
+  image: string;
+  link?: string;
+  // Bổ sung các trường khác nếu cần thiết
+}
+
 function Banner() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<BannerType[]>([]);
 
   // Fetch banners từ API
   useEffect(() => {

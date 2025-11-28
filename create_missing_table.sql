@@ -31,5 +31,5 @@ INSERT INTO yeu_thich (id, user_id, sanpham_id) VALUES
 ('test-wish-001', 'your-user-id-here', 'your-product-id-here');
 */
 
-SELECT '✅ Table yeu_thich created successfully!' as Result;
+SELECT ' Table yeu_thich created successfully!' as Result;
 
