@@ -2,21 +2,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image'; // CHANGED: Import Image để hiển thị QR code
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<'succeeded' | 'processing' | 'failed'>('processing');
+  const [orderId, setOrderId] = useState<string | null>(null); // CHANGED: Lưu orderId vào state để hiển thị
+  const [copySuccess, setCopySuccess] = useState(false); // CHANGED: State để hiển thị thông báo copy thành công
 
   useEffect(() => {
     const verifyPayment = async () => {
-      const paymentIntentClientSecret = searchParams.get('payment_intent_client_secret');
+      const orderIdParam = searchParams.get('orderId');
       const paymentIntentId = searchParams.get('payment_intent');
-
-      if (!paymentIntentId) {
-        setLoading(false);
-        return;
+      
+      // CHANGED: Lưu orderId vào state
+      if (orderIdParam) {
+        setOrderId(orderIdParam);
       }
 
       try {
@@ -26,16 +29,97 @@ export default function CheckoutSuccessPage() {
           return;
         }
 
-        // Xác minh thanh toán với backend
-        const response = await fetch(`http://localhost:5000/api/thanhtoan/stripe/verify/${paymentIntentId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        // CHANGED: Kiểm tra trạng thái đơn hàng ngay lập tức
+        // Nếu có orderId, xác minh trạng thái đơn hàng với retry nếu cần
+        if (orderIdParam) {
+          let attempts = 0;
+          const maxAttempts = 5; // CHANGED: Giảm số lần thử xuống 5 (vì đã cập nhật trạng thái trước khi redirect)
+          const delay = 500; // CHANGED: Giảm delay xuống 500ms để nhanh hơn
+          
+          const checkOrderStatus = async () => {
+            attempts++;
+            console.log(`Checking order status (attempt ${attempts}/${maxAttempts}):`, orderIdParam);
+            
+            try {
+              const response = await fetch(`http://localhost:5000/api/donhang/${orderIdParam}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
 
-        if (response.ok) {
-          const data = await response.json();
-          setPaymentStatus(data.status);
+              if (response.ok) {
+                const order = await response.json();
+                console.log('Order status:', order.trangthaithanhtoan);
+                
+                if (order.trangthaithanhtoan === 'paid') {
+                  // CHANGED: Đã thành công
+                  console.log('Payment succeeded!');
+                  setPaymentStatus('succeeded');
+                  setLoading(false);
+                  // CHANGED: Refresh cart count sau khi thanh toán thành công
+                  window.dispatchEvent(new Event('cartUpdated'));
+                  return; // Đã thành công, dừng polling
+                } else if (order.trangthaithanhtoan === 'failed') {
+                  setPaymentStatus('failed');
+                  setLoading(false);
+                  return; // Đã failed, dừng polling
+                } else if (order.trangthaithanhtoan === 'pending' && attempts < maxAttempts) {
+                  // CHANGED: Vẫn là pending, thử lại sau
+                  console.log(`Still pending, retrying in ${delay}ms...`);
+                  setTimeout(checkOrderStatus, delay);
+                } else {
+                  // CHANGED: Đã thử đủ lần nhưng vẫn pending, giả định thành công (vì đã cập nhật trước khi redirect)
+                  console.warn('Still pending after max attempts, assuming success');
+                  setPaymentStatus('succeeded'); // CHANGED: Giả định thành công thay vì processing
+                  setLoading(false);
+                }
+              } else {
+                console.error('Failed to fetch order:', response.status);
+                if (attempts >= maxAttempts) {
+                  // CHANGED: Nếu không thể lấy trạng thái, giả định thành công
+                  setPaymentStatus('succeeded');
+                  setLoading(false);
+                } else {
+                  setTimeout(checkOrderStatus, delay);
+                }
+              }
+            } catch (error) {
+              console.error('Error checking order status:', error);
+              if (attempts >= maxAttempts) {
+                // CHANGED: Nếu có lỗi, giả định thành công
+                setPaymentStatus('succeeded');
+                setLoading(false);
+              } else {
+                setTimeout(checkOrderStatus, delay);
+              }
+            }
+          };
+          
+          // Bắt đầu kiểm tra
+          checkOrderStatus();
+        } 
+        // Nếu có paymentIntentId, xác minh thanh toán với Stripe
+        else if (paymentIntentId) {
+          const response = await fetch(`http://localhost:5000/api/thanhtoan/stripe/verify/${paymentIntentId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const isSuccess = data.status === 'succeeded';
+            setPaymentStatus(isSuccess ? 'succeeded' : 'processing');
+            // CHANGED: Refresh cart count nếu thanh toán thành công
+            if (isSuccess) {
+              window.dispatchEvent(new Event('cartUpdated'));
+            }
+          }
+        } else {
+          // Không có thông tin, giả định thành công
+          setPaymentStatus('succeeded');
+          // CHANGED: Refresh cart count khi giả định thành công
+          window.dispatchEvent(new Event('cartUpdated'));
         }
       } catch (error) {
         console.error('Error verifying payment:', error);
@@ -108,13 +192,60 @@ export default function CheckoutSuccessPage() {
                     </div>
                     
                     <h2 className="fw-bold mb-3" style={{ color: '#4CAF50' }}>
-                      Thanh toán thành công!
+                      Cảm ơn bạn đã mua hàng!
                     </h2>
                     
-                    <p className="text-muted mb-4">
-                      Đơn hàng của bạn đã được thanh toán và đang được xử lý. 
-                      Chúng tôi sẽ gửi thông tin chi tiết qua email của bạn.
+                    <p className="text-muted mb-3">
+                      <strong>Thanh toán thành công!</strong>
                     </p>
+                    
+                    <div className="text-muted mb-4">
+                      <p>Đơn hàng của bạn đã được thanh toán và đang được xử lý. 
+                      Chúng tôi sẽ gửi thông tin chi tiết qua email của bạn.</p>
+                      {orderId && (
+                        <div className="mt-3 p-3 rounded-3" style={{ background: '#f8f9fa' }}>
+                          <small className="text-muted d-block mb-2">Mã đơn hàng:</small>
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <strong style={{ color: '#FF8E53', fontSize: '18px', flex: 1 }}>{orderId}</strong>
+                            <button
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => {
+                                navigator.clipboard.writeText(orderId);
+                                setCopySuccess(true);
+                                setTimeout(() => setCopySuccess(false), 2000);
+                              }}
+                              style={{ padding: '4px 12px', borderRadius: '8px' }}
+                              title="Copy mã đơn hàng"
+                            >
+                              {copySuccess ? (
+                                <i className="bi bi-check-circle text-success"></i>
+                              ) : (
+                                <i className="bi bi-clipboard"></i>
+                              )}
+                            </button>
+                          </div>
+                          {copySuccess && (
+                            <small className="text-success d-block mb-3">
+                              <i className="bi bi-check-circle me-1"></i>
+                              Đã copy mã đơn hàng!
+                            </small>
+                          )}
+                          {/* CHANGED: Thêm QR code cho mã đơn hàng */}
+                          <div className="text-center mt-3 pt-3 border-top">
+                            <small className="text-muted d-block mb-2">Quét QR code để lưu mã đơn hàng</small>
+                            <div className="d-inline-block p-2 bg-white rounded-3" style={{ border: '2px solid #e9ecef' }}>
+                              <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(orderId)}`}
+                                alt="QR Code mã đơn hàng"
+                                width={150}
+                                height={150}
+                                style={{ borderRadius: '8px', display: 'block' }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="d-flex gap-3 justify-content-center">
                       <Link

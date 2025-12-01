@@ -22,12 +22,23 @@ interface Category {
   link: string;
 }
 
-// (removed unused Partner interface)
+// Định nghĩa interface cho Banner
+interface BannerType {
+  id: number;
+  tieude: string;
+  mota: string;
+  url: string;
+  anhien: number;
+  thutu: number;
+  image: string;
+  link?: string;
+  // Bổ sung các trường khác nếu cần thiết
+}
 
 //Banner 
 function Banner() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<BannerType[]>([]);
 
   // Fetch banners từ API
   useEffect(() => {
@@ -53,28 +64,45 @@ function Banner() {
   }, []);
 
   useEffect(() => {
+    if (banners.length === 0) return; // kiểm tra banner có tồn tại không
+    
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
+      setCurrentSlide((prev) => (prev + 1) % banners.length); 
     }, 5000); // Chuyển slide mỗi 5 giây
     
-    return () => clearInterval(timer);
+    return () => clearInterval(timer); 
   }, [banners.length]);
 
   const nextSlide = () => {
+    if (banners.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % banners.length);
   };
 
   const prevSlide = () => {
+    if (banners.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
+  if (banners.length === 0) {
+    return (
+      <section className="position-relative" style={{ minHeight: '640px', overflow: 'hidden', background: 'linear-gradient(135deg, #FFF9F0 0%, #ffffff 100%)' }}>
+        <div className="container position-relative d-flex align-items-center justify-content-center" style={{ minHeight: '640px' }}>
+          <div className="text-center">
+            <h1 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>Chào mừng đến với DANNYdecor</h1>
+            <p className="mb-4 text-muted">Đang tải banner...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="position-relative" style={{ minHeight: '640px', overflow: 'hidden' }}>
+    <section className="position-relative banner-section" style={{ minHeight: '640px', overflow: 'hidden' }}>
       {/* Banner Slides */}
       {banners.map((banner, slideIndex) => (
         <div
           key={banner.id}
-          className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white"
+          className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white banner-content"
           style={{
             minHeight: '520px',
             opacity: currentSlide === slideIndex ? 1 : 0,
@@ -98,14 +126,14 @@ function Banner() {
             className="position-absolute top-0 start-0 w-100 h-100"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1 }}
           ></div>
-          <div className="container position-relative text-center" style={{ zIndex: 2 }}>
+          <div className="container position-relative text-center px-3" style={{ zIndex: 2 }}>
             <h1 className="fw-bold hero-title mb-3">
               {banner.tieude}
             </h1>
             <p className="mb-4 mx-auto hero-desc">
               {banner.mota}
             </p>
-            <Link href="/contact" className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold">
+            <Link href="/contact" className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold banner-button btn-lg-responsive">
               Xem thêm
             </Link>
           </div>
@@ -206,10 +234,10 @@ function ProductCategories() {
   const visibleCategories = categories.slice(currentIndex * itemsPerPage, (currentIndex * itemsPerPage) + itemsPerPage);
 
   return (
-    <section className="py-5" style={{ background: 'linear-gradient(180deg, #FFF9F0 0%, #ffffff 100%)' }}>
+    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #FFF9F0 0%, #ffffff 100%)' }}>
       <div className="container">
         <div className="text-center mb-5">
-          <h2 className="text-uppercase fw-bold mb-2" style={{ 
+          <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
             fontSize: '2rem', 
             letterSpacing: '2px',
             color: '#2c3e50',
@@ -228,7 +256,7 @@ function ProductCategories() {
               borderRadius: '2px'
             }}></div>
           </h2>
-          <p className="text-muted mt-3" style={{ fontSize: '1.05rem' }}>Khám phá bộ sưu tập nội thất cao cấp</p>
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Khám phá bộ sưu tập nội thất cao cấp</p>
         </div>
         
         <div className="d-flex justify-content-center align-items-center mb-4">
@@ -277,7 +305,7 @@ function ProductCategories() {
             {visibleCategories.map((cat) => (
               <div 
                 key={cat.id} 
-                className="col-md-4"
+                className="col-12 col-md-6 col-lg-4"
                 style={{
                   animationName: isAnimating 
                     ? (slideDirection === 'right' ? 'slideInLeft' : 'slideInRight')
@@ -289,7 +317,7 @@ function ProductCategories() {
               >
                 <Link href={cat.link} className="text-decoration-none">
                   <div 
-                    className="card border-0 overflow-hidden" 
+                    className="card border-0 overflow-hidden category-card" 
                     style={{ 
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       cursor: 'pointer',
@@ -305,7 +333,7 @@ function ProductCategories() {
                       e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.08)';
                     }}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
+                    <div className="position-relative overflow-hidden category-image" style={{ height: '250px' }}>
                       <div 
                         className="position-absolute top-0 start-0 w-100 h-100"
                         style={{ transition: 'transform 0.4s ease' }}
@@ -384,7 +412,7 @@ function HotProducts() {
       });
   }, []);
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price: number) => Number(price || 0).toLocaleString('vi-VN') + '₫';
 
   const itemsPerPage = 4;
   const maxIndex = Math.max(0, products.length - itemsPerPage);
@@ -403,10 +431,10 @@ function HotProducts() {
   const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerPage);
 
   return (
-    <section className="py-5" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF5E1 100%)' }}>
+    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF5E1 100%)' }}>
       <div className="container">
         <div className="text-center mb-5">
-          <h2 className="text-uppercase fw-bold mb-2" style={{ 
+          <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
             fontSize: '2rem', 
             letterSpacing: '2px',
             color: '#2c3e50',
@@ -425,8 +453,8 @@ function HotProducts() {
               borderRadius: '2px'
             }}></div>
           </h2>
-          <p className="text-muted mt-3" style={{ fontSize: '1.05rem' }}>Sản phẩm được yêu thích nhất</p>
-          <Link href="/products" className="btn btn-outline-dark mt-2 px-4" style={{ 
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Sản phẩm được yêu thích nhất</p>
+          <Link href="/products" className="btn btn-outline-dark mt-2 px-4 btn-responsive" style={{ 
             borderRadius: '25px',
             transition: 'all 0.3s ease'
           }}>
@@ -468,10 +496,10 @@ function HotProducts() {
 
           <div className="row g-4">
             {visibleProducts.map((product) => (
-              <div key={product.id} className="col-md-3">
+              <div key={product.id} className="col-6 col-md-4 col-lg-3">
                 <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
-                    className="card border-0"
+                    className="card border-0 product-card"
                     style={{ 
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
                       cursor: 'pointer',
@@ -518,11 +546,11 @@ function HotProducts() {
                       }}></div>
                     </div>
                     <div className="card-body py-3 px-3">
-                      <p className="mb-2 text-dark fw-semibold" style={{ fontSize: '0.95rem', lineHeight: '1.4', minHeight: '40px' }}>{product.name}</p>
+                      <p className="mb-2 text-dark fw-semibold product-card-title" style={{ fontSize: '0.95rem', lineHeight: '1.4', minHeight: '40px' }}>{product.name}</p>
                       <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex flex-column">
-                          <span className="text-danger fw-bold" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
-                          <span className="text-muted text-decoration-line-through" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
+                          <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
+                          <span className="text-muted text-decoration-line-through responsive-text" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
                         </div>
                         <div className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
                           <i className="bi bi-fire me-1"></i>HOT
@@ -565,7 +593,7 @@ function DiscountProducts() {
       });
   }, []);
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price: number) => Number(price || 0).toLocaleString('vi-VN') + '₫';
 
   const itemsPerPage = 4;
   const maxIndex = Math.max(0, products.length - itemsPerPage);
@@ -584,10 +612,10 @@ function DiscountProducts() {
   const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerPage);
 
   return (
-    <section className="py-5" style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' }}>
+    <section className="py-5 section-padding" style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' }}>
       <div className="container">
         <div className="text-center mb-5">
-          <h2 className="text-uppercase fw-bold mb-2 text-white" style={{ 
+          <h2 className="text-uppercase fw-bold mb-2 text-white section-title responsive-title" style={{ 
             fontSize: '2rem', 
             letterSpacing: '2px',
             position: 'relative',
@@ -607,8 +635,8 @@ function DiscountProducts() {
               boxShadow: '0 2px 8px rgba(255,230,109,0.6)'
             }}></div>
           </h2>
-          <p className="text-white mt-3" style={{ fontSize: '1.05rem', opacity: 0.95 }}>Ưu đãi đặc biệt - Giá tốt nhất</p>
-          <Link href="/discount-products" className="btn btn-light mt-2 px-4 fw-semibold" style={{ 
+          <p className="text-white mt-3 responsive-text" style={{ fontSize: '1.05rem', opacity: 0.95 }}>Ưu đãi đặc biệt - Giá tốt nhất</p>
+          <Link href="/discount-products" className="btn btn-light mt-2 px-4 fw-semibold btn-responsive" style={{ 
             borderRadius: '25px',
             transition: 'all 0.3s ease',
             boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
@@ -651,10 +679,10 @@ function DiscountProducts() {
 
           <div className="row g-4">
             {visibleProducts.map((product) => (
-              <div key={product.id} className="col-md-3">
+              <div key={product.id} className="col-6 col-md-4 col-lg-3">
                 <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
-                    className="card border-0"
+                    className="card border-0 product-card"
                     style={{ 
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
                       cursor: 'pointer',
@@ -702,11 +730,11 @@ function DiscountProducts() {
                       }}></div>
                     </div>
                     <div className="card-body py-3 px-3">
-                      <h6 className="card-title mb-2 text-dark fw-semibold" style={{ minHeight: '40px', fontSize: '0.95rem', lineHeight: '1.4' }}>{product.name}</h6>
+                      <h6 className="card-title mb-2 text-dark fw-semibold product-card-title" style={{ minHeight: '40px', fontSize: '0.95rem', lineHeight: '1.4' }}>{product.name}</h6>
                       <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex flex-column">
-                          <span className="text-danger fw-bold" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
-                          <span className="text-muted text-decoration-line-through" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
+                          <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
+                          <span className="text-muted text-decoration-line-through responsive-text" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
                         </div>
                         <div className="badge bg-warning text-dark px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
                           HOT
@@ -758,10 +786,10 @@ function Features() {
   ];
 
   return (
-    <section className="py-5" style={{ background: 'linear-gradient(180deg, #FFF8E8 0%, #ffffff 100%)' }}>
+    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #FFF8E8 0%, #ffffff 100%)' }}>
       <div className="container">
         <div className="text-center mb-5">
-          <h2 className="text-uppercase fw-bold mb-2" style={{ 
+          <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
             fontSize: '2rem', 
             letterSpacing: '2px',
             color: '#2c3e50',
@@ -780,14 +808,14 @@ function Features() {
               borderRadius: '2px'
             }}></div>
           </h2>
-          <p className="text-muted mt-3" style={{ fontSize: '1.05rem' }}>Giá trị và tầm nhìn của DANNYdecor</p>
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Giá trị và tầm nhìn của DANNYdecor</p>
         </div>
 
         <div className="row g-4">
           {features.map((f) => (
-            <div key={f.id} className="col-md-6 col-lg-3">
+            <div key={f.id} className="col-12 col-md-6 col-lg-3">
               <div 
-                className="card border-0 h-100 p-4 text-center d-flex flex-column"
+                className="card border-0 h-100 p-4 text-center d-flex flex-column feature-card"
                 style={{
                   borderRadius: '20px',
                   background: '#ffffff',
@@ -805,7 +833,7 @@ function Features() {
                 }}
               >
                 <div 
-                  className="d-inline-flex align-items-center justify-content-center mb-3 mx-auto"
+                  className="d-inline-flex align-items-center justify-content-center mb-3 mx-auto feature-icon"
                   style={{
                     width: '70px',
                     height: '70px',
@@ -894,17 +922,17 @@ function Partners() {
   ];
 
   return (
-    <section className="py-5" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}>
+    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}>
       <div className="container">
         <div className="text-center mb-5">
           <div className="d-inline-block mb-3" style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg, #FF6B6B, #FF8E53)' }}></div>
-          <h2 className="text-uppercase fw-bold section-title" style={{ color: '#2c3e50' }}>CÁC THƯƠNG HIỆU HỢP TÁC</h2>
+          <h2 className="text-uppercase fw-bold section-title responsive-title" style={{ color: '#2c3e50' }}>CÁC THƯƠNG HIỆU HỢP TÁC</h2>
         </div>
         <div className="row g-4">
           {partners.map((partner, partnerIndex) => (
             <div key={partnerIndex} className="col-6 col-md-4 col-lg-3">
               <div 
-                className="card border-0 shadow-sm overflow-hidden"
+                className="card border-0 shadow-sm overflow-hidden partner-card"
                 style={{ 
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   cursor: 'pointer',
@@ -1212,7 +1240,7 @@ function ContactInfo() {
 
   return (
     <section 
-      className="py-5 position-relative"
+      className="py-5 position-relative section-padding"
       style={{
         backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920")',
         backgroundSize: 'cover',
@@ -1227,7 +1255,7 @@ function ContactInfo() {
         {/* Header */}
         <div className="text-center text-white mb-5">
           <i className="bi bi-geo-alt-fill mb-3" style={{ fontSize: '40px' }}></i>
-          <h2 className="text-uppercase fw-bold section-title">
+          <h2 className="text-uppercase fw-bold section-title responsive-title">
             THÔNG TIN LIÊN HỆ
           </h2>
         </div>
@@ -1235,9 +1263,9 @@ function ContactInfo() {
         {/* Info Cards */}
         <div className="row g-0">
           {contactData.map((item, itemIndex) => (
-            <div key={item.id} className="col-md-4">
+            <div key={item.id} className="col-12 col-md-4">
               <div 
-                className="bg-white p-5 text-center h-100"
+                className="bg-white p-5 text-center h-100 contact-card"
                 style={{
                   borderRight: itemIndex < 2 ? '1px solid #eee' : 'none',
                   transition: 'all 0.3s ease',
@@ -1308,121 +1336,182 @@ function ContactInfo() {
 }
 
 // NEWS SECTION
+interface NewsArticle {
+  id: string;
+  title: string;
+  image: string;
+  slug: string;
+  category: string;
+  excerpt?: string;
+}
+
 function News() {
-  const newsData = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
-      title: '3 ĐIỀU CẦN BIẾT KHI LỰA CHỌN CÔNG TY THIẾT KẾ VĂN PHÒNG',
-      tag: '3 ĐIỀU CẦN BIẾT ĐỂ LỰA CHỌN CÔNG TY THIẾT KẾ VĂN PHÒNG',
-    },
-    {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800',
-      title: 'CÔNG TY THIẾT KẾ NỘI THẤT TẠI KHU ĐÔ THỊ VẠN PHÚC',
-      tag: 'CÔNG TY THIẾT KẾ NỘI THẤT TẠI KHU ĐÔ THỊ VẠN PHÚC',
-    },
-    {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1556020685-ae41abfc9365?w=800',
-      title: '7 MẪU THIẾT KẾ NỘI THẤT CHUNG CƯ XU HƯỚNG VÀ GIẢI PHÁP TỐI ƯU',
-      tag: 'MẪU THIẾT KẾ NỘI THẤT CĂN HỘ ĐẸP XU HƯỚNG VÀ GIẢI PHÁP TỐI ƯU',
-    },
-  ];
+  const [newsData, setNewsData] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/news')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Chỉ lấy 3 bài viết đầu tiên cho homepage
+          const latestNews = data.slice(0, 3).map((article: {
+            id: string;
+            title: string;
+            image: string;
+            slug: string;
+            category: string;
+            excerpt?: string;
+          }) => ({
+            id: article.id,
+            title: article.title,
+            image: article.image || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
+            slug: article.slug || article.id,
+            category: article.category || 'Tin tức',
+            excerpt: article.excerpt,
+          }));
+          setNewsData(latestNews);
+        } else {
+          console.error('News API did not return array:', data);
+          setNewsData([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching news:', err);
+        setNewsData([]);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-5 bg-light">
+        <div className="container">
+          <div className="text-center mb-5">
+            <div className="d-inline-block bg-warning mb-3" style={{ width: '60px', height: '3px' }}></div>
+            <h2 className="text-uppercase fw-bold section-title mb-3" style={{ letterSpacing: '2px' }}>
+              TIN TỨC
+            </h2>
+          </div>
+          <div className="text-center py-5">
+            <div className="spinner-border text-warning" role="status">
+              <span className="visually-hidden">Đang tải...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="py-5 bg-light">
+    <section className="py-5 bg-light section-padding">
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
           <div className="d-inline-block bg-warning mb-3" style={{ width: '60px', height: '3px' }}></div>
-          <h2 className="text-uppercase fw-bold section-title mb-3" style={{ letterSpacing: '2px' }}>
+          <h2 className="text-uppercase fw-bold section-title mb-3 responsive-title" style={{ letterSpacing: '2px' }}>
             TIN TỨC
           </h2>
-          <p className="text-muted mx-auto" style={{ maxWidth: '800px', fontSize: '15px', lineHeight: '1.8' }}>
+          <p className="text-muted mx-auto responsive-text" style={{ maxWidth: '800px', fontSize: '15px', lineHeight: '1.8' }}>
             Cập nhật những thông tin để khách hàng tìm hiểu thêm về kiến trúc, xu hướng của thiết kế nội thất đồng 
             thời là nơi để DaNNYdecor chia sẻ những hoạt động nội bộ của mình
           </p>
+          <Link href="/news" className="btn btn-outline-dark mt-3 px-4 btn-responsive" style={{ 
+            borderRadius: '25px',
+            transition: 'all 0.3s ease'
+          }}>
+            Xem tất cả tin tức <i className="bi bi-arrow-right ms-2"></i>
+          </Link>
         </div>
 
         {/* News Grid */}
-        <div className="row g-4">
-          {newsData.map((news) => (
-            <div key={news.id} className="col-md-4">
-              <div 
-                className="card border-0 shadow-sm overflow-hidden h-100"
-                style={{ 
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-10px)';
-                  e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                }}
-              >
-                {/* Image with overlay */}
-                <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
-                  <div 
-                    className="position-absolute top-0 start-0 w-100 h-100"
-                    style={{ transition: 'transform 0.3s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                  >
-                    <Image src={news.image} alt={news.title} fill style={{ objectFit: 'cover' }} />
-                  </div>
-                  
-                  {/* Dark overlay */}
-                  <div 
-                    className="position-absolute top-0 start-0 w-100 h-100"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-                  ></div>
+        {newsData.length === 0 ? (
+          <div className="text-center py-5">
+            <p className="text-muted">Chưa có tin tức nào</p>
+          </div>
+        ) : (
+          <div className="row g-4">
+            {newsData.map((news) => (
+              <div key={news.id} className="col-12 col-md-6 col-lg-4">
+                <div 
+                  className="card border-0 shadow-sm overflow-hidden h-100 news-card"
+                  style={{ 
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-10px)';
+                    e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                  }}
+                >
+                  {/* Image with overlay */}
+                  <div className="position-relative overflow-hidden news-image" style={{ height: '250px' }}>
+                    <div 
+                      className="position-absolute top-0 start-0 w-100 h-100"
+                      style={{ transition: 'transform 0.3s ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <Image src={news.image} alt={news.title} fill style={{ objectFit: 'cover' }} />
+                    </div>
+                    
+                    {/* Dark overlay */}
+                    <div 
+                      className="position-absolute top-0 start-0 w-100 h-100"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+                    ></div>
 
-                  {/* Tag on image */}
-                  <div 
-                    className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-4"
-                  >
-                    <h5 
-                      className="text-white text-center fw-bold text-uppercase news-tag"
+                    {/* Category badge on image */}
+                    <div 
+                      className="position-absolute top-0 start-0 p-3"
+                      style={{ zIndex: 2 }}
+                    >
+                      <span 
+                        className="badge bg-warning text-dark px-3 py-2"
+                        style={{ 
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          borderRadius: '8px'
+                        }}
+                      >
+                        {news.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="card-body p-4">
+                    <h6 
+                      className="card-title fw-bold mb-3 news-title responsive-text" 
                       style={{ 
-                        textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                        minHeight: '45px',
                       }}
                     >
-                      {news.tag}
-                    </h5>
+                      {news.title}
+                    </h6>
+                    <Link 
+                      href={`/news/${news.id}`}
+                      className="text-decoration-none fw-semibold feature-desc"
+                      style={{ 
+                        color: '#333',
+                        transition: 'color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = '#333'; }}
+                    >
+                      Xem thêm →
+                    </Link>
                   </div>
                 </div>
-
-                {/* Card Body */}
-                <div className="card-body p-4">
-                  <h6 
-                    className="card-title fw-bold mb-3 news-title" 
-                    style={{ 
-                      minHeight: '45px',
-                    }}
-                  >
-                    {news.title}
-                  </h6>
-                  <a 
-                    href="#" 
-                    className="text-decoration-none fw-semibold feature-desc"
-                    style={{ 
-                      color: '#333',
-                      transition: 'color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#333'; }}
-                  >
-                    Xem thêm →
-                  </a>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1466,7 +1555,7 @@ function ScrollToTopButton() {
   return (
     <div 
       onClick={scrollToTop}
-      className="position-fixed d-flex align-items-center justify-content-center"
+      className="position-fixed d-flex align-items-center justify-content-center scroll-to-top"
       style={{
         width: '45px',
         height: '45px',
@@ -1555,6 +1644,249 @@ export default function HomePage() {
             transform: translateY(0);
           }
         }
+
+        /* Responsive Styles */
+        /* Mobile First - Base styles for mobile */
+        .hero-title {
+          font-size: 1.75rem;
+          line-height: 1.3;
+        }
+
+        .hero-desc {
+          font-size: 0.95rem;
+          max-width: 90%;
+        }
+
+        .section-title {
+          font-size: 1.5rem;
+        }
+
+        .carousel-arrow {
+          display: none;
+        }
+
+        /* Tablet - 768px and up */
+        @media (min-width: 768px) {
+          .hero-title {
+            font-size: 2.5rem;
+          }
+
+          .hero-desc {
+            font-size: 1.1rem;
+            max-width: 80%;
+          }
+
+          .section-title {
+            font-size: 1.75rem;
+          }
+
+          .carousel-arrow {
+            display: flex;
+          }
+        }
+
+        /* Desktop - 992px and up */
+        @media (min-width: 992px) {
+          .hero-title {
+            font-size: 3.5rem;
+          }
+
+          .hero-desc {
+            font-size: 1.25rem;
+            max-width: 70%;
+          }
+
+          .section-title {
+            font-size: 2rem;
+          }
+        }
+
+        /* Banner Responsive */
+        @media (max-width: 767px) {
+          .banner-section {
+            min-height: 400px !important;
+          }
+
+          .banner-content {
+            min-height: 400px !important;
+            padding: 20px 15px;
+          }
+
+          .banner-button {
+            padding: 10px 20px !important;
+            font-size: 0.9rem !important;
+          }
+
+          .banner-nav-btn {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 0.8rem;
+          }
+
+          .banner-nav-btn.start-0 {
+            margin-left: 10px !important;
+          }
+
+          .banner-nav-btn.end-0 {
+            margin-right: 10px !important;
+          }
+        }
+
+        /* Product Cards Responsive */
+        @media (max-width: 767px) {
+          .product-card {
+            margin-bottom: 20px;
+          }
+
+          .product-card .card-body {
+            padding: 15px !important;
+          }
+
+          .product-card-title {
+            font-size: 0.9rem !important;
+            min-height: auto !important;
+          }
+
+          .product-price {
+            font-size: 1rem !important;
+          }
+        }
+
+        /* Category Cards Responsive */
+        @media (max-width: 767px) {
+          .category-card {
+            margin-bottom: 20px;
+          }
+
+          .category-image {
+            height: 180px !important;
+          }
+        }
+
+        /* Features Section Responsive */
+        @media (max-width: 767px) {
+          .feature-card {
+            margin-bottom: 20px;
+          }
+
+          .feature-icon {
+            width: 50px !important;
+            height: 50px !important;
+          }
+
+          .feature-icon i {
+            font-size: 24px !important;
+          }
+        }
+
+        /* Partners Section Responsive */
+        @media (max-width: 767px) {
+          .partner-card {
+            height: 150px !important;
+            margin-bottom: 15px;
+          }
+        }
+
+        /* News Section Responsive */
+        @media (max-width: 767px) {
+          .news-card {
+            margin-bottom: 20px;
+          }
+
+          .news-image {
+            height: 200px !important;
+          }
+
+          .news-title {
+            font-size: 0.95rem !important;
+            min-height: auto !important;
+          }
+        }
+
+        /* Contact Info Responsive */
+        @media (max-width: 767px) {
+          .contact-card {
+            border-right: none !important;
+            border-bottom: 1px solid #eee;
+            padding: 30px 20px !important;
+          }
+
+          .contact-card:last-child {
+            border-bottom: none;
+          }
+
+          section[style*="backgroundAttachment"] {
+            background-attachment: scroll !important;
+          }
+        }
+
+        /* Section Padding Responsive */
+        @media (max-width: 767px) {
+          .section-padding {
+            padding-top: 40px !important;
+            padding-bottom: 40px !important;
+          }
+        }
+
+        /* Text Responsive */
+        @media (max-width: 767px) {
+          .responsive-text {
+            font-size: 0.9rem;
+          }
+
+          .responsive-title {
+            font-size: 1.25rem;
+          }
+        }
+
+        /* Button Responsive */
+        @media (max-width: 767px) {
+          .btn-responsive {
+            padding: 8px 16px !important;
+            font-size: 0.85rem !important;
+          }
+
+          .btn-lg-responsive {
+            padding: 10px 20px !important;
+            font-size: 0.95rem !important;
+          }
+        }
+
+        /* Container Padding Responsive */
+        @media (max-width: 767px) {
+          .container {
+            padding-left: 15px;
+            padding-right: 15px;
+          }
+        }
+
+        /* Scroll to Top Button Responsive */
+        @media (max-width: 767px) {
+          .scroll-to-top {
+            width: 40px !important;
+            height: 40px !important;
+            bottom: 20px !important;
+            right: 20px !important;
+          }
+
+          .scroll-to-top i {
+            font-size: 20px !important;
+          }
+        }
+
+        /* Hide arrows on mobile for carousel */
+        @media (max-width: 767px) {
+          .carousel-arrow {
+            display: none !important;
+          }
+        }
+
+        /* Grid adjustments for mobile */
+        @media (max-width: 767px) {
+          .row.g-4 {
+            --bs-gutter-y: 1.5rem;
+          }
+        }
       `}</style>
       <Banner />
       <ProductCategories />
@@ -1566,6 +1898,7 @@ export default function HomePage() {
       <ContactInfo />
       <News />
       <ChatBox />
+      <ScrollToTopButton />
     </>
   );
 }

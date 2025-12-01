@@ -80,7 +80,7 @@ export default function AdminBlogCategoriesPage() {
         </div>
         <button
           className="btn btn-warning text-white d-flex align-items-center gap-2 shadow-sm"
-          onClick={() => router.push('/admin/blog-categories/create')}
+          onClick={() => router.push('/admin/danhmucbaiviet/create')}
         >
           <PlusCircle size={18} />
           <span>Thêm danh mục mới</span>
@@ -148,7 +148,7 @@ export default function AdminBlogCategoriesPage() {
                       <td className="px-4 py-3 text-center">
                         <div className="d-flex justify-content-center gap-2">
                           <button
-                            onClick={() => router.push(`/admin/blog-categories/edit/${item.id}`)}
+                            onClick={() => router.push(`/admin/danhmucbaiviet/edit/${item.id}`)}
                             className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
                           >
                             <Pencil size={14} /> Sửa

@@ -97,10 +97,10 @@ export default function ProductList({
                       {p.price && p.originalPrice ? (
                         <p className="mb-0">
                           <span className="text-primary fw-bold me-2">
-                            {p.price.toLocaleString()}₫
+                            {Number(p.price || 0).toLocaleString('vi-VN')}₫
                           </span>
                           <span className="text-muted text-decoration-line-through small">
-                            {p.originalPrice.toLocaleString()}₫
+                            {Number(p.originalPrice || 0).toLocaleString('vi-VN')}₫
                           </span>
                         </p>
                       ) : (

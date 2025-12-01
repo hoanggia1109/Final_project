@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   PaymentElement,
   useStripe,
@@ -16,6 +16,21 @@ export default function StripePaymentForm({ onSuccess, onError }: StripePaymentF
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  // CHANGED: Đã xóa emoji/sticker khỏi console logs
+  useEffect(() => {
+    if (stripe && elements) {
+      console.log('Stripe and Elements ready');
+      setIsReady(true);
+    } else {
+      console.log('Waiting for Stripe and Elements...', {
+        stripe: !!stripe,
+        elements: !!elements
+      });
+      setIsReady(false);
+    }
+  }, [stripe, elements]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,22 +42,38 @@ export default function StripePaymentForm({ onSuccess, onError }: StripePaymentF
     setProcessing(true);
     setMessage(null);
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/checkout/success`,
       },
+      redirect: 'if_required', // Chỉ redirect nếu cần thiết
     });
 
     if (error) {
       setMessage(error.message || 'Có lỗi xảy ra khi thanh toán');
       onError(error.message || 'Có lỗi xảy ra khi thanh toán');
       setProcessing(false);
-    } else {
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       // Thanh toán thành công
+      setProcessing(false);
       onSuccess();
+    } else {
+      // Đang xử lý, có thể redirect
+      setMessage('Đang xử lý thanh toán...');
     }
   };
+
+  if (!stripe || !elements) {
+    return (
+      <div className="text-center py-4">
+        <div className="spinner-border text-primary mb-3" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="text-muted">Đang tải form thanh toán...</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -52,13 +83,33 @@ export default function StripePaymentForm({ onSuccess, onError }: StripePaymentF
           background: '#ffffff',
           borderColor: '#e9ecef',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          minHeight: '200px',
         }}
       >
-        <PaymentElement
-          options={{
-            layout: 'tabs',
-          }}
-        />
+        {isReady ? (
+          <PaymentElement
+            options={{
+              layout: 'tabs',
+            }}
+            onReady={() => {
+              // CHANGED: Đã xóa emoji/sticker khỏi console logs
+              console.log('PaymentElement ready');
+            }}
+            onLoadError={(error) => {
+              console.error('PaymentElement load error:', error);
+              const errorMessage = error?.error?.message || 'Không thể tải form thanh toán';  
+              setMessage(`Lỗi: ${errorMessage}. Vui lòng kiểm tra cấu hình Stripe API key.`);
+              onError(errorMessage);
+            }}
+          />  
+        ) : (
+          <div className="text-center py-4">
+            <div className="spinner-border text-primary mb-2" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <small className="text-muted">Đang tải form nhập thẻ...</small>
+          </div>
+        )}
       </div>
       
       {message && (

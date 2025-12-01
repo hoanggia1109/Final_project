@@ -1,4 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
+const constants = require("./config/constants");
+const port = constants.SERVER.PORT;
 
 // Kết nối database MySQL
 const sequelize = new Sequelize("shopnoithat", "root", "", {
@@ -244,7 +246,16 @@ const DonHangModel = sequelize.define(
 trangthai: {
   type: DataTypes.ENUM("pending", "confirmed", "shipping", "delivered", "cancelled", "returned"),
   defaultValue: "pending",
-}  },
+    },
+    ly_do_huy: DataTypes.TEXT, // Lý do hủy đơn hàng
+    // Các cột địa chỉ chi tiết (cho banking và các phương thức khác)
+    diachichitiet: DataTypes.TEXT,
+    phuong_xa: DataTypes.STRING,
+    quan_huyen: DataTypes.STRING,
+    tinh_thanh: DataTypes.STRING,
+    hoten: DataTypes.STRING,
+    sdt: DataTypes.STRING,
+  },
   { tableName:"don_hang", timestamps: false }
 );
 

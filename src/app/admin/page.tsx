@@ -12,6 +12,11 @@ import {
   Eye,
   Activity,
   BarChart3,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  UserCheck,
+  FileText,
   LucideIcon
 } from 'lucide-react';
 
@@ -19,7 +24,14 @@ interface DashboardStats {
   totalProducts: number;
   totalOrders: number;
   totalUsers: number;
+  totalPosts: number; // Tổng số bài viết
   totalRevenue: number;
+  onlineUsers: number;
+  ordersToday: number;
+  ordersPending: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  revenueToday: number;
 }
 
 export default function AdminDashboard() {
@@ -28,8 +40,16 @@ export default function AdminDashboard() {
     totalProducts: 0,
     totalOrders: 0,
     totalUsers: 0,
+    totalPosts: 0,
     totalRevenue: 0,
+    onlineUsers: 0,
+    ordersToday: 0,
+    ordersPending: 0,
+    lowStockCount: 0,
+    outOfStockCount: 0,
+    revenueToday: 0,
   });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,36 +74,56 @@ export default function AdminDashboard() {
         setLoading(false);
         return;
       }
-      
-      // Load dashboard stats
-      const dashboardRes = await fetch('http://localhost:5000/admin/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      // Load tất cả thống kê song song
+      const [
+        dashboardRes,
+        revenueRes,
+        onlineUsersRes,
+        ordersTodayRes,
+        ordersPendingRes,
+        lowStockRes,
+        outOfStockRes
+      ] = await Promise.all([
+        fetch('http://localhost:5000/api/admin/dashboard', { headers }),
+        fetch('http://localhost:5000/api/admin/revenue/daily', { headers }),
+        fetch('http://localhost:5000/api/admin/users/online', { headers }),
+        fetch('http://localhost:5000/api/admin/orders/today', { headers }),
+        fetch('http://localhost:5000/api/admin/orders/pending', { headers }),
+        fetch('http://localhost:5000/api/admin/products/low-stock', { headers }),
+        fetch('http://localhost:5000/api/admin/products/out-of-stock', { headers })
+      ]);
+
+      const dashboardData = dashboardRes.ok ? await dashboardRes.json() : {};
+      const revenueData = revenueRes.ok ? await revenueRes.json() : { tong_doanh_thu: 0 };
+      const onlineUsersData = onlineUsersRes.ok ? await onlineUsersRes.json() : { total: 0 };
+      const ordersTodayData = ordersTodayRes.ok ? await ordersTodayRes.json() : { count: 0, orders: [] };
+      const ordersPendingData = ordersPendingRes.ok ? await ordersPendingRes.json() : { count: 0 };
+      const lowStockData = lowStockRes.ok ? await lowStockRes.json() : { count: 0 };
+      const outOfStockData = outOfStockRes.ok ? await outOfStockRes.json() : { count: 0 };
+
+      setStats({
+        totalProducts: dashboardData.sanpham || 0,
+        totalOrders: dashboardData.donhang || 0,
+        totalUsers: dashboardData.nguoidung || 0,
+        totalPosts: dashboardData.baiviet || 0,
+        totalRevenue: revenueData.tong_doanh_thu || 0,
+        onlineUsers: onlineUsersData.total || 0,
+        ordersToday: ordersTodayData.count || 0,
+        ordersPending: ordersPendingData.count || 0,
+        lowStockCount: lowStockData.count || 0,
+        outOfStockCount: outOfStockData.count || 0,
+        revenueToday: revenueData.tong_doanh_thu || 0,
       });
 
-      if (dashboardRes.ok) {
-        const dashboardData = await dashboardRes.json();
-        console.log('Dashboard data:', dashboardData);
-        setStats({
-          totalProducts: dashboardData.sanpham || 0,
-          totalOrders: dashboardData.donhang || 0,
-          totalUsers: dashboardData.nguoidung || 0,
-          totalRevenue: 0, // TODO: Tính từ đơn hàng
-        });
-      } else {
-        console.error('Dashboard API failed, using fallback');
-        // Fallback: Load sản phẩm trực tiếp
-        const productsRes = await fetch('http://localhost:5000/api/sanpham');
-        const products = await productsRes.json();
-
-        setStats({
-          totalProducts: Array.isArray(products) ? products.length : 0,
-          totalOrders: 0,
-          totalUsers: 0,
-          totalRevenue: 0,
-        });
+      // Set recent orders (lấy từ orders today, tối đa 5 đơn)
+      if (ordersTodayData.orders && Array.isArray(ordersTodayData.orders)) {
+        setRecentOrders(ordersTodayData.orders.slice(0, 5));
       }
     } catch (error) {
       console.error('Lỗi tải thống kê:', error);
@@ -309,7 +349,28 @@ export default function AdminDashboard() {
         }
 
         .activity-body {
-          padding: 60px 30px;
+          padding: 30px;
+        }
+
+        .activity-body .table {
+          margin-bottom: 0;
+        }
+
+        .activity-body .table thead th {
+          background: linear-gradient(135deg, #FFF5F0, #FFE5E0);
+          border-bottom: 2px solid #FFE5D9;
+          color: #2c3e50;
+          font-weight: 600;
+          padding: 15px;
+        }
+
+        .activity-body .table tbody td {
+          padding: 15px;
+          vertical-align: middle;
+        }
+
+        .activity-body .table tbody tr:hover {
+          background: #FFF9F0;
         }
 
         .empty-state {
@@ -392,10 +453,70 @@ export default function AdminDashboard() {
               </div>
               <div className="col-12 col-sm-6 col-lg-3">
                 <StatCard
-                  title="Doanh thu"
-                  value={`${stats.totalRevenue.toLocaleString('vi-VN')}₫`}
+                  title="Tổng bài viết"
+                  value={stats.totalPosts}
+                  icon={FileText}
+                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Stats */}
+          <div className="stats-grid">
+            <h3 className="section-title">
+              <Activity size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+              Thống kê chi tiết
+            </h3>
+            <div className="row g-4">
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Người dùng online"
+                  value={stats.onlineUsers}
+                  icon={UserCheck}
+                  gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Đơn hàng hôm nay"
+                  value={stats.ordersToday}
+                  icon={Clock}
+                  gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Đơn hàng chờ xử lý"
+                  value={stats.ordersPending}
+                  icon={AlertTriangle}
+                  gradient="linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Sản phẩm tồn kho thấp"
+                  value={stats.lowStockCount}
+                  icon={AlertTriangle}
+                  gradient="linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
+                />
+              </div>
+            </div>
+            <div className="row g-4 mt-2">
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Doanh thu hôm nay"
+                  value={`${stats.revenueToday.toLocaleString('vi-VN')}₫`}
                   icon={DollarSign}
                   gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Sản phẩm hết hàng"
+                  value={stats.outOfStockCount}
+                  icon={Package}
+                  gradient="linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
                 />
               </div>
             </div>
@@ -437,11 +558,38 @@ export default function AdminDashboard() {
               </div>
               <div className="col-12 col-md-6 col-lg-3">
                 <QuickActionCard
+                  title="Quản lý đơn hàng"
+                  description="Xem và xử lý đơn hàng"
+                  icon={ShoppingCart}
+                  onClick={() => router.push('/admin/orders')}
+                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
+                />
+              </div>
+              <div className="col-12 col-md-6 col-lg-3">
+                <QuickActionCard
+                  title="Quản lý tồn kho"
+                  description="Theo dõi tồn kho sản phẩm"
+                  icon={Package}
+                  onClick={() => router.push('/admin/tonkho')}
+                  gradient="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+                />
+              </div>
+              <div className="col-12 col-md-6 col-lg-3">
+                <QuickActionCard
+                  title="Người dùng online"
+                  description={`${stats.onlineUsers} người đang online`}
+                  icon={UserCheck}
+                  onClick={() => router.push('/admin/users')}
+                  gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+                />
+              </div>
+              <div className="col-12 col-md-6 col-lg-3">
+                <QuickActionCard
                   title="Thống kê chi tiết"
                   description="Xem báo cáo và phân tích"
                   icon={TrendingUp}
                   onClick={() => alert('Chức năng đang phát triển')}
-                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
+                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                 />
               </div>
             </div>
@@ -449,19 +597,94 @@ export default function AdminDashboard() {
 
           {/* Recent Activity */}
           <div className="activity-card">
-            <div className="activity-header">
-              <h4 className="activity-title">
+            <div className="activity-header d-flex justify-content-between align-items-center">
+              <h4 className="activity-title mb-0">
                 <Eye size={22} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-                Hoạt động gần đây
+                Đơn hàng hôm nay
               </h4>
+              <button 
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => router.push('/admin/orders')}
+              >
+                Xem tất cả
+              </button>
             </div>
             <div className="activity-body">
-              <div className="empty-state">
-                <div className="empty-icon">
-                  <Activity size={40} color="#FF8E53" strokeWidth={2} />
+              {recentOrders.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">
+                    <Activity size={40} color="#FF8E53" strokeWidth={2} />
+                  </div>
+                  <p className="empty-text">Chưa có đơn hàng nào hôm nay</p>
                 </div>
-                <p className="empty-text">Chưa có hoạt động nào</p>
-              </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentOrders.map((order: any) => (
+                        <tr key={order.id}>
+                          <td>
+                            <strong style={{ color: '#FF6B6B' }}>#{order.code}</strong>
+                          </td>
+                          <td>
+                            {order.user?.ho_ten || 'N/A'}
+                            <br />
+                            <small className="text-muted">{order.user?.email || ''}</small>
+                          </td>
+                          <td>
+                            <strong>{Number(order.tongtien_sau_giam || 0).toLocaleString('vi-VN')}₫</strong>
+                          </td>
+                          <td>
+                            <span 
+                              className="badge"
+                              style={{
+                                background: order.trangthai === 'pending' ? '#ffc107' :
+                                           order.trangthai === 'confirmed' ? '#17a2b8' :
+                                           order.trangthai === 'shipping' ? '#007bff' :
+                                           order.trangthai === 'delivered' ? '#28a745' :
+                                           order.trangthai === 'cancelled' ? '#dc3545' : '#6c757d',
+                                color: '#fff',
+                                padding: '6px 12px',
+                                borderRadius: '6px'
+                              }}
+                            >
+                              {order.trangthai === 'pending' ? 'Chờ xác nhận' :
+                               order.trangthai === 'confirmed' ? 'Đã xác nhận' :
+                               order.trangthai === 'shipping' ? 'Đang giao' :
+                               order.trangthai === 'delivered' ? 'Đã giao' :
+                               order.trangthai === 'cancelled' ? 'Đã hủy' :
+                               order.trangthai === 'returned' ? 'Đã trả' : order.trangthai}
+                            </span>
+                          </td>
+                          <td>
+                            <small className="text-muted">
+                              {order.created_at ? new Date(order.created_at).toLocaleString('vi-VN') : 'N/A'}
+                            </small>
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => router.push(`/admin/orders/${order.id}`)}
+                            >
+                              Chi tiết
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>

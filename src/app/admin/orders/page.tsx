@@ -12,7 +12,9 @@ interface OrderItem {
   phi_van_chuyen: number;
   trangthai: string;
   trangthaithanhtoan: string;
+  phuongthucthanhtoan?: string;
   ghichu?: string;
+  ly_do_huy?: string;
   created_at: string;
   user?: {
     email: string;
@@ -260,11 +262,11 @@ export default function AdminOrdersPage() {
                       {/* Tổng tiền */}
                       <td className="py-3">
                         <div className="fw-bold text-warning">
-                          {order.tongtien_sau_giam.toLocaleString('vi-VN')}₫
+                          {Number(order.tongtien_sau_giam || 0).toLocaleString('vi-VN')}₫
                         </div>
-                        {order.giamgia > 0 && (
+                        {Number(order.giamgia || 0) > 0 && (
                           <small className="text-muted">
-                            Giảm: {order.giamgia.toLocaleString('vi-VN')}₫
+                            Giảm: {Number(order.giamgia || 0).toLocaleString('vi-VN')}₫
                           </small>
                         )}
                       </td>
@@ -324,7 +326,7 @@ export default function AdminOrdersPage() {
                           href={`/admin/orders/${order.id}`}
                           className="btn btn-sm btn-outline-warning"
                         >
-                          <i className="bi bi-eye"></i>
+                          <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
                         </Link>
                       </td>
                     </tr>

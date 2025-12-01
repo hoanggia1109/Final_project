@@ -431,7 +431,7 @@ export default function ProductPage() {
                             className="btn btn-detail w-100"
                             onClick={() => router.push(`/products/${p.id}`)}
                           >
-                            <i className="bi bi-eye me-2"></i>
+                            <i className="bi bi-eye me-2" style={{ fontSize: '18px' }}></i>
                             Chi tiết
                           </button>
                         </div>

@@ -65,59 +65,175 @@ export default function CreateBannerPage() {
   };
 
   return (
-    <div className="container py-5">
-      <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <h2 className="text-primary fw-bold text-uppercase m-0">Tạo banner mới</h2>
-        <button onClick={() => router.back()} className="btn btn-outline-secondary d-flex align-items-center gap-2">
-          <ArrowLeft size={18} /> Quay lại
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="card shadow-sm p-4 mx-auto" style={{ maxWidth: 700 }}>
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Tiêu đề</label>
-          <input name="tieude" value={form.tieude} onChange={handleChange} className="form-control" required />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Mô tả</label>
-          <textarea name="mota" value={form.mota} onChange={handleChange} className="form-control" rows={3} />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Link sản phẩm</label>
-          <input name="linksp" value={form.linksp} onChange={handleChange} className="form-control" />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Ảnh banner</label>
-          <input type="file" accept="image/*" onChange={handleFileChange} className="form-control" />
-          {preview && (
-            <div className="mt-3 text-center">
-              <img src={preview} className="img-thumbnail" style={{ width: 120, height: 120, objectFit: 'cover' }} />
+    <>
+      <style jsx>{`
+        .form-container {
+          background: linear-gradient(135deg, #FFF9F0 0%, #ffffff 100%);
+          min-height: 100vh;
+          padding: 2rem 0;
+        }
+        .form-header {
+          background: #ffffff;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .form-card {
+          background: #ffffff;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: none;
+          padding: 2rem;
+        }
+        .form-label {
+          color: #2C3E50;
+          font-weight: 600;
+          font-size: 0.95rem;
+          margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          padding: 0.75rem 1rem;
+          transition: all 0.3s ease;
+          font-size: 0.95rem;
+        }
+        .form-control:focus, .form-select:focus {
+          border-color: #FFC107;
+          box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+          outline: none;
+        }
+        .form-control:hover, .form-select:hover {
+          border-color: #d0d0d0;
+        }
+        .image-upload-area {
+          border: 2px dashed #d0d0d0;
+          border-radius: 12px;
+          padding: 2rem;
+          text-align: center;
+          transition: all 0.3s ease;
+          background: #fafafa;
+        }
+        .image-upload-area:hover {
+          border-color: #FFC107;
+          background: #fffbf0;
+        }
+        .image-preview {
+          border-radius: 12px;
+          border: 2px solid #e0e0e0;
+          padding: 0.5rem;
+          background: #fafafa;
+          max-width: 100%;
+          height: auto;
+        }
+        .btn-submit {
+          background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+          border: none;
+          color: #fff;
+          font-weight: 600;
+          padding: 0.75rem 2rem;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+        .btn-submit:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(255, 193, 7, 0.4);
+        }
+        .btn-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+          .form-header {
+            padding: 1rem;
+          }
+          .form-card {
+            padding: 1.5rem;
+          }
+        }
+      `}</style>
+      <div className="form-container">
+        <div className="container">
+          <div className="form-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+              <h2 className="fw-bold mb-1" style={{ color: '#2C3E50', fontSize: '1.75rem' }}>Tạo banner mới</h2>
+              <p className="text-muted mb-0">Thêm banner quảng cáo mới</p>
             </div>
-          )}
-        </div>
+            <button onClick={() => router.back()} className="btn btn-outline-secondary d-flex align-items-center gap-2">
+              <ArrowLeft size={18} /> Quay lại
+            </button>
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Thứ tự</label>
-          <input type="number" name="thutu" value={form.thutu} onChange={handleChange} className="form-control" />
-        </div>
+          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '800px' }}>
+            <div className="mb-4">
+              <label className="form-label">Tiêu đề <span className="text-danger">*</span></label>
+              <input name="tieude" value={form.tieude} onChange={handleChange} className="form-control" placeholder="Nhập tiêu đề banner" required />
+            </div>
 
-        <div className="mb-4">
-          <label className="form-label fw-semibold">Trạng thái</label>
-          <select name="anhien" value={form.anhien} onChange={handleChange} className="form-select">
-            <option value={1}>Hiển thị</option>
-            <option value={0}>Ẩn</option>
-          </select>
-        </div>
+            <div className="mb-4">
+              <label className="form-label">Mô tả</label>
+              <textarea name="mota" value={form.mota} onChange={handleChange} className="form-control" rows={3} placeholder="Nhập mô tả banner" />
+            </div>
 
-        <div className="d-flex justify-content-end mt-4">
-          <button type="submit" disabled={saving} className="btn btn-primary d-flex align-items-center gap-2 px-4">
-            <Save size={18} /> {saving ? 'Đang lưu...' : 'Lưu'}
-          </button>
+            <div className="mb-4">
+              <label className="form-label">Link sản phẩm</label>
+              <input name="linksp" value={form.linksp} onChange={handleChange} className="form-control" placeholder="https://..." />
+              <small className="text-muted">Link đến sản phẩm hoặc trang liên quan</small>
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label">Ảnh banner <span className="text-danger">*</span></label>
+              <div className="image-upload-area">
+                {preview ? (
+                  <div>
+                    <img src={preview} className="image-preview mb-3" style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }} alt="Preview" />
+                    <div>
+                      <label htmlFor="banner-upload" className="btn btn-sm btn-outline-primary">
+                        Đổi ảnh
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-muted mb-2">Kéo thả ảnh vào đây hoặc click để chọn</p>
+                    <label htmlFor="banner-upload" className="btn btn-sm btn-primary">
+                      Chọn file
+                    </label>
+                  </div>
+                )}
+                <input id="banner-upload" type="file" accept="image/*" onChange={handleFileChange} className="d-none" required={!preview} />
+              </div>
+              <small className="text-muted">Khuyến nghị: 1920x640px hoặc tỷ lệ tương tự</small>
+            </div>
+
+            <div className="row g-3 mb-4">
+              <div className="col-md-6">
+                <label className="form-label">Thứ tự hiển thị</label>
+                <input type="number" name="thutu" value={form.thutu} onChange={handleChange} className="form-control" min="1" />
+                <small className="text-muted">Số càng nhỏ hiển thị càng trước</small>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Trạng thái</label>
+                <select name="anhien" value={form.anhien} onChange={handleChange} className="form-select">
+                  <option value={1}>✓ Hiển thị</option>
+                  <option value={0}>✗ Ẩn</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-end gap-2 pt-3 border-top">
+              <button type="button" onClick={() => router.back()} className="btn btn-light" disabled={saving}>
+                Hủy
+              </button>
+              <button type="submit" disabled={saving} className="btn-submit d-flex align-items-center gap-2">
+                <Save size={18} /> {saving ? 'Đang lưu...' : 'Lưu banner'}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
-    </div>
+      </div>
+    </>
   );
 }

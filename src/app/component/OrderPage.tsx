@@ -64,7 +64,7 @@ export default function OrderPage() {
 
   const [errors, setErrors] = useState<Partial<Record<keyof OrderFormData, string>>>({});
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price: number) => Number(price || 0).toLocaleString('vi-VN') + '₫';
 
   // Tính tổng tiền
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);

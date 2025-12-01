@@ -347,7 +347,7 @@ export default function NewsDetailPage() {
                   {formatDate(article.publishDate)}
                 </span>
                 <span className="meta-item">
-                  <i className="bi bi-eye"></i>
+                  <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
                   {(article.views || 0).toLocaleString()} lượt xem
                 </span>
               </div>

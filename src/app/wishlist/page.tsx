@@ -362,7 +362,7 @@ export default function WishlistPage() {
                               </Link>
                               <div className="d-flex justify-content-between align-items-center mb-2">
                               <span className="fw-bold text-warning" style={{ fontSize: '18px' }}>
-                                  {price.toLocaleString('vi-VN')}₫
+                                  {Number(price || 0).toLocaleString('vi-VN')}₫
                               </span>
                                 <small className="text-muted">
                                   <i className="bi bi-box-seam me-1"></i>

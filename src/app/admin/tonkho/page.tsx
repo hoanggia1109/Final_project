@@ -423,7 +423,7 @@ export default function TonKhoPage() {
                         <td>{item.sanpham.thuonghieu?.tenbrand || '-'}</td>
                         <td className="text-center">
                           <span className="text-primary fw-medium">
-                            {item.gia.toLocaleString()} ₫
+                            {Number(item.gia || 0).toLocaleString('vi-VN')}₫
                           </span>
                         </td>
                         <td className="text-center">

@@ -45,6 +45,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.qrserver.com',  // cho phép load QR code từ QR Server API
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.jsdelivr.net',  // cho phép load ảnh từ jsDelivr CDN
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

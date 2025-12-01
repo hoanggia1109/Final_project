@@ -110,10 +110,13 @@
  *             properties:
  *               pass_old:
  *                 type: string
+ *                 example: "123456"
  *               pass_new1:
  *                 type: string
+ *                 example: "123456789"
  *               pass_new2:
  *                 type: string
+ *                 example: "123456789"
  *     responses:
  *       200:
  *         description: Đổi mật khẩu thành công
@@ -124,150 +127,54 @@
  * @swagger
  * /api/sanpham:
  *   get:
- *     summary: Lấy danh sách tất cả sản phẩm
+ *     summary: Lấy danh sách sản phẩm
  *     tags: [Sản phẩm]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Số trang
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số sản phẩm mỗi trang
+ *       - in: query
+ *         name: danhmuc_id
+ *         schema:
+ *           type: string
+ *         description: Lọc theo danh mục
+ *       - in: query
+ *         name: thuonghieu_id
+ *         schema:
+ *           type: string
+ *         description: Lọc theo thương hiệu
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm theo tên
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Danh sách sản phẩm
  */
 
 /**
  * @swagger
  * /api/sanpham/{id}:
  *   get:
- *     summary: Lấy chi tiết sản phẩm theo ID
+ *     summary: Lấy chi tiết sản phẩm
  *     tags: [Sản phẩm]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
  *     responses:
  *       200:
  *         description: Chi tiết sản phẩm
- */
-
-/**
- * @swagger
- * /api/sanpham/timkiem:
- *   get:
- *     summary: Tìm kiếm sản phẩm theo tên
- *     tags: [Sản phẩm]
- *     parameters:
- *       - in: query
- *         name: q
- *         schema:
- *           type: string
- *         required: true
- *         description: Từ khóa tìm kiếm
- *     responses:
- *       200:
- *         description: Danh sách kết quả
- */
-
-/**
- * @swagger
- * /api/sanpham/trongloai/{id}:
- *   get:
- *     summary: Lấy danh sách sản phẩm trong danh mục
- *     tags: [Sản phẩm]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Thành công
- */
-
-// =============THUONG HIEU========================
-/**
- * @swagger
- * /api/thuonghieu:
- *   get:
- *     summary: Lấy danh sách thương hiệu hiển thị
- *     tags: [Thương hiệu]
- *     responses:
- *       200:
- *         description: Danh sách thương hiệu thành công
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   tenbrand:
- *                     type: string
- *                   logo:
- *                     type: string
- *                   anhien:
- *                     type: integer
- */
-/**
- * @swagger
- * /api/sanpham/thuonghieu/{id}:
- *   get:
- *     summary: Lấy sản phẩm theo thương hiệu
- *     tags: [Sản phẩm]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Thành công
- */
-
-/**
- * @swagger
- * /api/sanpham/hot:
- *   get:
- *     summary: Lấy danh sách sản phẩm bán chạy
- *     tags: [Sản phẩm]
- *     responses:
- *       200:
- *         description: Thành công
- */
-
-/**
- * @swagger
- * /api/sanpham/moi:
- *   get:
- *     summary: Lấy danh sách sản phẩm mới
- *     tags: [Sản phẩm]
- *     responses:
- *       200:
- *         description: Thành công
- */
-
-/**
- * @swagger
- * /api/sanpham/xemnhieu:
- *   get:
- *     summary: Lấy top sản phẩm xem nhiều
- *     tags: [Sản phẩm]
- *     responses:
- *       200:
- *         description: Thành công
- */
-
-/**
- * @swagger
- * /api/sanpham/giamgia:
- *   get:
- *     summary: Lấy sản phẩm đang có mã giảm giá
- *     tags: [Sản phẩm]
- *     responses:
- *       200:
- *         description: Thành công
  */
 
 /* ===================== GIỎ HÀNG ===================== */
@@ -275,7 +182,7 @@
  * @swagger
  * /api/giohang:
  *   get:
- *     summary: Xem giỏ hàng của người dùng
+ *     summary: Lấy giỏ hàng của người dùng
  *     tags: [Giỏ hàng]
  *     security:
  *       - bearerAuth: []
@@ -284,13 +191,11 @@
  *         description: Danh sách sản phẩm trong giỏ hàng
  */
 
-/**
- * @swagger
  /**
  * @swagger
  * /api/giohang:
  *   post:
- *     summary: Thêm nhiều sản phẩm vào giỏ hàng
+ *     summary: Thêm sản phẩm vào giỏ hàng
  *     tags: [Giỏ hàng]
  *     security:
  *       - bearerAuth: []
@@ -299,17 +204,15 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: array
- *             items:
- *               type: object
- *               properties:
- *                 bienthe_id:
- *                   type: string
- *                 soluong:
- *                   type: integer
+ *             type: object
+ *             properties:
+ *               bienthe_id:
+ *                 type: string
+ *               soluong:
+ *                 type: integer
  *     responses:
  *       200:
- *         description: Thêm nhiều sản phẩm thành công
+ *         description: Thêm vào giỏ hàng thành công
  */
 
  /**
@@ -326,7 +229,6 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của sản phẩm trong giỏ hàng
  *     requestBody:
  *       required: true
  *       content:
@@ -336,12 +238,9 @@
  *             properties:
  *               soluong:
  *                 type: integer
- *                 example: 3
  *     responses:
  *       200:
- *         description: Cập nhật số lượng thành công
- *       404:
- *         description: Không tìm thấy sản phẩm trong giỏ hàng
+ *         description: Cập nhật thành công
  */
 
 /**
@@ -358,24 +257,12 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID của sản phẩm trong giỏ hàng
  *     responses:
  *       200:
- *         description: Xóa sản phẩm khỏi giỏ hàng thành công
- *       404:
- *         description: Không tìm thấy sản phẩm trong giỏ hàng
+ *         description: Xóa thành công
  */
 
 /* ===================== ĐƠN HÀNG ===================== */
-/**
- * @swagger
- * tags:
- *   - name: Đơn hàng
- *     description: Quản lý và xử lý đơn hàng người dùng
- */
-
-/**
- * @swagger
  /**
  * @swagger
  * /api/donhang:
@@ -492,7 +379,9 @@
  * /api/donhang/{id}/huy:
  *   put:
  *     summary: Hủy đơn hàng
- *     description: Cho phép người dùng hủy đơn hàng khi trạng thái chưa giao.
+ *     description: |
+ *       Cho phép người dùng hủy đơn hàng khi trạng thái chưa giao hàng.
+ *       Hệ thống sẽ tự động gửi email thông báo hủy đơn hàng đến customer.
  *     tags: [Đơn hàng]
  *     security:
  *       - bearerAuth: []
@@ -514,8 +403,14 @@
  *                 message:
  *                   type: string
  *                   example: Đã hủy đơn hàng
+ *       400:
+ *         description: Không thể hủy đơn hàng đã được giao
+ *       403:
+ *         description: Không có quyền hủy đơn hàng này
  *       404:
  *         description: Không tìm thấy đơn hàng
+ *       500:
+ *         description: Lỗi server
  */
 /* ===================== REVIEW ===================== */
 /**
@@ -547,33 +442,22 @@
  *         updated_at:
  *           type: string
  *           example: "2025-10-29T09:10:00Z"
- *         user:
- *           type: object
- *           properties:
- *             id:
- *               type: string
- *             ho_ten:
- *               type: string
- *         hinhanh:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *               url:
- *                 type: string
- *                 example: "/uploads/reviews/1730182233990-image1.jpg"
  */
 
 /**
  * @swagger
- * /api/review:
+ * /api/review/bienthe/{bienthe_id}:
  *   post:
- *     summary: Tạo đánh giá mới cho sản phẩm
+ *     summary: Tạo đánh giá mới (có upload ảnh)
  *     tags: [Review]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bienthe_id
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -581,21 +465,17 @@
  *           schema:
  *             type: object
  *             properties:
- *               chitiet_donhang_id:
- *                 type: string
- *                 example: "f50e6aa9-b333-11f0-b695-2a4b22e88692"
  *               rating:
  *                 type: integer
- *                 example: 4
+ *                 example: 5
  *               binhluan:
  *                 type: string
- *                 example: "Giao hàng nhanh, chất lượng ổn."
+ *                 example: "Sản phẩm rất đẹp, chất lượng tốt!"
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Tối đa 5 ảnh upload
  *     responses:
  *       200:
  *         description: Tạo đánh giá thành công
@@ -603,8 +483,6 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Review'
- *       400:
- *         description: Thiếu thông tin đánh giá
  *       401:
  *         description: Chưa đăng nhập
  */
@@ -705,7 +583,7 @@
  * @swagger
  * /api/review/bienthe/{bienthe_id}/average:
  *   get:
- *     summary: Lấy điểm trung bình đánh giá của sản phẩm biến thể
+ *     summary: Lấy điểm đánh giá trung bình của biến thể
  *     tags: [Review]
  *     parameters:
  *       - in: path
@@ -715,22 +593,15 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Điểm trung bình rating
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 average_rating:
- *                   type: number
- *                   example: 4.6
+ *         description: Điểm đánh giá trung bình
  */
 
+/* ===================== MÃ GIẢM GIÁ ===================== */
 /**
  * @swagger
- * /api/magiamgia/apply:
+ * /api/magiamgia/kiemtra:
  *   post:
- *     summary: Áp dụng mã giảm giá vào đơn hàng
+ *     summary: Kiểm tra mã giảm giá
  *     tags: [Mã giảm giá]
  *     requestBody:
  *       required: true
@@ -741,18 +612,15 @@
  *             properties:
  *               code:
  *                 type: string
- *                 example: SALE20
+ *                 example: "SALE10"
  *               tongtien:
  *                 type: number
- *                 example: 1200000
+ *                 example: 1000000
  *     responses:
  *       200:
- *         description: Mã giảm giá hợp lệ, trả về kết quả giảm
- *       400:
- *         description: Lỗi dữ liệu đầu vào hoặc đơn hàng chưa đủ điều kiện
- *       404:
- *         description: Mã không hợp lệ hoặc đã hết hạn
+ *         description: Mã giảm giá hợp lệ
  */
+
 /* ===================== BÀI VIẾT ===================== */
 /**
  * @swagger
@@ -760,26 +628,31 @@
  *   get:
  *     summary: Lấy danh sách bài viết
  *     tags: [Bài viết]
+ *     parameters:
+ *       - in: query
+ *         name: danhmuc_id
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Danh sách bài viết
  */
 
 /**
  * @swagger
- * /api/baiviet/{slug}:
+ * /api/baiviet/{id}:
  *   get:
  *     summary: Lấy chi tiết bài viết
  *     tags: [Bài viết]
  *     parameters:
  *       - in: path
- *         name: slug
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Chi tiết bài viết
  */
 
 /* ===================== LIÊN HỆ ===================== */
@@ -787,7 +660,7 @@
  * @swagger
  * /api/lienhe:
  *   post:
- *     summary: Gửi liên hệ từ form
+ *     summary: Gửi liên hệ
  *     tags: [Liên hệ]
  *     requestBody:
  *       required: true
@@ -796,62 +669,36 @@
  *           schema:
  *             type: object
  *             properties:
- *               ho_ten:
+ *               hoten:
  *                 type: string
  *               email:
  *                 type: string
- *               noi_dung:
+ *               sdt:
+ *                 type: string
+ *               noidung:
  *                 type: string
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Gửi liên hệ thành công
  */
 
-/**
- * @swagger
- * /api/uploads:
- *   post:
- *     summary: Upload ảnh sản phẩm
- *     tags: [Upload]
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Thành công
- */
-
-/**
- * @swagger
- * tags:
- *   - name: Danh mục
- *     description: Quản lý và hiển thị danh mục sản phẩm
- */
-
+/* ===================== DANH MỤC ===================== */
 /**
  * @swagger
  * /api/danhmuc:
  *   get:
- *     summary: Lấy danh sách danh mục hiển thị
+ *     summary: Lấy danh sách danh mục
  *     tags: [Danh mục]
  *     responses:
  *       200:
- *         description: Danh sách danh mục được trả về thành công
- * 
+ *         description: Danh sách danh mục
  */          
-// ======DANH MỤC========================================
+
 /**
  * @swagger
  * /api/danhmuc/{id}:
  *   get:
- *     summary: Lấy chi tiết danh mục và danh sách sản phẩm trong danh mục
+ *     summary: Lấy chi tiết danh mục
  *     tags: [Danh mục]
  *     parameters:
  *       - in: path
@@ -859,12 +706,12 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID danh mục
  *     responses:
  *       200:
- *         description: Thông tin danh mục và danh sách sản phẩm
+ *         description: Chi tiết danh mục
  */
 
+/* ===================== ADMIN ===================== */
 /**
  * @swagger
  * /admin/danhmuc:
@@ -882,13 +729,8 @@
  *             properties:
  *               tendm:
  *                 type: string
- *                 example: Ghế Văn Phòng
- *               code:
- *                 type: string
- *                 example: DM009
  *               mota:
  *                 type: string
- *                 example: ghe-van-phong
  *     responses:
  *       200:
  *         description: Thêm danh mục thành công
@@ -917,9 +759,7 @@
  *             properties:
  *               tendm:
  *                 type: string
- *               anhien:
- *                 type: integer
- *               slug:
+ *               mota:
  *                 type: string
  *     responses:
  *       200:
@@ -944,45 +784,17 @@
  *       200:
  *         description: Xóa danh mục thành công
  */
-// ================= thương hiệu ====================
+
+/* ===================== THƯƠNG HIỆU ===================== */
 /**
  * @swagger
- * tags:
- *   - name: Thương hiệu
- *     description: Quản lý và hiển thị thương hiệu sản phẩm
- */
-
-
-
-/**
- * @swagger
- * /api/thuonghieu/{id}:
+ * /api/thuonghieu:
  *   get:
- *     summary: Lấy danh sách sản phẩm theo thương hiệu
- *     tags: [Thương hiệu]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID thương hiệu
+ *     summary: Lấy danh sách thương hiệu
+ *     tags: [Sản phẩm]
  *     responses:
  *       200:
- *         description: Danh sách sản phẩm của thương hiệu
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   tensp:
- *                     type: string
- *                   thumbnail:
- *                     type: string
+ *         description: Danh sách thương hiệu
  */
 
 /**
@@ -990,7 +802,7 @@
  * /admin/thuonghieu:
  *   post:
  *     summary: (Admin) Thêm thương hiệu mới
- *     tags: [Thương hiệu]
+ *     tags: [Sản phẩm]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -1002,13 +814,8 @@
  *             properties:
  *               tenbrand:
  *                 type: string
- *                 example: Nội thất Hòa Phát
- *               logo:
+ *               mota:
  *                 type: string
- *                 example: https://example.com/logo.jpg
- *               anhien:
- *                 type: integer
- *                 example: 1
  *     responses:
  *       200:
  *         description: Thêm thương hiệu thành công
@@ -1019,7 +826,7 @@
  * /admin/thuonghieu/{id}:
  *   put:
  *     summary: (Admin) Cập nhật thương hiệu
- *     tags: [Thương hiệu]
+ *     tags: [Sản phẩm]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1037,10 +844,8 @@
  *             properties:
  *               tenbrand:
  *                 type: string
- *               logo:
+ *               mota:
  *                 type: string
- *               anhien:
- *                 type: integer
  *     responses:
  *       200:
  *         description: Cập nhật thương hiệu thành công
@@ -1051,7 +856,7 @@
  * /admin/thuonghieu/{id}:
  *   delete:
  *     summary: (Admin) Xóa thương hiệu
- *     tags: [Thương hiệu]
+ *     tags: [Sản phẩm]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1064,14 +869,8 @@
  *       200:
  *         description: Xóa thương hiệu thành công
  */
-// ===========biến thể ================
-/**
- * @swagger
- * tags:
- *   - name: Biến thể
- *     description: Quản lý các biến thể sản phẩm (màu, size, giá, tồn kho)
- */
 
+/* ===================== BIẾN THỂ ===================== */
 /**
  * @swagger
  * /api/bienthe:
@@ -1080,31 +879,106 @@
  *     tags: [Biến thể]
  *     responses:
  *       200:
- *         description: Thành công
+ *         description: Danh sách biến thể
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   mausac:
+ *                     type: string
+ *                   kichthuoc:
+ *                     type: string
+ *                   chatlieu:
+ *                     type: string
+ *                   gia:
+ *                     type: number
+ *                   sl_tonkho:
+ *                     type: integer
+ *                   sanpham:
+ *                     type: object
+ *                   images:
+ *                     type: array
+ *       500:
+ *         description: Lỗi server
  */
 
-// /**
-//  * @swagger
-//  * /api/bienthe/{id}:
-//  *   get:
-//  *     summary: Lấy chi tiết biến thể theo ID
-//  *     tags: [Biến thể]
-//  *     parameters:
-//  *       - in: path
-//  *         name: id
-//  *         required: true
-//  *         schema:
-//  *           type: string
-//  *     responses:
-//  *       200:
-//  *         description: Thành công
-//  */
+/**
+ * @swagger
+ * /api/bienthe/{id}:
+ *   get:
+ *     summary: Lấy thông tin chi tiết một biến thể theo ID
+ *     tags: [Biến thể]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của biến thể
+ *     responses:
+ *       200:
+ *         description: Thông tin chi tiết biến thể
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 mausac:
+ *                   type: string
+ *                 kichthuoc:
+ *                   type: string
+ *                 chatlieu:
+ *                   type: string
+ *                 gia:
+ *                   type: number
+ *                 sl_tonkho:
+ *                   type: integer
+ *                 code:
+ *                   type: string
+ *                 sanpham:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     code:
+ *                       type: string
+ *                     tensp:
+ *                       type: string
+ *                     thumbnail:
+ *                       type: string
+ *                     mota:
+ *                       type: string
+ *                     danhmuc:
+ *                       type: object
+ *                     thuonghieu:
+ *                       type: object
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       url:
+ *                         type: string
+ *       404:
+ *         description: Không tìm thấy biến thể
+ *       500:
+ *         description: Lỗi server
+ */
 
 /**
  * @swagger
  * /admin/bienthe:
  *   post:
- *     summary: Thêm biến thể mới
+ *     summary: Thêm biến thể
  *     tags: [Biến thể]
  *     security:
  *       - bearerAuth: []
@@ -1255,7 +1129,6 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID địa chỉ
  *     requestBody:
  *       required: true
  *       content:
@@ -1269,22 +1142,18 @@
  *               phuong_xa: { type: string }
  *               quan_huyen: { type: string }
  *               tinh_thanh: { type: string }
- *               macdinh: { type: integer, example: 0 }
- *               loaidiachi:
- *                 type: string
- *                 enum: [home, office, other]
+ *               macdinh: { type: integer }
+ *               loaidiachi: { type: string, enum: [home, office, other] }
  *     responses:
  *       200:
- *         description: Cập nhật địa chỉ thành công
- *       404:
- *         description: Không tìm thấy địa chỉ
+ *         description: Cập nhật thành công
  */
 
 /**
  * @swagger
  * /api/diachi/{id}:
  *   delete:
- *     summary: Xoá địa chỉ
+ *     summary: Xóa địa chỉ
  *     tags: [Địa chỉ]
  *     security:
  *       - bearerAuth: []
@@ -1294,27 +1163,41 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID địa chỉ
  *     responses:
  *       200:
- *         description: Xoá địa chỉ thành công
- *       404:
- *         description: Không tìm thấy địa chỉ
+ *         description: Xóa thành công
  */
-// ==================thanh toán===================
+
+/* ===================== THANH TOÁN ===================== */
 /**
  * @swagger
- * tags:
- *   - name: Thanh toán
- *     description: Xử lý thanh toán đơn hàng (VNPay, MoMo, COD)
+ * /api/thanhtoan/stripe/create-payment-intent:
+ *   post:
+ *     summary: Tạo Payment Intent cho Stripe
+ *     tags: [Đơn hàng]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *                 example: "abc-123-def-456"
+ *     responses:
+ *       200:
+ *         description: Tạo Payment Intent thành công
  */
 
 /**
  * @swagger
- * /api/thanhtoan/vnpay:
+ * /api/thanhtoan/stripe/confirm-payment:
  *   post:
- *     summary: Tạo link thanh toán VNPay
- *     tags: [Thanh toán]
+ *     summary: Xác nhận thanh toán Stripe thành công
+ *     tags: [Đơn hàng]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -1324,39 +1207,21 @@
  *           schema:
  *             type: object
  *             properties:
- *               donhang_id:
+ *               orderId:
  *                 type: string
- *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *               paymentIntentId:
+ *                 type: string
  *     responses:
  *       200:
- *         description: URL redirect tới VNPay
- */
-/**
- * @swagger
- * /api/thanhtoan/vnpay/return:
- *   get:
- *     summary: Callback từ VNPay sau khi thanh toán
- *     tags: [Thanh toán]
- *     parameters:
- *       - in: query
- *         name: orderId
- *         schema:
- *           type: string
- *       - in: query
- *         name: vnp_ResponseCode
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Cập nhật trạng thái thanh toán
+ *         description: Xác nhận thanh toán thành công
  */
 
 /**
  * @swagger
- * /api/thanhtoan/momo:
+ * /api/thanhtoan/banking/confirm-transfer:
  *   post:
- *     summary: Tạo giao dịch MoMo
- *     tags: [Thanh toán]
+ *     summary: Xác nhận đã chuyển khoản
+ *     tags: [Đơn hàng]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -1366,49 +1231,672 @@
  *           schema:
  *             type: object
  *             properties:
- *               donhang_id:
+ *               orderId:
  *                 type: string
  *     responses:
  *       200:
- *         description: URL redirect tới MoMo
+ *         description: Xác nhận chuyển khoản thành công
  */
+
 /**
  * @swagger
- * /api/thanhtoan/cod:
- *   post:
- *     summary: Thanh toán khi nhận hàng (COD)
- *     tags: [Thanh toán]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               donhang_id:
- *                 type: string
- *     responses:
- *       200:
- *         description: Cập nhật trạng thái COD
- */
-/**
- * @swagger
- * /api/thanhtoan/trangthai/{id}:
+ * /api/thanhtoan/check-status/{orderId}:
  *   get:
  *     summary: Kiểm tra trạng thái thanh toán đơn hàng
- *     tags: [Thanh toán]
+ *     tags: [Đơn hàng]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: orderId
  *         required: true
  *         schema:
  *           type: string
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Thông tin trạng thái thanh toán
  */
 
+/* ===================== ADMIN - THỐNG KÊ ===================== */
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin - Thống kê
+ *     description: API thống kê dành cho quản trị viên (doanh thu, đơn hàng, tồn kho, user online)
+ */
+
+/**
+ * @swagger
+ * /api/admin/dashboard:
+ *   get:
+ *     summary: Thống kê tổng quan dashboard
+ *     description: Lấy thống kê tổng quan về sản phẩm, đơn hàng, người dùng và bài viết. Có thể filter đơn hàng theo khoảng ngày.
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-01"
+ *         description: Ngày bắt đầu để filter đơn hàng (YYYY-MM-DD). Nếu có, phải có to_date.
+ *       - in: query
+ *         name: to_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-31"
+ *         description: Ngày kết thúc để filter đơn hàng (YYYY-MM-DD). Nếu có, phải có from_date.
+ *     responses:
+ *       200:
+ *         description: Thống kê dashboard thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sanpham:
+ *                   type: integer
+ *                   example: 150
+ *                   description: Tổng số sản phẩm
+ *                 donhang:
+ *                   type: integer
+ *                   example: 1250
+ *                   description: Tổng số đơn hàng (có filter nếu có from_date và to_date)
+ *                 nguoidung:
+ *                   type: integer
+ *                   example: 500
+ *                   description: Tổng số người dùng
+ *                 baiviet:
+ *                   type: integer
+ *                   example: 45
+ *                   description: Tổng số bài viết
+ *                 period:
+ *                   type: object
+ *                   description: Khoảng thời gian filter (chỉ có khi có from_date và to_date)
+ *                   properties:
+ *                     from_date:
+ *                       type: string
+ *                       format: date
+ *                       example: "2025-01-01"
+ *                     to_date:
+ *                       type: string
+ *                       format: date
+ *                       example: "2025-01-31"
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/revenue/daily:
+ *   get:
+ *     summary: Lấy doanh thu theo ngày
+ *     description: Thống kê doanh thu và số đơn hàng trong một ngày cụ thể. Chỉ tính đơn hàng đã thanh toán.
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-20"
+ *         description: Ngày cần thống kê (YYYY-MM-DD). Nếu không có, mặc định là hôm nay.
+ *     responses:
+ *       200:
+ *         description: Thống kê doanh thu theo ngày thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   example: "2025-01-20"
+ *                 tong_doanh_thu:
+ *                   type: number
+ *                   example: 5000000
+ *                   description: Tổng doanh thu trong ngày (VND)
+ *                 so_don_hang:
+ *                   type: integer
+ *                   example: 25
+ *                   description: Số lượng đơn hàng trong ngày
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/revenue/monthly:
+ *   get:
+ *     summary: Lấy doanh thu theo tháng
+ *     description: Thống kê doanh thu và số đơn hàng trong một tháng cụ thể. Chỉ tính đơn hàng đã thanh toán.
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *           example: 2025
+ *         description: Năm cần thống kê. Nếu không có, mặc định là năm hiện tại.
+ *       - in: query
+ *         name: month
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *           minimum: 1
+ *           maximum: 12
+ *         description: Tháng cần thống kê (1-12). Nếu không có, mặc định là tháng hiện tại.
+ *     responses:
+ *       200:
+ *         description: Thống kê doanh thu theo tháng thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 year:
+ *                   type: integer
+ *                   example: 2025
+ *                 month:
+ *                   type: integer
+ *                   example: 1
+ *                 tong_doanh_thu:
+ *                   type: number
+ *                   example: 150000000
+ *                   description: Tổng doanh thu trong tháng (VND)
+ *                 so_don_hang:
+ *                   type: integer
+ *                   example: 750
+ *                   description: Số lượng đơn hàng trong tháng
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/revenue/range:
+ *   get:
+ *     summary: Lấy doanh thu theo khoảng ngày (from-date to date)
+ *     description: Thống kê doanh thu và số đơn hàng trong một khoảng thời gian tùy chọn. Chỉ tính đơn hàng đã thanh toán. Có thể trả về danh sách đơn hàng nếu cần.
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from_date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-01"
+ *         description: Ngày bắt đầu (YYYY-MM-DD)
+ *       - in: query
+ *         name: to_date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-31"
+ *         description: Ngày kết thúc (YYYY-MM-DD)
+ *       - in: query
+ *         name: include_orders
+ *         schema:
+ *           type: boolean
+ *           example: false
+ *         description: Có trả về danh sách đơn hàng không (true/false). Mặc định là false.
+ *     responses:
+ *       200:
+ *         description: Thống kê doanh thu theo khoảng ngày thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 from_date:
+ *                   type: string
+ *                   format: date
+ *                   example: "2025-01-01"
+ *                 to_date:
+ *                   type: string
+ *                   format: date
+ *                   example: "2025-01-31"
+ *                 tong_doanh_thu:
+ *                   type: number
+ *                   example: 50000000
+ *                   description: Tổng doanh thu trong khoảng thời gian (VND)
+ *                 so_don_hang:
+ *                   type: integer
+ *                   example: 250
+ *                   description: Số lượng đơn hàng trong khoảng thời gian
+ *                 orders:
+ *                   type: array
+ *                   description: Danh sách đơn hàng (chỉ có khi include_orders=true)
+ *                   items:
+ *                     type: object
+ *       400:
+ *         description: Thiếu tham số hoặc ngày không hợp lệ
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/products/low-stock:
+ *   get:
+ *     summary: Lấy sản phẩm có tồn kho thấp (< 8)
+ *     description: Lấy danh sách các biến thể sản phẩm có số lượng tồn kho nhỏ hơn 8 (nhưng lớn hơn 0).
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách sản phẩm có tồn kho thấp
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   example: 15
+ *                   description: Số lượng biến thể có tồn kho thấp
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       sl_tonkho:
+ *                         type: integer
+ *                         example: 5
+ *                       gia:
+ *                         type: number
+ *                       mausac:
+ *                         type: string
+ *                       sanpham:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           code:
+ *                             type: string
+ *                           tensp:
+ *                             type: string
+ *                           thumbnail:
+ *                             type: string
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/products/out-of-stock:
+ *   get:
+ *     summary: Lấy sản phẩm hết hàng (tồn kho <= 0)
+ *     description: Lấy danh sách các biến thể sản phẩm đã hết hàng (số lượng tồn kho nhỏ hơn hoặc bằng 0).
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách sản phẩm hết hàng
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   example: 8
+ *                   description: Số lượng biến thể hết hàng
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       sl_tonkho:
+ *                         type: integer
+ *                         example: 0
+ *                       gia:
+ *                         type: number
+ *                       mausac:
+ *                         type: string
+ *                       sanpham:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           code:
+ *                             type: string
+ *                           tensp:
+ *                             type: string
+ *                           thumbnail:
+ *                             type: string
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/orders/today:
+ *   get:
+ *     summary: Lấy đơn hàng theo ngày
+ *     description: Lấy danh sách tất cả đơn hàng được tạo trong một ngày cụ thể (từ 00:00:00 đến 23:59:59). Mặc định là hôm nay nếu không có query param date.
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-20"
+ *         description: Ngày cần lấy đơn hàng (YYYY-MM-DD). Nếu không có, mặc định là hôm nay.
+ *     responses:
+ *       200:
+ *         description: Danh sách đơn hàng hôm nay
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   example: "2025-01-20"
+ *                   description: Ngày được lấy đơn hàng
+ *                 count:
+ *                   type: integer
+ *                   example: 42
+ *                   description: Số lượng đơn hàng trong ngày
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       code:
+ *                         type: string
+ *                       tongtien:
+ *                         type: number
+ *                       tongtien_sau_giam:
+ *                         type: number
+ *                       trangthai:
+ *                         type: string
+ *                         enum: [pending, confirmed, shipping, delivered, cancelled, returned]
+ *                       trangthaithanhtoan:
+ *                         type: string
+ *                         enum: [pending, paid, failed, refunded, cancelled]
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           ho_ten:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/orders/pending:
+ *   get:
+ *     summary: Lấy đơn hàng đang chờ xử lý
+ *     description: Lấy danh sách tất cả đơn hàng có trạng thái "pending" (chờ xác nhận).
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách đơn hàng đang chờ xử lý
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   example: 12
+ *                   description: Số lượng đơn hàng đang chờ xử lý
+ *                 orders:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       code:
+ *                         type: string
+ *                       tongtien:
+ *                         type: number
+ *                       tongtien_sau_giam:
+ *                         type: number
+ *                       trangthai:
+ *                         type: string
+ *                         enum: [pending, confirmed, shipping, delivered, cancelled, returned]
+ *                       trangthaithanhtoan:
+ *                         type: string
+ *                         enum: [pending, paid, failed, refunded, cancelled]
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           ho_ten:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/users/online:
+ *   get:
+ *     summary: Lấy danh sách user đang online real-time
+ *     description: Lấy danh sách người dùng đang hoạt động trong vòng 5 phút gần nhất. Dữ liệu được cập nhật real-time.
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách user đang online
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                   example: 15
+ *                   description: Tổng số user đang online
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       ho_ten:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       role:
+ *                         type: string
+ *                         enum: [admin, customer]
+ *                       last_activity:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Thời gian hoạt động cuối cùng
+ *                         example: "2025-01-20T10:30:00.000Z"
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/* ===================== ADMIN - QUẢN LÝ ĐƠN HÀNG ===================== */
+/**
+ * @swagger
+ * /api/admin/donhang:
+ *   get:
+ *     summary: (Admin) Lấy danh sách đơn hàng với filter từ-đến ngày
+ *     description: Lấy danh sách tất cả đơn hàng trong hệ thống. Có thể filter theo khoảng thời gian, trạng thái đơn hàng và trạng thái thanh toán.
+ *     tags: [Admin - Đơn hàng]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-01"
+ *         description: Ngày bắt đầu filter (YYYY-MM-DD). Lọc theo created_at của đơn hàng.
+ *       - in: query
+ *         name: to_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-01-31"
+ *         description: Ngày kết thúc filter (YYYY-MM-DD). Lọc theo created_at của đơn hàng.
+ *       - in: query
+ *         name: trangthai
+ *         schema:
+ *           type: string
+ *           enum: [pending, confirmed, shipping, delivered, cancelled, returned]
+ *           example: "pending"
+ *         description: Lọc theo trạng thái đơn hàng
+ *       - in: query
+ *         name: trangthaithanhtoan
+ *         schema:
+ *           type: string
+ *           enum: [pending, paid, failed, refunded, cancelled]
+ *           example: "paid"
+ *         description: Lọc theo trạng thái thanh toán
+ *     responses:
+ *       200:
+ *         description: Danh sách đơn hàng
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   code:
+ *                     type: string
+ *                   trangthai:
+ *                     type: string
+ *                   trangthaithanhtoan:
+ *                     type: string
+ *                   tongtien_sau_giam:
+ *                     type: number
+ *                   user:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       ho_ten:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                   chitiet:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *       401:
+ *         description: Chưa đăng nhập hoặc không có quyền admin
+ *       500:
+ *         description: Lỗi server
+ */
+
+/**
+ * @swagger
+ * /api/admin/donhang/{id}:
+ *   put:
+ *     summary: (Admin) Cập nhật trạng thái đơn hàng
+ *     description: |
+ *       Admin có thể cập nhật trạng thái đơn hàng (trangthai) và trạng thái thanh toán (trangthaithanhtoan).
+ *       Khi trạng thái đơn hàng thay đổi, hệ thống sẽ tự động gửi email thông báo đến customer.
+ *       **Chỉ cho phép cập nhật trạng thái, không thể cập nhật các thông tin khác như địa chỉ, ghi chú, v.v.**
+ *     tags: [Admin - Thống kê]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID của đơn hàng cần cập nhật
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               trangthai:
+ *                 type: string
+ *                 enum: [pending, confirmed, shipping, delivered, cancelled, returned]
+ *                 description: Trạng thái đơn hàng mới. Khi thay đổi sẽ gửi email cho customer.
+ *                 example: "confirmed"
+ *               trangthaithanhtoan:
+ *                 type: string
+ *                 enum: [pending, paid, failed, refunded, cancelled]
+ *                 description: Trạng thái thanh toán
+ *                 example: "paid"
+ *     responses:
+ *       200:
+ *         description: Cập nhật trạng thái đơn hàng thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Cập nhật trạng thái đơn hàng thành công"
+ *       400:
+ *         description: Không có dữ liệu để cập nhật hoặc dữ liệu không hợp lệ
+ *       404:
+ *         description: Không tìm thấy đơn hàng
+ *       500:
+ *         description: Lỗi server
+ */

@@ -215,7 +215,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price: number) => Number(price || 0).toLocaleString('vi-VN') + '₫';
 
   // Lấy số lượng tồn kho của biến thể được chọn
   const getCurrentStock = () => {
@@ -771,40 +771,31 @@ export default function ProductDetailPage() {
           box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
         }
 
-        .color-option {
+        .color-radio-option {
           width: 50px;
           height: 50px;
           border: 3px solid #FFE5D9;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
           border-radius: 12px;
+          transition: all 0.3s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          cursor: pointer;
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .color-option:hover {
+        .color-radio-option:hover {
           border-color: #FF8E53;
           transform: translateY(-4px) scale(1.05);
           box-shadow: 0 6px 16px rgba(255, 142, 83, 0.3);
         }
 
-        .color-option.active {
+        .color-radio-option.active {
           border-color: #FF6B6B;
           border-width: 4px;
           box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2), 0 6px 16px rgba(255, 107, 107, 0.3);
           transform: scale(1.1);
-        }
-        
-        .color-option.active::after {
-          content: '✓';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          color: #fff;
-          font-size: 20px;
-          font-weight: bold;
-          text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .quantity-control {
@@ -1278,7 +1269,7 @@ export default function ProductDetailPage() {
                   >
                     <i className="bi bi-truck" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
                     <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Giao hàng nhanh</p>
-                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Miễn phí 5tr</p>
+                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Miễn phí 5 triệu</p>
                   </div>
                 </div>
                 <div className="col-6">
@@ -1383,20 +1374,46 @@ export default function ProductDetailPage() {
                 {product.colors && product.colors.length > 0 && (
                   <div className="mb-4">
                     <h6 className="mb-3 fw-semibold" style={{ color: '#2c3e50', letterSpacing: '0.5px', fontSize: '1.05rem' }}>Màu sắc</h6>
-                    <div className="d-flex gap-3">
+                    <div className="d-flex gap-3 flex-wrap align-items-start">
                       {product.colors.map((color, index) => (
-                        <div
-                          key={index}
-                          className={`color-option ${selectedColor === index ? 'active' : ''}`}
-                          style={{ backgroundColor: color.code }}
-                          onClick={() => setSelectedColor(index)}
-                          title={color.name}
-                        />
+                        <div key={index} className="d-flex flex-column align-items-center">
+                          <label
+                            className={`color-radio-option ${selectedColor === index ? 'active' : ''}`}
+                            style={{ 
+                              backgroundColor: color.code,
+                            }}
+                            title={color.name}
+                          >
+                            <input
+                              type="radio"
+                              name="color"
+                              value={index}
+                              checked={selectedColor === index}
+                              onChange={() => setSelectedColor(index)}
+                              style={{ display: 'none' }}
+                            />
+                            {selectedColor === index && (
+                              <span style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                color: '#fff',
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                pointerEvents: 'none'
+                              }}>✓</span>
+                            )}
+                          </label>
+                          {selectedColor === index && (
+                            <span className="mt-2" style={{ fontSize: '0.85rem', color: '#2c3e50', fontWeight: '600' }}>
+                              {color.name}
+                            </span>
+                          )}
+                        </div>
                       ))}
                     </div>
-                    <p className="text-muted mt-2 mb-0" style={{ fontSize: '0.9rem' }}>
-                      {product.colors[selectedColor]?.name || 'Màu mặc định'}
-                    </p>
                   </div>
                 )}
 

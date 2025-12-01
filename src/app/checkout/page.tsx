@@ -3,19 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
-import StripePaymentForm from '../component/StripePaymentForm';
-import LocationSelector from '../component/LocationSelector';
-
-// Khởi tạo Stripe từ publishable key (cần có NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-if (!publishableKey) {
-  console.warn(
-    '⚠️ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY chưa được cấu hình. Stripe form sẽ không hiển thị.'
-  );
-}
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
+// CHANGED: Đã xóa import Stripe components vì chuyển sang trang riêng /checkout/stripe
 
 interface CartItem {
   id: string;
@@ -55,9 +43,7 @@ export default function CheckoutPage() {
   const [applyingCode, setApplyingCode] = useState(false);
   const [discountError, setDiscountError] = useState('');
   
-  // Stripe payment states
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [showStripeForm, setShowStripeForm] = useState(false);
+  // CHANGED: Đã xóa Stripe form states vì chuyển sang trang riêng /checkout/stripe
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -99,8 +85,9 @@ export default function CheckoutPage() {
           throw new Error('Failed to load cart');
         }
 
+        // CHANGED: Đã xóa emoji/sticker khỏi console logs
         const data = await response.json();
-        console.log('📦 Cart data from checkout:', data);
+        console.log('Cart data from checkout:', data);
         
         const items = data.san_pham || [];
         
@@ -113,7 +100,7 @@ export default function CheckoutPage() {
           setCartItems(items);
         setTotalAmount(data.tong_tien || 0);
       } catch (error) {
-        console.error('❌ Error loading cart:', error);
+        console.error('Error loading cart:', error);
         router.push('/cart');
       } finally {
         setLoading(false);
@@ -143,13 +130,22 @@ export default function CheckoutPage() {
       }
 
       // Tạo đơn hàng
+      // CHANGED: Gửi đầy đủ thông tin địa chỉ để backend có thể lưu vào đơn hàng
       const orderData = {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        district: formData.district,
+        ward: formData.ward,
         ghichu: formData.note,
         tinh_thanh: formData.city,
         magiamgia_code: appliedDiscount?.code || null,
+        phuongthucthanhtoan: formData.paymentMethod, // CHANGED: Gửi phương thức thanh toán (cod, stripe, banking)
       };
 
-      console.log('📤 Sending order data:', orderData);
+      // CHANGED: Đã xóa emoji/sticker khỏi console logs
+      console.log('Sending order data:', orderData);
       
       const response = await fetch('http://localhost:5000/api/donhang', {
         method: 'POST',
@@ -160,22 +156,23 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderData),
       });
 
-      console.log('📥 Response status:', response.status);
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('❌ Error response:', errorData);
+        console.error('Error response:', errorData);
         throw new Error(errorData.message || 'Không thể tạo đơn hàng');
       }
 
       const data = await response.json();
-      console.log('✅ Order created:', data);
+      console.log('Order created:', data);
       const orderId = data.donhang.id;
 
       // Xử lý theo phương thức thanh toán
       if (formData.paymentMethod === 'stripe') {
+        // CHANGED: Đã xóa emoji/sticker khỏi console logs
         // Tạo payment intent với Stripe
-        console.log('🔄 Creating Stripe payment intent for order:', orderId);
+        console.log('Creating Stripe payment intent for order:', orderId);
         
         const paymentResponse = await fetch('http://localhost:5000/api/thanhtoan/stripe/create-payment-intent', {
           method: 'POST',
@@ -186,19 +183,51 @@ export default function CheckoutPage() {
           body: JSON.stringify({ donhang_id: orderId }),
         });
 
-        console.log('📥 Payment response status:', paymentResponse.status);
+        console.log('Payment response status:', paymentResponse.status);
 
         if (!paymentResponse.ok) {
-          const errorData = await paymentResponse.json();
-          console.error('❌ Payment Intent Error:', errorData);
-          throw new Error(errorData.message || errorData.error || 'Không thể tạo payment intent');
+          let errorData;
+          try {
+            errorData = await paymentResponse.json();
+          } catch {
+            const text = await paymentResponse.text();
+            console.error('Failed to parse error response:', text);
+            throw new Error(`Lỗi từ server (${paymentResponse.status}): ${paymentResponse.statusText}`);
+          }
+          
+          console.error('Payment Intent Error:', {
+            status: paymentResponse.status,
+            statusText: paymentResponse.statusText,
+            error: errorData
+          });
+          
+          // Tạo thông báo lỗi chi tiết hơn
+          let errorMessage = 'Không thể tạo payment intent';
+          
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.type) {
+            errorMessage = `Lỗi Stripe (${errorData.type}): ${errorData.error || errorData.message || 'Không xác định'}`;
+          }
+          
+          // Thêm thông tin debug nếu có
+          if (errorData.code) {
+            errorMessage += ` (Code: ${errorData.code})`;
+          }
+          
+          throw new Error(errorMessage);
         }
 
+        // CHANGED: Đã xóa emoji/sticker khỏi console logs
+        // CHANGED: Redirect sang trang riêng để điền thông tin thẻ thay vì hiển thị inline
         const paymentData = await paymentResponse.json();
-        console.log('✅ Payment Intent created:', paymentData);
-        setClientSecret(paymentData.clientSecret);
-        setShowStripeForm(true);
+        console.log('Payment Intent created:', paymentData);
+        
+        // CHANGED: Redirect sang trang Stripe checkout thay vì hiển thị form inline
         setProcessing(false);
+        router.push(`/checkout/stripe?orderId=${orderId}`);
       } else if (formData.paymentMethod === 'cod') {
         // Thanh toán COD
         await fetch('http://localhost:5000/api/thanhtoan/cod', {
@@ -213,15 +242,83 @@ export default function CheckoutPage() {
       alert('Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
       window.dispatchEvent(new Event('cartUpdated'));
         router.push('/orders');
-      } else {
-        // Banking
-        alert('Tính năng chuyển khoản đang được phát triển!');
+      } else if (formData.paymentMethod === 'banking') {
+        // CHANGED: Redirect sang trang banking payment thay vì alert
+        console.log('=== BANKING PAYMENT SELECTED ===');
+        console.log('Payment method:', formData.paymentMethod);
+        console.log('Order ID:', orderId);
+        console.log('Redirecting to banking checkout page...');
+        
+        // CHANGED: Set processing false trước khi redirect
         setProcessing(false);
+        
+        // CHANGED: Redirect sang trang banking
+        router.push(`/checkout/banking?orderId=${orderId}`);
+        return; // CHANGED: Return ngay để tránh xử lý tiếp và không chạy code phía dưới
+      } else {
+        // CHANGED: Xử lý các phương thức thanh toán khác (nếu có)
+        console.warn('Unknown payment method:', formData.paymentMethod);
+        setProcessing(false);
+        alert('Phương thức thanh toán không hợp lệ');
+        return;
       }
     } catch (error) {
-      console.error('❌ Error creating order:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra';
-      alert(`Lỗi: ${errorMessage}\n\nVui lòng kiểm tra:\n- Đã đăng nhập chưa?\n- Giỏ hàng có sản phẩm không?\n- Server có chạy không?`);
+      // CHANGED: Đã xóa emoji/sticker khỏi console logs
+      console.error('Error creating order:', error);
+      
+      // CHANGED: Xử lý error message chi tiết hơn với try-catch để tránh lỗi
+      let errorMessage = 'Có lỗi xảy ra';
+      try {
+        if (error instanceof Error) {
+          errorMessage = error.message || 'Có lỗi xảy ra';
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        } else if (error && typeof error === 'object') {
+          // CHANGED: Kiểm tra các thuộc tính có thể có của error object
+          if ('message' in error && error.message) {
+            errorMessage = String(error.message);
+          } else if ('error' in error && error.error) {
+            errorMessage = String(error.error);
+          } else if ('msg' in error && error.msg) {
+            errorMessage = String(error.msg);
+          }
+        }
+      } catch (parseError) {
+        // CHANGED: Nếu không parse được error, dùng message mặc định
+        console.error('Error parsing error message:', parseError);
+        errorMessage = 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.';
+      }
+      
+      // CHANGED: Log error details an toàn hơn
+      try {
+        console.error('Full error details:', {
+          message: errorMessage,
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack?.split('\n').slice(0, 3)
+          } : error
+        });
+      } catch (logError) {
+        console.error('Error logging error details:', logError);
+      }
+      
+      // CHANGED: Hiển thị alert với thông báo lỗi chi tiết
+      try {
+        alert(
+          `Lỗi: ${errorMessage}\n\n` +
+          `Vui lòng kiểm tra:\n` +
+          `- Đã đăng nhập chưa?\n` +
+          `- Giỏ hàng có sản phẩm không?\n` +
+          `- Server có chạy không?\n` +
+          `- Thông tin địa chỉ đã điền đầy đủ chưa?\n\n` +
+          `Chi tiết: ${errorMessage}`
+        );
+      } catch (alertError) {
+        console.error('Error showing alert:', alertError);
+      }
+      
       setProcessing(false);
     }
   };
@@ -278,7 +375,7 @@ export default function CheckoutPage() {
   };
 
   const subtotal = totalAmount;
-  const shippingFee = subtotal > 5000000 ? 0 : 30000;
+  const shippingFee = subtotal > 5000000 ? 0 : 100000;
   const discount = appliedDiscount?.giam || 0;
   const total = subtotal + shippingFee - discount;
 
@@ -439,15 +536,59 @@ export default function CheckoutPage() {
                       />
                     </div>
 
-                    <LocationSelector
-                      selectedCity={formData.city}
-                      selectedDistrict={formData.district}
-                      selectedWard={formData.ward}
-                      onCityChange={(city) => setFormData(prev => ({ ...prev, city }))}
-                      onDistrictChange={(district) => setFormData(prev => ({ ...prev, district }))}
-                      onWardChange={(ward) => setFormData(prev => ({ ...prev, ward }))}
-                      required
-                    />
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">
+                        Thành phố <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="city"
+                        className="form-control"
+                        placeholder="Hà Nội"
+                        value={formData.city}
+                        onChange={handleChange}
+                        required
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          border: '2px solid #e9ecef',
+                        }}
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">Quận/Huyện</label>
+                      <input
+                        type="text"
+                        name="district"
+                        className="form-control"
+                        placeholder="Quận/Huyện"
+                        value={formData.district}
+                        onChange={handleChange}
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          border: '2px solid #e9ecef',
+                        }}
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">Phường/Xã</label>
+                      <input
+                        type="text"
+                        name="ward"
+                        className="form-control"
+                        placeholder="Phường/Xã"
+                        value={formData.ward}
+                        onChange={handleChange}
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '12px',
+                          border: '2px solid #e9ecef',
+                        }}
+                      />
+                    </div>
 
                     <div className="col-12">
                       <label className="form-label fw-semibold">Ghi chú (tùy chọn)</label>
@@ -498,7 +639,7 @@ export default function CheckoutPage() {
                     </label>
                   </div>
 
-                  <div className="form-check mb-3 p-3 border rounded-3" style={{ background: showStripeForm ? '#f0f8ff' : 'transparent' }}>
+                  <div className="form-check mb-3 p-3 border rounded-3">
                     <input
                       className="form-check-input"
                       type="radio"
@@ -507,7 +648,6 @@ export default function CheckoutPage() {
                       value="stripe"
                       checked={formData.paymentMethod === 'stripe'}
                       onChange={handleChange}
-                      disabled={showStripeForm}
                     />
                     <label className="form-check-label w-100" htmlFor="stripe">
                       <div className="d-flex align-items-center">
@@ -738,50 +878,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Hiển thị Stripe payment form hoặc button đặt hàng */}
-                  {showStripeForm && clientSecret ? (
-                    <div className="mt-4">
-                      <div className="alert alert-info" role="alert">
-                        <i className="bi bi-info-circle me-2"></i>
-                        Vui lòng điền thông tin thẻ để hoàn tất thanh toán
-                      </div>
-                      {stripePromise ? (
-                        <Elements
-                          stripe={stripePromise}
-                          options={{
-                            clientSecret,
-                            appearance: {
-                              theme: 'stripe',
-                              variables: {
-                                colorPrimary: '#FF6B6B',
-                              },
-                            },
-                          }}
-                          key={clientSecret}
-                        >
-                          <StripePaymentForm
-                            onSuccess={() => {
-                              alert('Thanh toán thành công!');
-                              window.dispatchEvent(new Event('cartUpdated'));
-                              router.push('/checkout/success');
-                            }}
-                            onError={(error) => {
-                              console.error('Payment error:', error);
-                              setShowStripeForm(false);
-                              setProcessing(false);
-                            }}
-                          />
-                        </Elements>
-                      ) : (
-                        <div className="alert alert-danger mt-3" role="alert">
-                          <i className="bi bi-exclamation-circle me-2"></i>
-                          Chưa cấu hình Stripe publishable key (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Vui lòng kiểm tra file
-                          <code className="ms-1">.env.local</code> và khởi động lại frontend.
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <>
+                  {/* CHANGED: Đã xóa Stripe form inline vì chuyển sang trang riêng /checkout/stripe */}
                   <button
                     type="submit"
                     className="btn text-white w-100 py-3"
@@ -827,8 +924,6 @@ export default function CheckoutPage() {
                       </a>
                     </small>
                   </div>
-                    </>
-                  )}
                 </div>
               </div>
             </div>

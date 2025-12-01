@@ -350,7 +350,7 @@ export default function NewsPage() {
                             {formatDate(article.publishDate)}
                           </span>
                           <span className="text-white d-flex align-items-center gap-2">
-                            <i className="bi bi-eye"></i>
+                            <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
                             {(article.views || 0).toLocaleString()} lượt xem
                           </span>
                         </div>
@@ -400,7 +400,7 @@ export default function NewsPage() {
                           {formatDate(article.publishDate)}
                         </span>
                         <span className="news-views">
-                          <i className="bi bi-eye"></i>
+                          <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
                           {(article.views || 0).toLocaleString()}
                         </span>
                       </div>

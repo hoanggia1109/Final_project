@@ -64,27 +64,107 @@ export default function CreateDanhMucPage() {
   };
 
   return (
-    <div>
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="fw-bold mb-1" style={{ color: '#2C3E50' }}>Thêm Danh mục mới</h2>
-          <p className="text-muted mb-0">Tạo danh mục sản phẩm mới</p>
-        </div>
-        <button
-          onClick={() => router.back()}
-          className="btn btn-outline-secondary d-flex align-items-center gap-2"
-        >
-          <ArrowLeft size={18} />
-          Quay lại
-        </button>
-      </div>
+    <>
+      <style jsx>{`
+        .form-container {
+          background: linear-gradient(135deg, #FFF9F0 0%, #ffffff 100%);
+          min-height: 100vh;
+          padding: 2rem 0;
+        }
+        .form-header {
+          background: #ffffff;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .form-card {
+          background: #ffffff;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: none;
+        }
+        .form-label {
+          color: #2C3E50;
+          font-weight: 600;
+          font-size: 0.95rem;
+          margin-bottom: 0.5rem;
+        }
+        .form-control, .form-select {
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          padding: 0.75rem 1rem;
+          transition: all 0.3s ease;
+          font-size: 0.95rem;
+        }
+        .form-control:focus, .form-select:focus {
+          border-color: #FFC107;
+          box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+          outline: none;
+        }
+        .form-control:hover, .form-select:hover {
+          border-color: #d0d0d0;
+        }
+        .btn-submit {
+          background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+          border: none;
+          color: #fff;
+          font-weight: 600;
+          padding: 0.75rem 2rem;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+        .btn-submit:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(255, 193, 7, 0.4);
+        }
+        .image-upload-area {
+          border: 2px dashed #d0d0d0;
+          border-radius: 12px;
+          padding: 2rem;
+          text-align: center;
+          transition: all 0.3s ease;
+          background: #fafafa;
+        }
+        .image-upload-area:hover {
+          border-color: #FFC107;
+          background: #fffbf0;
+        }
+        .image-preview {
+          border-radius: 12px;
+          border: 2px solid #e0e0e0;
+          padding: 0.5rem;
+          background: #fafafa;
+        }
+        @media (max-width: 768px) {
+          .form-header {
+            padding: 1rem;
+          }
+        }
+      `}</style>
+      <div className="form-container">
+        <div className="container">
+          {/* Header */}
+          <div className="form-header d-flex justify-content-between align-items-center">
+            <div>
+              <h2 className="fw-bold mb-1" style={{ color: '#2C3E50', fontSize: '1.75rem' }}>Thêm Danh mục mới</h2>
+              <p className="text-muted mb-0">Tạo danh mục sản phẩm mới</p>
+            </div>
+            <button
+              onClick={() => router.back()}
+              className="btn btn-outline-secondary d-flex align-items-center gap-2"
+            >
+              <ArrowLeft size={18} />
+              Quay lại
+            </button>
+          </div>
 
-      {/* Form */}
-      <div className="row">
-        <div className="col-lg-8">
-          <form onSubmit={handleSubmit} className="card shadow-sm border-0">
-            <div className="card-body p-4">
+          {/* Form */}
+          <div className="row">
+            <div className="col-lg-8">
+              <form onSubmit={handleSubmit} className="form-card">
+                <div className="card-body p-4">
               {/* Mã danh mục */}
               <div className="mb-4">
                 <label className="form-label fw-semibold">
@@ -129,48 +209,48 @@ export default function CreateDanhMucPage() {
                 />
               </div>
 
-              {/* Ảnh */}
-              <div className="mb-4">
-                <label className="form-label fw-semibold">Ảnh danh mục</label>
-                <div className="border border-2 border-dashed rounded p-4 text-center">
-                  {preview ? (
-                    <div>
-                      <img
-                        src={preview}
-                        alt="Preview"
-                        className="img-thumbnail mb-3"
-                        style={{
-                          width: '200px',
-                          height: '200px',
-                          objectFit: 'cover',
-                        }}
+                  {/* Ảnh */}
+                  <div className="mb-4">
+                    <label className="form-label">Ảnh danh mục</label>
+                    <div className="image-upload-area">
+                      {preview ? (
+                        <div>
+                          <img
+                            src={preview}
+                            alt="Preview"
+                            className="image-preview mb-3"
+                            style={{
+                              width: '200px',
+                              height: '200px',
+                              objectFit: 'cover',
+                            }}
+                          />
+                          <div>
+                            <label htmlFor="file-upload" className="btn btn-sm btn-outline-primary">
+                              <Upload size={14} className="me-1" />
+                              Đổi ảnh
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload size={48} className="text-muted mb-3" />
+                          <p className="text-muted mb-2">Kéo thả ảnh vào đây hoặc click để chọn</p>
+                          <label htmlFor="file-upload" className="btn btn-sm btn-primary">
+                            Chọn ảnh
+                          </label>
+                        </div>
+                      )}
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="d-none"
                       />
-                      <div>
-                        <label htmlFor="file-upload" className="btn btn-sm btn-outline-primary">
-                          <Upload size={14} className="me-1" />
-                          Đổi ảnh
-                        </label>
-                      </div>
                     </div>
-                  ) : (
-                    <div>
-                      <Upload size={48} className="text-muted mb-3" />
-                      <p className="text-muted mb-2">Kéo thả ảnh vào đây hoặc click để chọn</p>
-                      <label htmlFor="file-upload" className="btn btn-sm btn-primary">
-                        Chọn ảnh
-                      </label>
-                    </div>
-                  )}
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="d-none"
-                  />
-                </div>
-                <small className="text-muted">Khuyến nghị: 500x500px, định dạng JPG/PNG</small>
-              </div>
+                    <small className="text-muted">Khuyến nghị: 500x500px, định dạng JPG/PNG</small>
+                  </div>
 
               {/* Trạng thái */}
               <div className="mb-4">
@@ -186,45 +266,47 @@ export default function CreateDanhMucPage() {
                 </select>
               </div>
 
-              {/* Submit Buttons */}
-              <div className="d-flex gap-2 justify-content-end pt-3 border-top">
-                <button
-                  type="button"
-                  onClick={() => router.back()}
-                  className="btn btn-light"
-                  disabled={saving}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="btn btn-warning text-white d-flex align-items-center gap-2"
-                >
-                  <Save size={18} />
-                  {saving ? 'Đang lưu...' : 'Lưu danh mục'}
-                </button>
-              </div>
+                  {/* Submit Buttons */}
+                  <div className="d-flex gap-3 justify-content-end pt-4 mt-3 border-top">
+                    <button
+                      type="button"
+                      onClick={() => router.back()}
+                      className="btn btn-outline-secondary"
+                      disabled={saving}
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="btn-submit d-flex align-items-center gap-2"
+                    >
+                      <Save size={18} />
+                      {saving ? 'Đang lưu...' : 'Lưu danh mục'}
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
 
-        {/* Help Sidebar */}
-        <div className="col-lg-4">
-          <div className="card shadow-sm border-0">
-            <div className="card-body">
-              <h6 className="fw-bold mb-3">💡 Hướng dẫn</h6>
-              <ul className="small text-muted mb-0" style={{ lineHeight: '1.8' }}>
-                <li>Mã danh mục phải là duy nhất</li>
-                <li>Tên danh mục nên ngắn gọn, dễ hiểu</li>
-                <li>Ảnh đại diện giúp khách hàng dễ nhận diện</li>
-                <li>Có thể ẩn danh mục tạm thời nếu chưa có sản phẩm</li>
-              </ul>
+            {/* Help Sidebar */}
+            <div className="col-lg-4">
+              <div className="card shadow-sm border-0" style={{ borderRadius: '16px' }}>
+                <div className="card-body">
+                  <h6 className="fw-bold mb-3" style={{ color: '#2C3E50' }}>💡 Hướng dẫn</h6>
+                  <ul className="small text-muted mb-0" style={{ lineHeight: '1.8' }}>
+                    <li>Mã danh mục phải là duy nhất</li>
+                    <li>Tên danh mục nên ngắn gọn, dễ hiểu</li>
+                    <li>Ảnh đại diện giúp khách hàng dễ nhận diện</li>
+                    <li>Có thể ẩn danh mục tạm thời nếu chưa có sản phẩm</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

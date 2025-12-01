@@ -60,8 +60,29 @@ router.get("/giamgia", async (_req, res) => {
   }
 });
 
+// Toggle ẩn/hiện sản phẩm - Phải đặt trước route /:id
+router.patch("/:id/toggle", async (req, res) => {
+  try {
+    const sp = await SanPhamModel.findByPk(req.params.id);
+    if (!sp) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    
+    const newStatus = sp.anhien === 1 ? 0 : 1;
+    await sp.update({ anhien: newStatus });
+    
+    res.json({ 
+      message: newStatus === 1 ? "Đã hiển thị sản phẩm" : "Đã ẩn sản phẩm",
+      anhien: newStatus 
+    });
+  } catch (err) {
+    console.error(" Lỗi toggle sản phẩm:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
+    console.log(`[GET /api/sanpham/:id] Fetching product ${req.params.id}`);
+    
     const sp = await SanPhamModel.findByPk(req.params.id, {
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
@@ -75,10 +96,40 @@ router.get("/:id", async (req, res) => {
       ],
     });
 
-    if (!sp) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
-    res.status(200).json(sp);
+    if (!sp) {
+      console.log(`[GET /api/sanpham/:id] Product ${req.params.id} not found`);
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+    
+    console.log(`[GET /api/sanpham/:id] Product found: ${sp.tensp}`);
+    console.log(`[GET /api/sanpham/:id] Thumbnail: ${sp.thumbnail || 'N/A'}`);
+    console.log(`[GET /api/sanpham/:id] Number of variants: ${sp.bienthe ? sp.bienthe.length : 0}`);
+    
+    // Convert to plain object để đảm bảo Sequelize serialize đúng
+    const productData = sp.get({ plain: true });
+    
+    console.log(`[GET /api/sanpham/:id] ProductData thumbnail: ${productData.thumbnail || 'N/A'}`);
+    
+    if (productData.bienthe && productData.bienthe.length > 0) {
+      productData.bienthe.forEach((bt, idx) => {
+        console.log(`[GET /api/sanpham/:id] Variant ${idx + 1} (${bt.id}):`);
+        console.log(`  - Images count: ${bt.images ? bt.images.length : 0}`);
+        if (bt.images && bt.images.length > 0) {
+          bt.images.forEach((img, imgIdx) => {
+            console.log(`  - Image ${imgIdx + 1}: id=${img.id}, url=${img.url}`);
+          });
+        } else {
+          console.log(`  - ⚠️ No images for variant ${bt.id}`);
+        }
+      });
+    } else {
+      console.log(`[GET /api/sanpham/:id] ⚠️ No variants found`);
+    }
+    
+    res.status(200).json(productData);
   } catch (err) {
     console.error("Lỗi /sp/:id:", err);
+    console.error("Error stack:", err.stack);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -188,6 +239,20 @@ router.put("/:id", upload.any(), async (req, res) => {
       const bt = bienthe[i];
       const filesForVariant = req.files.filter((f) => f.fieldname === `images_${i}`);
 
+      // Parse deletedImages nếu có
+      let deletedImageIds = [];
+      if (bt.deletedImages) {
+        try {
+          deletedImageIds = typeof bt.deletedImages === 'string' 
+            ? JSON.parse(bt.deletedImages) 
+            : Array.isArray(bt.deletedImages) 
+              ? bt.deletedImages 
+              : [];
+        } catch (e) {
+          console.error("Error parsing deletedImages:", e);
+        }
+      }
+
       if (bt.id) {
         const oldBT = oldVariants.find((v) => v.id === bt.id);
         if (oldBT) {
@@ -202,6 +267,59 @@ router.put("/:id", upload.any(), async (req, res) => {
             { transaction: t }
           );
 
+          // Lấy danh sách ảnh hiện tại từ database
+          const currentImages = await ImageModel.findAll({
+            where: { bienthe_id: oldBT.id },
+            transaction: t
+          });
+
+          // Xác định ảnh cần xóa: ảnh không có trong currentImageIds
+          const currentImageIds = bt.currentImageIds || [];
+          const imagesToDelete = currentImages.filter(img => !currentImageIds.includes(img.id));
+
+          // Xóa ảnh cũ nếu có
+          if (imagesToDelete.length > 0 || deletedImageIds.length > 0) {
+            const allImagesToDelete = [
+              ...imagesToDelete.map(img => img.id),
+              ...deletedImageIds
+            ];
+
+            const imagesToDeleteFromDB = await ImageModel.findAll({
+              where: { 
+                id: { [Op.in]: allImagesToDelete },
+                bienthe_id: oldBT.id 
+              },
+              transaction: t
+            });
+
+            // Xóa file ảnh từ server
+            const fs = require("fs");
+            const path = require("path");
+            for (const img of imagesToDeleteFromDB) {
+              if (img.url) {
+                const filePath = path.join(__dirname, "..", img.url.replace(/^\//, ""));
+                if (fs.existsSync(filePath)) {
+                  try {
+                    fs.unlinkSync(filePath);
+                    console.log(`Deleted image file: ${filePath}`);
+                  } catch (err) {
+                    console.error(`Error deleting image file ${filePath}:`, err);
+                  }
+                }
+              }
+            }
+
+            // Xóa ảnh khỏi database
+            await ImageModel.destroy({
+              where: { 
+                id: { [Op.in]: allImagesToDelete },
+                bienthe_id: oldBT.id 
+              },
+              transaction: t
+            });
+          }
+
+          // Thêm ảnh mới
           for (const file of filesForVariant) {
             await ImageModel.create(
               { bienthe_id: oldBT.id, url: `/uploads/sanpham/${file.filename}` },
@@ -232,7 +350,22 @@ router.put("/:id", upload.any(), async (req, res) => {
     }
 
     await t.commit();
-    res.json({ message: " Cập nhật sản phẩm thành công!", sp });
+    
+    // Lấy lại sản phẩm với đầy đủ thông tin (bao gồm ảnh) để trả về
+    const updatedSp = await SanPhamModel.findByPk(req.params.id, {
+      include: [
+        { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
+        { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
+        {
+          model: SanPhamBienTheModel,
+          as: "bienthe",
+          attributes: ["id", "gia", "mausac", "kichthuoc", "chatlieu", "sl_tonkho", "code"],
+          include: [{ model: ImageModel, as: "images", attributes: ["id", "url"] }],
+        },
+      ],
+    });
+    
+    res.json({ message: " Cập nhật sản phẩm thành công!", sp: updatedSp });
   } catch (err) {
     await t.rollback();
     console.error(err);

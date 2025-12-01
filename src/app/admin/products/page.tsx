@@ -43,6 +43,7 @@ export default function ProductAdminPage() {
   const [thuonghieus, setThuonghieus] = useState<ThuongHieu[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
   // Filter & Pagination states
   const [search, setSearch] = useState("");
@@ -76,6 +77,32 @@ export default function ProductAdminPage() {
       console.error("Lỗi tải dữ liệu:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Toggle ẩn/hiện sản phẩm
+  const handleToggleStatus = async (id: string) => {
+    setToggleLoading(id);
+    try {
+      const res = await fetch(`http://localhost:5000/api/sanpham/${id}/toggle`, {
+        method: "PATCH",
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        const newStatus = data.anhien;
+        setProducts(products.map((p) => 
+          p.id === id ? { ...p, anhien: newStatus } : p
+        ));
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Không thể cập nhật trạng thái!");
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật trạng thái:", error);
+      alert("Có lỗi xảy ra!");
+    } finally {
+      setToggleLoading(null);
     }
   };
 
@@ -127,7 +154,7 @@ export default function ProductAdminPage() {
 
   // Format price
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+    return Number(price || 0).toLocaleString('vi-VN') + '₫';
   };
 
   // Format date
@@ -350,6 +377,7 @@ export default function ProductAdminPage() {
           border-radius: 8px;
           font-size: 0.75rem;
           font-weight: 600;
+          white-space: nowrap;
         }
 
         .status-active {
@@ -395,6 +423,27 @@ export default function ProductAdminPage() {
         }
 
         .btn-delete:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .btn-toggle {
+          background: linear-gradient(135deg, #FFA726, #FF9800);
+          color: #fff;
+          border: none;
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .btn-toggle:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
+        }
+
+        .btn-toggle:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
@@ -694,8 +743,22 @@ export default function ProductAdminPage() {
                         <td>
                           <div className="d-flex gap-2">
                             <button
+                              className="btn-toggle"
+                              onClick={() => handleToggleStatus(p.id)}
+                              disabled={toggleLoading === p.id}
+                              title={p.anhien === 1 ? "Ẩn sản phẩm" : "Hiện sản phẩm"}
+                            >
+                              {toggleLoading === p.id ? (
+                                <span className="spinner-border spinner-border-sm" style={{ width: '14px', height: '14px' }}></span>
+                              ) : p.anhien === 1 ? (
+                                <EyeOff size={14} />
+                              ) : (
+                                <Eye size={14} />
+                              )}
+                            </button>
+                            <button
                               className="btn-edit"
-                              onClick={() => router.push(`/admin/products/${p.id}`)}
+                              onClick={() => router.push(`/admin/products/edit/${p.id}`)}
                               title="Sửa"
                             >
                               <Pencil size={14} />

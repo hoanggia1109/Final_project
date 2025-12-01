@@ -1,177 +1,151 @@
 'use client';
-import Link from 'next/link';
 
 export default function Footer() {
-  const servicesCol1 = [
-    { name: 'Văn phòng', href: '/van-phong' },
-    { name: 'Thiết kế cửa hàng', href: '/thiet-ke-cua-hang' },
-    { name: 'Gym, Spa', href: '/gym-spa' },
-    { name: 'Nhà hàng', href: '/nha-hang' },
-    { name: 'Quán cà phê', href: '/quan-ca-phe' },
-    { name: 'Quán trà sữa', href: '/quan-tra-sua' },
-    { name: 'Showroom', href: '/showroom' },
-    { name: 'Cách tính vực khác', href: '/cach-tinh-vuc-khac' },
+  // Danh sách sản phẩm (Chỉ để chữ hiển thị)
+  const products = [
+    'Sofa phòng khách',
+    'Bàn trà - Kệ Tivi',
+    'Bộ bàn ghế ăn',
+    'Giường ngủ hiện đại',
+    'Tủ quần áo',
+    'Bàn trang điểm',
+    'Nội thất văn phòng',
+    'Đồ trang trí (Decor)'
   ];
 
-  const servicesCol2 = [
-    { name: 'Chính sách bảo hành', href: '/chinh-sach-bao-hanh' },
-    { name: 'Điều khoản dịch vụ', href: '/dieu-khoan-dich-vu' },
-    { name: 'Chính sách bảo mật', href: '/chinh-sach-bao-mat' },
+  // Danh sách hỗ trợ
+  const supports = [
+    'Hướng dẫn mua hàng',
+    'Chính sách bảo hành',
+    'Chính sách đổi trả',
+    'Vận chuyển & Lắp đặt',
+    'Hình thức thanh toán',
+    'Bảo mật thông tin'
   ];
 
   return (
-    <footer className="bg-dark text-white pt-5 pb-3">
-      <div className="container">
-        <div className="row g-4">
-          {/* Column 1 - Company Info */}
-          <div className="col-md-3">
-            {/* Logo */}
-            <div className="mb-4">
-              <div className="d-flex align-items-center mb-2">
-                <div className="bg-white text-dark px-2 py-1 fw-bold me-2" style={{ fontSize: '20px' }}>
-                  DN
+    <>
+      <footer className="bg-dark text-white pt-5 pb-4 footer-container">
+        <div className="container">
+          <div className="row g-4">
+            
+            {/* Cột 1: Thương hiệu */}
+            <div className="col-lg-4 col-md-6">
+              <div className="mb-4">
+                <div className="d-flex align-items-center mb-3">
+                  <div className="bg-white text-dark fw-bold px-2 py-1 me-2 rounded-1" style={{ fontSize: '20px' }}>
+                    DN
+                  </div>
+                  <span className="fw-bold text-uppercase" style={{ letterSpacing: '2px', fontSize: '18px' }}>
+                    Nội thất Danny
+                  </span>
                 </div>
-                <span className="text-white" style={{ fontSize: '12px' }}>BRAND</span>
+                <p className="text-white-50 small mb-4" style={{ lineHeight: '1.8' }}>
+                  Nâng tầm không gian sống của bạn với những sản phẩm nội thất chất lượng, 
+                  thiết kế hiện đại và tinh tế. Chúng tôi cam kết mang lại sự hài lòng tuyệt đối.
+                </p>
+                
+                {/* Social Icons - Giữ nguyên vẻ đẹp nhưng code gọn hơn */}
+                <div className="d-flex gap-2">
+                  {['facebook', 'instagram', 'tiktok', 'youtube'].map((icon, index) => (
+                    <div key={index} className="social-icon d-flex align-items-center justify-content-center rounded-circle border border-secondary text-white">
+                      <i className={`bi bi-${icon}`}></i>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Company Description */}
-            <p className="mb-4" style={{ fontSize: '13px', lineHeight: '1.7', color: '#aaa' }}>
-              Công ty TNHH Trang trí Nội thất và Xây dựng Vân Tây
-              <br /><br />
-              chuyên thiết kế và thi công văn phòng và các cơ sở kinh doanh (quán cà phê, nhà hàng, phòng tập gym, yoga, các cửa hàng, showroom...)
+            {/* Cột 2: Danh mục Sản phẩm */}
+            <div className="col-lg-3 col-md-6">
+              <h5 className="text-warning fw-bold text-uppercase mb-4" style={{ fontSize: '16px' }}>
+                Sản phẩm
+              </h5>
+              <ul className="list-unstyled">
+                {products.map((item, index) => (
+                  <li key={index} className="mb-2">
+                    <span className="footer-item text-white-50">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Cột 3: Hỗ trợ khách hàng */}
+            <div className="col-lg-2 col-md-6">
+              <h5 className="text-warning fw-bold text-uppercase mb-4" style={{ fontSize: '16px' }}>
+                Hỗ trợ
+              </h5>
+              <ul className="list-unstyled">
+                {supports.map((item, index) => (
+                  <li key={index} className="mb-2">
+                    <span className="footer-item text-white-50">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Cột 4: Liên hệ */}
+            <div className="col-lg-3 col-md-6">
+              <h5 className="text-warning fw-bold text-uppercase mb-4" style={{ fontSize: '16px' }}>
+                Liên hệ
+              </h5>
+              <ul className="list-unstyled small text-white-50">
+                <li className="mb-3 d-flex">
+                  <i className="bi bi-geo-alt-fill text-warning me-2 mt-1"></i>
+                  <span>Số Đường 3, KDC Vạn Phúc, Hiệp Bình Phước, Thủ Đức, TP. HCM</span>
+                </li>
+                <li className="mb-3 d-flex">
+                  <i className="bi bi-telephone-fill text-warning me-2 mt-1"></i>
+                  <div>
+                    <span className="d-block text-white fw-bold fs-6">(028) 66 857 354</span>
+                    <span className="small">Hỗ trợ 24/7</span>
+                  </div>
+                </li>
+                <li className="d-flex">
+                  <i className="bi bi-envelope-fill text-warning me-2 mt-1"></i>
+                  <span>info@noithatdanny.com</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="border-top border-secondary mt-5 pt-3 text-center">
+            <p className="small text-secondary mb-0">
+              © 2024 <b>Nội thất Danny</b>. All Rights Reserved.
             </p>
-
-            {/* Social Icons */}
-            <div className="d-flex gap-2">
-              <a 
-                href="#" 
-                className="btn btn-outline-light btn-sm rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: '36px', height: '36px', transition: 'all 0.3s ease' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFC107';
-                  e.currentTarget.style.borderColor = '#FFC107';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.borderColor = '#fff';
-                }}
-              >
-                <i className="bi bi-facebook"></i>
-              </a>
-              <a 
-                href="#" 
-                className="btn btn-outline-light btn-sm rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: '36px', height: '36px', transition: 'all 0.3s ease' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFC107';
-                  e.currentTarget.style.borderColor = '#FFC107';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.borderColor = '#fff';
-                }}
-              >
-                <i className="bi bi-instagram"></i>
-              </a>
-            </div>
-          </div>
-
-          {/* Column 2 - Contact Info */}
-          <div className="col-md-3">
-            <h5 className="text-uppercase fw-bold mb-4" style={{ fontSize: '16px', color: '#FFC107' }}>
-              LIÊN HỆ NGAY ĐỂ ĐƯỢC TƯ VẤN
-            </h5>
-            
-            <div className="mb-3">
-              <p className="mb-2" style={{ fontSize: '13px', color: '#aaa' }}>
-                DANNYdecor rất hân hạnh được phục vụ quý khách tại văn phòng của chúng tôi:
-              </p>
-              <p className="mb-0 fw-semibold" style={{ fontSize: '13px', lineHeight: '1.7' }}>
-                Số Đường 3, KDC Vạn Phúc, Hiệp Bình Phước, Thủ Đức, TP. HCM
-              </p>
-            </div>
-
-            <div className="mb-3">
-              <p className="mb-1 fw-bold text-warning" style={{ fontSize: '14px' }}>
-                HOTLINE: (028) 66 857 354
-              </p>
-            </div>
-
-            <div className="mb-2">
-              <p className="mb-1" style={{ fontSize: '13px' }}>
-                Email: <a href="mailto:info@dannydecor.com" className="text-warning text-decoration-none">info@dannydecor.com</a>
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-1" style={{ fontSize: '13px' }}>
-                Web: <a href="https://dannydecor.com" className="text-warning text-decoration-none">dannydecor.com</a>
-              </p>
-            </div>
-          </div>
-
-          {/* Column 3 - Services */}
-          <div className="col-md-3">
-            <h5 className="text-lowercase fw-bold mb-4" style={{ fontSize: '16px', color: '#FFC107' }}>
-              Thiết kế
-            </h5>
-            <ul className="list-unstyled">
-              {servicesCol1.map((service, idx) => (
-                <li key={idx} className="mb-2">
-                  <Link 
-                    href={service.href} 
-                    className="text-decoration-none"
-                    style={{ 
-                      fontSize: '13px', 
-                      color: '#aaa',
-                      transition: 'color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#aaa'; }}
-                  >
-                    {service.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4 - Policies */}
-          <div className="col-md-3">
-            <h5 className="text-lowercase fw-bold mb-4" style={{ fontSize: '16px', color: '#FFC107' }}>
-                Chính sách điều khoản
-            </h5>
-            <ul className="list-unstyled">
-              {servicesCol2.map((service, idx) => (
-                <li key={idx} className="mb-2">
-                  <Link 
-                    href={service.href} 
-                    className="text-decoration-none"
-                    style={{ 
-                      fontSize: '13px', 
-                      color: '#aaa',
-                      transition: 'color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#aaa'; }}
-                  >
-                    {service.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
+      </footer>
 
-        {/* Copyright */}
-        <div className="border-top border-secondary mt-5 pt-3">
-          <p className="text-center mb-0" style={{ fontSize: '13px', color: '#777' }}>
-            Dannydecor © 2022 , All Rights Reserved
-          </p>
-        </div>
-      </div>
-    </footer>
+      {/* Style JSX: Chỉ dùng để làm đẹp hiệu ứng hover mà Bootstrap mặc định không có */}
+      <style jsx>{`
+        .footer-item {
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 14px;
+        }
+        .footer-item:hover {
+          color: #ffc107 !important; /* Màu vàng khi di chuột vào */
+          padding-left: 5px; /* Hiệu ứng trượt nhẹ sang phải */
+        }
+        
+        .social-icon {
+          width: 36px;
+          height: 36px;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+        .social-icon:hover {
+          background-color: #ffc107;
+          border-color: #ffc107 !important;
+          color: #000 !important;
+        }
+      `}</style>
+    </>
   );
 }
-

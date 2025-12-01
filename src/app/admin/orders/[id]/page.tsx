@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Package } from 'lucide-react';
 
 interface OrderDetail {
   id: string;
@@ -14,17 +15,22 @@ interface OrderDetail {
   phi_van_chuyen: number;
   trangthai: string;
   trangthaithanhtoan: string;
+  phuongthucthanhtoan: string;
   ghichu?: string;
+  ly_do_huy?: string;
   created_at: string;
   user?: {
+    id: string;
     email: string;
     ho_ten?: string;
     sdt?: string;
   };
   diachi?: {
-    ten: string;
+    hoten?: string;
+    ten?: string;
     sdt: string;
-    diachi_cu_the: string;
+    diachichitiet?: string;
+    diachi_cu_the?: string;
     phuong_xa: string;
     quan_huyen: string;
     tinh_thanh: string;
@@ -46,13 +52,13 @@ interface OrderDetail {
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadOrderDetail();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id]);
 
   const loadOrderDetail = async () => {
     try {
@@ -62,16 +68,38 @@ export default function AdminOrderDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/donhang/${params.id}`, {
+      // Sử dụng API admin để lấy đầy đủ thông tin
+      const response = await fetch(`http://localhost:5000/api/admin/donhang/${params.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) throw new Error('Failed to load order');
-
-      const data = await response.json();
-      setOrder(data);
+      if (!response.ok) {
+        // Fallback: thử API thường nếu API admin không có
+        const fallbackResponse = await fetch(`http://localhost:5000/api/donhang/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!fallbackResponse.ok) throw new Error('Failed to load order');
+        const fallbackData = await fallbackResponse.json();
+        setOrder(fallbackData);
+      } else {
+        const data = await response.json();
+        console.log('[Admin Order Detail] Full response:', JSON.stringify(data, null, 2));
+        console.log('[Admin Order Detail] Order data keys:', Object.keys(data));
+        console.log('[Admin Order Detail] User data:', data.user);
+        console.log('[Admin Order Detail] User ID from order:', data.user_id);
+        
+        // Debug: Kiểm tra xem user có trong data không
+        if (!data.user && data.user_id) {
+          console.warn('[Admin Order Detail] ⚠️ User ID exists but user object is missing!');
+        }
+        
+        setOrder(data);
+      }
     } catch (error) {
       console.error('Error loading order:', error);
       alert('Không thể tải chi tiết đơn hàng');
@@ -90,7 +118,7 @@ export default function AdminOrderDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/donhang/${order.id}/trangthai`, {
+      const response = await fetch(`http://localhost:5000/api/admin/donhang/${order.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -106,6 +134,35 @@ export default function AdminOrderDetailPage() {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Không thể cập nhật trạng thái');
+    }
+  };
+
+  const confirmPayment = async () => {
+    if (!order) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Vui lòng đăng nhập');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/admin/donhang/${order.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ trangthaithanhtoan: 'paid' }),
+      });
+
+      if (!response.ok) throw new Error('Failed to confirm payment');
+
+      alert('Xác nhận thanh toán thành công!');
+      loadOrderDetail();
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      alert('Không thể xác nhận thanh toán');
     }
   };
 
@@ -223,14 +280,20 @@ export default function AdminOrderDetailPage() {
                                 flexShrink: 0,
                               }}
                             >
-                              {item.bienthe.sanpham?.thumbnail && (
+                              {item.bienthe.sanpham?.thumbnail ? (
                                 <Image
-                                  src={item.bienthe.sanpham.thumbnail}
+                                  src={item.bienthe.sanpham.thumbnail.startsWith('http') 
+                                    ? item.bienthe.sanpham.thumbnail 
+                                    : `http://localhost:5000${item.bienthe.sanpham.thumbnail}`}
                                   alt={item.bienthe.sanpham?.tensp || 'Product'}
                                   fill
                                   style={{ objectFit: 'cover' }}
                                   className="rounded"
                                 />
+                              ) : (
+                                <div className="d-flex align-items-center justify-content-center h-100 text-muted">
+                                  <Package size={24} />
+                                </div>
                               )}
                             </div>
                             <div>
@@ -255,14 +318,14 @@ export default function AdminOrderDetailPage() {
                           )}
                         </td>
                         <td className="py-3">
-                          {Number(item.gia).toLocaleString('vi-VN')}₫
+                          <strong>{Number(item.gia || 0).toLocaleString('vi-VN')}₫</strong>
                         </td>
                         <td className="py-3">
-                          <span className="badge bg-secondary">{item.soluong}</span>
+                          <span className="badge bg-secondary">{item.soluong || 0}</span>
                         </td>
                         <td className="py-3">
                           <div className="fw-bold text-warning">
-                            {(Number(item.gia) * item.soluong).toLocaleString('vi-VN')}₫
+                            {((Number(item.gia || 0)) * (item.soluong || 0)).toLocaleString('vi-VN')}₫
                           </div>
                         </td>
                       </tr>
@@ -300,18 +363,31 @@ export default function AdminOrderDetailPage() {
               </h5>
             </div>
             <div className="card-body">
-              <div className="mb-3">
-                <small className="text-muted d-block">Tên:</small>
-                <strong>{order.user?.ho_ten || 'N/A'}</strong>
-              </div>
-              <div className="mb-3">
-                <small className="text-muted d-block">Email:</small>
-                <strong>{order.user?.email}</strong>
-              </div>
-              {order.user?.sdt && (
-                <div>
-                  <small className="text-muted d-block">SĐT:</small>
-                  <strong>{order.user.sdt}</strong>
+              {order.user ? (
+                <>
+                  <div className="mb-3">
+                    <small className="text-muted d-block mb-1">Tên khách hàng:</small>
+                    <strong className="fs-6">{order.user.ho_ten || 'Chưa cập nhật'}</strong>
+                  </div>
+                  <div className="mb-3">
+                    <small className="text-muted d-block mb-1">Email:</small>
+                    <strong className="fs-6">{order.user.email || 'N/A'}</strong>
+                  </div>
+                  {order.user.sdt && (
+                    <div className="mb-3">
+                      <small className="text-muted d-block mb-1">Số điện thoại:</small>
+                      <strong className="fs-6">{order.user.sdt}</strong>
+                    </div>
+                  )}
+                  <div className="mb-0">
+                    <small className="text-muted d-block mb-1">ID khách hàng:</small>
+                    <code className="small">{order.user.id || order.user_id}</code>
+                  </div>
+                </>
+              ) : (
+                <div className="text-muted">
+                  <p className="mb-0">Không có thông tin khách hàng</p>
+                  <small>ID: {order.user_id || 'N/A'}</small>
                 </div>
               )}
             </div>
@@ -328,14 +404,14 @@ export default function AdminOrderDetailPage() {
               </div>
               <div className="card-body">
                 <div className="mb-2">
-                  <strong>{order.diachi.ten}</strong>
+                  <strong>{order.diachi.ten || order.diachi.hoten || 'N/A'}</strong>
                 </div>
                 <div className="mb-2">
                   <i className="bi bi-telephone me-2"></i>
-                  {order.diachi.sdt}
+                  {order.diachi.sdt || 'N/A'}
                 </div>
                 <div className="text-muted">
-                  {order.diachi.diachi_cu_the}, {order.diachi.phuong_xa}, {order.diachi.quan_huyen}, {order.diachi.tinh_thanh}
+                  {order.diachi.diachichitiet || order.diachi.diachi_cu_the || ''}, {order.diachi.phuong_xa || ''}, {order.diachi.quan_huyen || ''}, {order.diachi.tinh_thanh || ''}
                 </div>
               </div>
             </div>
@@ -351,24 +427,24 @@ export default function AdminOrderDetailPage() {
             </div>
             <div className="card-body">
               <div className="d-flex justify-content-between mb-2">
-                <span>Tạm tính:</span>
-                <strong>{order.tongtien.toLocaleString('vi-VN')}₫</strong>
+                <span className="text-muted">Tạm tính:</span>
+                <strong>{Number(order.tongtien || 0).toLocaleString('vi-VN')}₫</strong>
               </div>
-              {order.giamgia > 0 && (
+              {Number(order.giamgia || 0) > 0 && (
                 <div className="d-flex justify-content-between mb-2 text-success">
-                  <span>Giảm giá:</span>
-                  <strong>-{order.giamgia.toLocaleString('vi-VN')}₫</strong>
+                  <span className="text-muted">Giảm giá:</span>
+                  <strong>-{Number(order.giamgia || 0).toLocaleString('vi-VN')}₫</strong>
                 </div>
               )}
               <div className="d-flex justify-content-between mb-3">
-                <span>Phí vận chuyển:</span>
-                <strong>{order.phi_van_chuyen.toLocaleString('vi-VN')}₫</strong>
+                <span className="text-muted">Phí vận chuyển:</span>
+                <strong>{Number(order.phi_van_chuyen || 0).toLocaleString('vi-VN')}₫</strong>
               </div>
               <div className="border-top pt-3">
-                <div className="d-flex justify-content-between">
+                <div className="d-flex justify-content-between align-items-center">
                   <strong className="fs-5">Tổng cộng:</strong>
                   <strong className="fs-4 text-warning">
-                    {order.tongtien_sau_giam.toLocaleString('vi-VN')}₫
+                    {Number(order.tongtien_sau_giam || 0).toLocaleString('vi-VN')}₫
                   </strong>
                 </div>
               </div>
@@ -384,6 +460,30 @@ export default function AdminOrderDetailPage() {
               </h5>
             </div>
             <div className="card-body">
+              {/* Xác nhận thanh toán cho đơn hàng banking */}
+              {order.phuongthucthanhtoan === 'banking' && 
+               order.trangthaithanhtoan === 'pending' && (
+                <div className="alert alert-warning mb-3" role="alert">
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  <strong>Đơn hàng chuyển khoản:</strong> Vui lòng kiểm tra và xác nhận đã nhận được thanh toán.
+                </div>
+              )}
+              
+              {order.phuongthucthanhtoan === 'banking' && 
+               order.trangthaithanhtoan === 'pending' && (
+                <button
+                  className="btn btn-success text-white w-100 mb-3"
+                  onClick={() => {
+                    if (confirm('Xác nhận đã nhận được thanh toán từ khách hàng?')) {
+                      confirmPayment();
+                    }
+                  }}
+                >
+                  <i className="bi bi-credit-card me-2"></i>
+                  Xác nhận đã thanh toán
+                </button>
+              )}
+
               <div className="d-grid gap-2">
                 {order.trangthai === 'pending' && (
                   <button
