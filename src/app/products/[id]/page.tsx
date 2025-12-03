@@ -17,6 +17,7 @@ interface ProductDetail {
   brand: string;
   sku: string;
   stock: number;
+  views: number;
   rating: number;
   reviews: number;
   description: string;
@@ -1338,14 +1339,20 @@ export default function ProductDetailPage() {
                   {product.name}
                 </h1>
 
-                {/* Rating & Reviews */}
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="rating-stars">
-                    {'★'.repeat(Math.floor(reviewData.rating.average_rating))}
-                    {'☆'.repeat(5 - Math.floor(reviewData.rating.average_rating))}
+                {/* Rating & Reviews & Views */}
+                <div className="d-flex align-items-center gap-3 mb-3 flex-wrap">
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="rating-stars">
+                      {'★'.repeat(Math.floor(reviewData.rating.average_rating))}
+                      {'☆'.repeat(5 - Math.floor(reviewData.rating.average_rating))}
+                    </div>
+                    <span className="text-muted">
+                      {reviewData.rating.average_rating.toFixed(1)} ({reviewData.rating.count} đánh giá)
+                    </span>
                   </div>
-                  <span className="text-muted">
-                    {reviewData.rating.average_rating.toFixed(1)} ({reviewData.rating.count} đánh giá)
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    <i className="bi bi-eye" style={{ fontSize: '16px' }}></i>
+                    {(product.views || 0).toLocaleString('vi-VN')} lượt xem
                   </span>
                 </div>
 

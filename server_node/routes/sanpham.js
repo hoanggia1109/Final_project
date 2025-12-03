@@ -105,10 +105,15 @@ router.get("/:id", async (req, res) => {
     console.log(`[GET /api/sanpham/:id] Thumbnail: ${sp.thumbnail || 'N/A'}`);
     console.log(`[GET /api/sanpham/:id] Number of variants: ${sp.bienthe ? sp.bienthe.length : 0}`);
     
+    // Tăng lượt xem
+    await sp.increment('luotxem');
+    await sp.reload(); // Reload để lấy giá trị mới
+    
     // Convert to plain object để đảm bảo Sequelize serialize đúng
     const productData = sp.get({ plain: true });
     
     console.log(`[GET /api/sanpham/:id] ProductData thumbnail: ${productData.thumbnail || 'N/A'}`);
+    console.log(`[GET /api/sanpham/:id] Views: ${productData.luotxem || 0}`);
     
     if (productData.bienthe && productData.bienthe.length > 0) {
       productData.bienthe.forEach((bt, idx) => {

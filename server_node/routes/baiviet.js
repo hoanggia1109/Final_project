@@ -49,6 +49,11 @@ router.get("/:id", async (req, res) => {
       ],
     });
     if (!item) return res.status(404).json({ message: "Không tìm thấy bài viết" });
+    
+    // Tăng lượt xem
+    await item.increment('luotxem');
+    await item.reload(); // Reload để lấy giá trị mới
+    
     res.json(item);
   } catch (err) {
     res.status(500).json({ message: "Lỗi server", error: err.message });

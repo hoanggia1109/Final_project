@@ -37,6 +37,11 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Kiểm tra nếu email chưa xác thực
+        if (data.requiresVerification) {
+          alert(data.message + '\n\nVui lòng kiểm tra email và click vào link xác nhận để kích hoạt tài khoản.');
+          return;
+        }
         throw new Error(data.message || 'Đăng nhập thất bại');
       }
 

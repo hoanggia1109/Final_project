@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const jwt = require("jsonwebtoken");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { UserModel } = require("../database");
+const { UserModel, DiaChiModel } = require("../database");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const nodemailer = require("nodemailer");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,7 +20,7 @@ router.post("/dangky", async (req, res) => {
   console.log(" Nhận request đăng ký:", req.body);
   
   try {
-    const { email, password, fullName, phone } = req.body;
+    const { email, password, fullName, phone, ngaysinh, gioitinh, birthDate, gender, address, city, district, ward } = req.body;
     
     // Validation
     if (!email || !password) {
@@ -46,6 +46,10 @@ router.post("/dangky", async (req, res) => {
     // Tạo verification token
     const verificationToken = uuidv4();
     
+    // Xử lý ngày sinh và giới tính (hỗ trợ cả birthDate/gender và ngaysinh/gioitinh)
+    const finalNgaysinh = ngaysinh || birthDate || null;
+    const finalGioitinh = gioitinh || gender || null;
+    
     console.log(" Creating user...");
     const newUser = await UserModel.create({ 
       id: uuidv4(), 
@@ -53,12 +57,36 @@ router.post("/dangky", async (req, res) => {
       password: hashed,
       ho_ten: fullName || null,
       sdt: phone || null,
+      ngaysinh: finalNgaysinh,
+      gioitinh: finalGioitinh,
       email_verified: 0, // Chưa xác thực
       email_verification_token: verificationToken
     });
     
     console.log(" User created:", newUser.id);
     console.log(" Verification token:", verificationToken);
+    
+    // Tạo địa chỉ nếu có thông tin địa chỉ
+    if (address || city || district || ward) {
+      try {
+        await DiaChiModel.create({
+          id: uuidv4(),
+          user_id: newUser.id,
+          hoten: fullName || email.split('@')[0],
+          sdt: phone || null,
+          diachichitiet: address || null,
+          phuong_xa: ward || null,
+          quan_huyen: district || null,
+          tinh_thanh: city || null,
+          loaidiachi: 'home',
+          macdinh: 1, // Đặt làm địa chỉ mặc định
+        });
+        console.log(" Địa chỉ đã được tạo cho user:", newUser.id);
+      } catch (diachiError) {
+        console.error(" Lỗi khi tạo địa chỉ:", diachiError);
+        // Không fail đăng ký nếu lỗi tạo địa chỉ
+      }
+    }
     
     // Gửi email xác nhận đăng ký (không chờ để không làm chậm response)
     sendRegistrationEmail(email, fullName || email.split('@')[0], verificationToken)
@@ -90,8 +118,18 @@ router.post("/dangnhap", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: "Sai mật khẩu" });
 
-    // Kiểm tra email đã xác thực chưa (chỉ cảnh báo, vẫn cho đăng nhập)
+    // Kiểm tra email đã xác thực chưa - Admin không cần xác thực email
     const emailVerified = user.email_verified === 1;
+    const isAdmin = user.role === 'admin';
+    
+    // Chỉ yêu cầu xác thực email cho user thường, admin không cần
+    if (!isAdmin && !emailVerified) {
+      return res.status(403).json({ 
+        message: "Email chưa được xác thực. Vui lòng kiểm tra email và xác nhận tài khoản trước khi đăng nhập.",
+        emailVerified: false,
+        requiresVerification: true
+      });
+    }
     
     const token = jwt.sign({ id: user.id, email, role: user.role }, "SECRET_KEY", { expiresIn: "7d" });
     
@@ -104,9 +142,8 @@ router.post("/dangnhap", async (req, res) => {
         email: user.email,
         fullName: user.ho_ten || email.split('@')[0], // Dùng email nếu không có tên
         role: user.role || 'customer',
-        emailVerified: emailVerified
-      },
-      warning: !emailVerified ? "Email chưa được xác thực. Vui lòng kiểm tra hộp thư để xác nhận." : null
+        emailVerified: isAdmin ? true : emailVerified // Admin luôn được coi là đã xác thực
+      }
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

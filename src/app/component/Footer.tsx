@@ -122,28 +122,317 @@ export default function Footer() {
         </div>
       </footer>
 
-      {/* Style JSX: Chỉ dùng để làm đẹp hiệu ứng hover mà Bootstrap mặc định không có */}
+      {/* Style JSX: Responsive và hiệu ứng hover */}
       <style jsx>{`
+        .footer-container {
+          padding-top: 3.5rem !important;
+          padding-bottom: 2rem !important;
+          background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%) !important;
+        }
+
         .footer-item {
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           font-size: 14px;
+          display: inline-block;
+          position: relative;
         }
         .footer-item:hover {
-          color: #ffc107 !important; /* Màu vàng khi di chuột vào */
-          padding-left: 5px; /* Hiệu ứng trượt nhẹ sang phải */
+          color: #ffc107 !important;
+          padding-left: 8px;
+          transform: translateX(5px);
+        }
+        .footer-item::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          width: 0;
+          height: 2px;
+          background: #ffc107;
+          transition: width 0.3s ease;
+        }
+        .footer-item:hover::before {
+          width: 20px;
         }
         
         .social-icon {
-          width: 36px;
-          height: 36px;
-          transition: all 0.3s ease;
+          width: 38px;
+          height: 38px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
+          font-size: 16px;
+          position: relative;
+          overflow: hidden;
+        }
+        .social-icon::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 193, 7, 0.2);
+          transform: translate(-50%, -50%);
+          transition: width 0.3s ease, height 0.3s ease;
+        }
+        .social-icon:hover::before {
+          width: 100%;
+          height: 100%;
         }
         .social-icon:hover {
           background-color: #ffc107;
           border-color: #ffc107 !important;
           color: #000 !important;
+          transform: translateY(-4px) scale(1.1);
+          box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+        .social-icon i {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Mobile First - Base styles for mobile */
+        @media (max-width: 575.98px) {
+          .footer-container {
+            padding-top: 2.5rem !important;
+            padding-bottom: 1.5rem !important;
+          }
+
+          .footer-container .container {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+
+          /* Brand section mobile - chỉ logo và tên căn giữa */
+          .footer-container .col-lg-4 {
+            margin-bottom: 2.5rem;
+            text-align: left;
+          }
+
+          .footer-container .col-lg-4 .d-flex {
+            justify-content: flex-start;
+            margin-bottom: 1rem;
+          }
+
+          .footer-container .col-lg-4 .bg-white {
+            font-size: 18px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+          }
+
+          .footer-container .col-lg-4 span {
+            font-size: 16px !important;
+            letter-spacing: 1.5px !important;
+          }
+
+          .footer-container .col-lg-4 p {
+            font-size: 13px !important;
+            text-align: left;
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+            color: rgba(255, 255, 255, 0.7) !important;
+          }
+
+          /* Social icons mobile */
+          .footer-container .d-flex.gap-2 {
+            justify-content: flex-start;
+            margin-top: 0;
+          }
+
+          .social-icon {
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 18px !important;
+          }
+
+          /* Column titles mobile */
+          .footer-container h5 {
+            font-size: 15px !important;
+            margin-bottom: 1.25rem !important;
+            text-align: left;
+            letter-spacing: 0.5px;
+          }
+
+          /* List items mobile - giữ text-align left */
+          .footer-container .col-lg-3,
+          .footer-container .col-lg-2 {
+            text-align: left;
+            margin-bottom: 2rem;
+          }
+
+          .footer-container ul {
+            margin-bottom: 0;
+          }
+
+          .footer-item {
+            font-size: 13.5px !important;
+            line-height: 1.8;
+          }
+
+          /* Contact info mobile */
+          .footer-container .col-lg-3 ul li {
+            align-items: flex-start;
+            text-align: left;
+            margin-bottom: 1rem;
+          }
+
+          .footer-container .col-lg-3 ul li i {
+            margin-top: 2px;
+            font-size: 16px;
+            flex-shrink: 0;
+          }
+
+          .footer-container .col-lg-3 ul li span {
+            word-break: break-word;
+            line-height: 1.6;
+            font-size: 13px;
+          }
+
+          .footer-container .col-lg-3 ul li .d-block {
+            font-size: 14px !important;
+          }
+
+          /* Copyright mobile */
+          .footer-container .border-top {
+            margin-top: 2.5rem !important;
+            padding-top: 1.25rem !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+          }
+
+          .footer-container .border-top p {
+            font-size: 12px !important;
+            line-height: 1.6;
+          }
+        }
+
+        /* Tablet - 576px to 767px */
+        @media (min-width: 576px) and (max-width: 767.98px) {
+          .footer-container {
+            padding-top: 3rem !important;
+            padding-bottom: 2rem !important;
+          }
+
+          .footer-container .col-md-6 {
+            margin-bottom: 2.5rem;
+          }
+
+          .footer-container h5 {
+            font-size: 15px !important;
+            margin-bottom: 1.5rem !important;
+          }
+
+          .footer-item {
+            font-size: 14px;
+            line-height: 1.8;
+          }
+
+          .footer-container .col-lg-3 ul li {
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+          }
+
+          .footer-container .col-lg-3 ul li span {
+            word-break: break-word;
+            line-height: 1.7;
+          }
+
+          .social-icon {
+            width: 40px;
+            height: 40px;
+          }
+        }
+
+        /* Small Desktop - 768px to 991px */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+          .footer-container {
+            padding-top: 3.25rem !important;
+            padding-bottom: 2rem !important;
+          }
+
+          .footer-container .col-md-6 {
+            margin-bottom: 2rem;
+          }
+
+          .footer-container h5 {
+            font-size: 15.5px !important;
+            margin-bottom: 1.5rem !important;
+          }
+
+          .footer-item {
+            font-size: 14px;
+            line-height: 1.8;
+          }
+
+          .social-icon {
+            width: 38px;
+            height: 38px;
+          }
+        }
+
+        /* Large Desktop - 992px and up */
+        @media (min-width: 992px) {
+          .footer-container {
+            padding-top: 4rem !important;
+            padding-bottom: 2.5rem !important;
+          }
+
+          .footer-container h5 {
+            font-size: 16px;
+            margin-bottom: 1.75rem;
+            letter-spacing: 0.5px;
+          }
+
+          .footer-item {
+            font-size: 14px;
+            line-height: 1.9;
+          }
+
+          .social-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 17px;
+          }
+        }
+
+        /* Extra Large Desktop - 1200px and up */
+        @media (min-width: 1200px) {
+          .footer-container {
+            padding-top: 4.5rem !important;
+            padding-bottom: 3rem !important;
+          }
+
+          .footer-container .container {
+            max-width: 1140px;
+          }
+        }
+
+        /* Touch devices - better tap targets */
+        @media (hover: none) and (pointer: coarse) {
+          .footer-item {
+            padding: 6px 0;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+          }
+
+          .social-icon {
+            min-width: 44px;
+            min-height: 44px;
+          }
+        }
+
+        /* Print styles */
+        @media print {
+          .footer-container {
+            background: white !important;
+            color: black !important;
+          }
+
+          .social-icon {
+            display: none;
+          }
         }
       `}</style>
     </>

@@ -20,16 +20,74 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
     fullName: '',
     phone: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
     setError(''); // Clear error khi user nhập
+    // Clear field error khi user bắt đầu nhập
+    if (fieldErrors[name]) {
+      setFieldErrors({ ...fieldErrors, [name]: '' });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (mode === 'login') {
+      if (!formData.email.trim()) {
+        errors.email = 'Vui lòng nhập email';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        errors.email = 'Email không hợp lệ';
+      }
+      if (!formData.password.trim()) {
+        errors.password = 'Vui lòng nhập mật khẩu';
+      } else if (formData.password.length < 6) {
+        errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+      }
+    } else {
+      // Register mode
+      if (!formData.fullName.trim()) {
+        errors.fullName = 'Vui lòng nhập họ tên';
+      }
+      if (!formData.email.trim()) {
+        errors.email = 'Vui lòng nhập email';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        errors.email = 'Email không hợp lệ';
+      }
+      if (!formData.phone.trim()) {
+        errors.phone = 'Vui lòng nhập số điện thoại';
+      } else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) {
+        errors.phone = 'Số điện thoại không hợp lệ';
+      }
+      if (!formData.password.trim()) {
+        errors.password = 'Vui lòng nhập mật khẩu';
+      } else if (formData.password.length < 6) {
+        errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+      }
+      if (!formData.confirmPassword.trim()) {
+        errors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
+      } else if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = 'Mật khẩu không khớp';
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setFieldErrors({});
+
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
 
     try {
       if (mode === 'login') {
@@ -48,6 +106,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
         const data = await response.json();
 
         if (!response.ok) {
+          // Kiểm tra nếu email chưa xác thực
+          if (data.requiresVerification) {
+            setError(data.message + '\n\nVui lòng kiểm tra email và click vào link xác nhận để kích hoạt tài khoản.');
+            setLoading(false);
+            return;
+          }
           throw new Error(data.message || 'Đăng nhập thất bại');
         }
 
@@ -122,6 +186,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
             password: formData.password,
             fullName: formData.fullName,
             phone: formData.phone,
+            ngaysinh: null,
+            gioitinh: null,
+            address: null,
+            city: null,
+            district: null,
+            ward: null,
           }),
         });
 
@@ -228,15 +298,19 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                 placeholder="Nhập email của bạn"
                 value={formData.email}
                 onChange={handleChange}
-                required
                 disabled={loading}
                 style={{
                   padding: '12px 16px',
-                  border: '1px solid #ddd',
+                  border: fieldErrors.email ? '1px solid #dc3545' : '1px solid #ddd',
                   borderRadius: '8px',
                   fontSize: '15px',
                 }}
               />
+              {fieldErrors.email && (
+                <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                  {fieldErrors.email}
+                </small>
+              )}
             </div>
 
             {/* Password */}
@@ -249,37 +323,98 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
                 placeholder="Nhập mật khẩu"
                 value={formData.password}
                 onChange={handleChange}
-                required
                 disabled={loading}
                 style={{
                   padding: '12px 16px',
-                  border: '1px solid #ddd',
+                  border: fieldErrors.password ? '1px solid #dc3545' : '1px solid #ddd',
                   borderRadius: '8px',
                   fontSize: '15px',
                 }}
               />
+              {fieldErrors.password && (
+                <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                  {fieldErrors.password}
+                </small>
+              )}
             </div>
 
             {mode === 'register' && (
-              <div className="mb-3">
-                <label className="form-label small fw-semibold text-dark">Xác nhận mật khẩu</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  className="form-control"
-                  placeholder="Nhập lại mật khẩu"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                  style={{
-                    padding: '12px 16px',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    fontSize: '15px',
-                  }}
-                />
-              </div>
+              <>
+                {/* Full Name */}
+                <div className="mb-3">
+                  <label className="form-label small fw-semibold text-dark">Họ tên</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    className="form-control"
+                    placeholder="Nhập họ tên"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    disabled={loading}
+                    style={{
+                      padding: '12px 16px',
+                      border: fieldErrors.fullName ? '1px solid #dc3545' : '1px solid #ddd',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                    }}
+                  />
+                  {fieldErrors.fullName && (
+                    <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                      {fieldErrors.fullName}
+                    </small>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div className="mb-3">
+                  <label className="form-label small fw-semibold text-dark">Số điện thoại</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    className="form-control"
+                    placeholder="Nhập số điện thoại"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={loading}
+                    style={{
+                      padding: '12px 16px',
+                      border: fieldErrors.phone ? '1px solid #dc3545' : '1px solid #ddd',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                    }}
+                  />
+                  {fieldErrors.phone && (
+                    <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                      {fieldErrors.phone}
+                    </small>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div className="mb-3">
+                  <label className="form-label small fw-semibold text-dark">Xác nhận mật khẩu</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    className="form-control"
+                    placeholder="Nhập lại mật khẩu"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={loading}
+                    style={{
+                      padding: '12px 16px',
+                      border: fieldErrors.confirmPassword ? '1px solid #dc3545' : '1px solid #ddd',
+                      borderRadius: '8px',
+                      fontSize: '15px',
+                    }}
+                  />
+                  {fieldErrors.confirmPassword && (
+                    <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                      {fieldErrors.confirmPassword}
+                    </small>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Forgot Password Link (Login only) */}

@@ -56,7 +56,20 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
 
   try {
 
+    console.log("[Review] Request body:", req.body);
+    console.log("[Review] Request files:", req.files ? req.files.length : 0);
+    
     const { chitiet_donhang_id, rating, binhluan } = req.body;
+    
+    if (!chitiet_donhang_id) {
+      return res.status(400).json({ message: "Thiếu chitiet_donhang_id" });
+    }
+    
+    if (!rating) {
+      return res.status(400).json({ message: "Thiếu rating" });
+    }
+    
+    console.log("[Review] Creating review with:", { chitiet_donhang_id, rating, binhluan, user_id: req.user.id });
 
 
 
@@ -69,6 +82,8 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
       include: [{ model: DonHangModel, as: "donhang" }],
 
     });
+    
+    console.log("[Review] Found chiTiet:", chiTiet ? chiTiet.id : "null");
 
 
 
@@ -90,21 +105,46 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
 
 
 
-    // Tạo đánh giá
+    // Kiểm tra xem đã có review cho chitiet_donhang_id này chưa
+    const existingReview = await DanhGiaModel.findOne({
+      where: {
+        user_id: req.user.id,
+        chitiet_donhang_id: chitiet_donhang_id,
+      },
+    });
+    
+    if (existingReview) {
+      console.log("[Review] Review already exists for chitiet_donhang_id:", chitiet_donhang_id);
+      return res.status(400).json({ 
+        message: "Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi" 
+      });
+    }
 
+    // Tạo đánh giá - Lấy bienthe_id từ chi tiết đơn hàng
+    const bienthe_id = chiTiet.bienthe_id;
+    
+    if (!bienthe_id) {
+      return res.status(400).json({ message: "Không tìm thấy biến thể sản phẩm trong chi tiết đơn hàng" });
+    }
+    
+    console.log("[Review] Creating review with bienthe_id:", bienthe_id);
     const review = await DanhGiaModel.create({
 
       id: uuidv4(),
 
       user_id: req.user.id,
 
-      chitiet_donhang_id,
+      chitiet_donhang_id, // Lưu chitiet_donhang_id để biết review thuộc về đơn hàng nào
+
+      bienthe_id, // Vẫn cần bienthe_id vì database có foreign key constraint
 
       rating,
 
       binhluan,
 
     });
+    
+    console.log("[Review] Review created successfully:", review.id);
 
 
 
@@ -134,9 +174,28 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
 
   } catch (err) {
 
-    console.error("Lỗi tạo đánh giá:", err);
+    console.error("[Review] Lỗi tạo đánh giá:", err);
+    console.error("[Review] Error details:", {
+      message: err.message,
+      name: err.name,
+      sql: err.sql,
+      original: err.original,
+      stack: err.stack
+    });
 
-    res.status(500).json({ message: "Lỗi server", error: err.message });
+    // Kiểm tra nếu lỗi là do thiếu cột trong database
+    if (err.message && err.message.includes("Unknown column")) {
+      return res.status(500).json({ 
+        message: "Database chưa được cập nhật. Vui lòng chạy migration script để thêm cột chitiet_donhang_id vào bảng danh_gia",
+        error: err.message
+      });
+    }
+
+    res.status(500).json({ 
+      message: "Lỗi server", 
+      error: err.message,
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 
   }
 

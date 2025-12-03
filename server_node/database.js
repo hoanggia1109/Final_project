@@ -155,6 +155,7 @@ const DanhMucBaiVietModel = sequelize.define(
       noidung: DataTypes.TEXT,
       anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
       hinh_anh: DataTypes.STRING,
+      luotxem: { type: DataTypes.INTEGER, defaultValue: 0 },
       user_id: DataTypes.CHAR(36),
       danhmuc_baiviet_id: DataTypes.CHAR(36),
         created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
@@ -168,7 +169,8 @@ const DanhMucBaiVietModel = sequelize.define(
     {
       id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
       user_id: DataTypes.CHAR(36),
-      chitiet_donhang_id: DataTypes.CHAR(36),
+      chitiet_donhang_id: DataTypes.CHAR(36), // Để biết review thuộc về đơn hàng nào
+      bienthe_id: DataTypes.CHAR(36), // Vẫn cần vì database có foreign key constraint
       rating: DataTypes.INTEGER,
       binhluan: DataTypes.TEXT,
         created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
@@ -444,6 +446,7 @@ DanhGiaModel.belongsTo(UserModel, {
   as: "user",
 });
 // Đánh giá liên kết tới chi tiết đơn hàng
+// Association với DonHangChiTietModel (qua chitiet_donhang_id)
 DonHangChiTietModel.hasMany(DanhGiaModel, {
   foreignKey: "chitiet_donhang_id",
   as: "danhgias",
@@ -451,6 +454,16 @@ DonHangChiTietModel.hasMany(DanhGiaModel, {
 DanhGiaModel.belongsTo(DonHangChiTietModel, {
   foreignKey: "chitiet_donhang_id",
   as: "chitiet_donhang",
+});
+
+// Association với SanPhamBienTheModel (qua bienthe_id - vì có foreign key constraint)
+SanPhamBienTheModel.hasMany(DanhGiaModel, {
+  foreignKey: "bienthe_id",
+  as: "danhgias",
+});
+DanhGiaModel.belongsTo(SanPhamBienTheModel, {
+  foreignKey: "bienthe_id",
+  as: "bienthe",
 });
 
 UserModel.hasMany(BaiVietModel, {

@@ -15,6 +15,7 @@ interface BackendProduct {
   code?: string;
   mota?: string;
   thumbnail?: string;
+  luotxem?: number;
   bienthe?: BienThe[];
   danhmuc?: { tendm?: string };
   thuonghieu?: { tenbrand?: string };
@@ -37,10 +38,10 @@ export async function GET(
       cache: 'no-store' // Tắt cache
     });
     
-    console.log('📥 Response status:', response.status);
+    console.log(' Response status:', response.status);
     
     if (!response.ok) {
-      console.error('❌ Backend response not OK:', response.status);
+      console.error('Backend response not OK:', response.status);
       return NextResponse.json(
         { error: 'Không tìm thấy sản phẩm' },
         { status: 404 }
@@ -64,6 +65,7 @@ export async function GET(
       brand: product.thuonghieu?.tenbrand || 'VANTAYdecor',
       sku: product.code || `SP-${product.id}`,
       stock: totalStock, // Tổng tồn kho từ tất cả biến thể
+      views: product.luotxem || 0,
       rating: 4.8,
       reviews: 0,
       description: product.mota || 'Sản phẩm chất lượng cao từ VANTAYdecor',

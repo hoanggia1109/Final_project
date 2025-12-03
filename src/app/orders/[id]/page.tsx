@@ -120,6 +120,14 @@ export default function OrderDetailPage() {
 
   const [cancelling, setCancelling] = useState(false);
 
+  // Review states
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [submittingReview, setSubmittingReview] = useState(false);
+
 
 
   useEffect(() => {
@@ -161,6 +169,8 @@ export default function OrderDetailPage() {
       if (response.ok) {
 
         const data = await response.json();
+        
+        console.log('[Order Detail] Loaded order data:', data);
 
         setOrder(data);
 
@@ -286,6 +296,128 @@ export default function OrderDetailPage() {
 
 
 
+  const handleSubmitReview = async () => {
+
+    if (!selectedItemId || !reviewComment.trim()) {
+
+      alert('Vui lòng nhập đánh giá');
+
+      return;
+
+    }
+
+
+
+    setSubmittingReview(true);
+
+    try {
+
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+
+        alert('Vui lòng đăng nhập lại');
+
+        router.push('/login');
+
+        return;
+
+      }
+
+
+
+      const formData = new FormData();
+
+      formData.append('chitiet_donhang_id', selectedItemId);
+
+      formData.append('rating', String(reviewRating));
+
+      formData.append('binhluan', reviewComment.trim());
+
+      
+
+      // Thêm ảnh nếu có
+
+      reviewImages.forEach((file) => {
+
+        formData.append('images', file);
+
+      });
+
+
+
+      const response = await fetch('/api/reviews', {
+
+        method: 'POST',
+
+        headers: {
+
+          'Authorization': `Bearer ${token}`
+
+        },
+
+        body: formData
+
+      });
+
+
+
+      const data = await response.json();
+
+
+
+      if (response.ok) {
+
+        setToastMessage('Đánh giá thành công!');
+
+        setToastType('success');
+
+        setShowToast(true);
+
+        setShowReviewModal(false);
+
+        setSelectedItemId(null);
+
+        setReviewRating(5);
+
+        setReviewComment('');
+
+        setReviewImages([]);
+
+        // Reload order để cập nhật
+
+        loadOrderDetail();
+
+      } else {
+
+        setToastMessage(data.error || 'Không thể tạo đánh giá');
+
+        setToastType('error');
+
+        setShowToast(true);
+
+      }
+
+    } catch (error) {
+
+      console.error('Error submitting review:', error);
+
+      setToastMessage('Có lỗi xảy ra');
+
+      setToastType('error');
+
+      setShowToast(true);
+
+    } finally {
+
+      setSubmittingReview(false);
+
+    }
+
+  };
+
+
+
   const statusConfig = {
 
     pending: { label: 'Chờ xác nhận', color: '#ffc107', icon: 'clock', bgLight: '#fff8e1' },
@@ -356,7 +488,7 @@ export default function OrderDetailPage() {
 
     <>
 
-      {showToast && (
+      {showToast && toastMessage && (
 
         <Toast
 
@@ -647,6 +779,26 @@ export default function OrderDetailPage() {
                             </span>
 
                           </div>
+
+                          {/* Review Button - chỉ hiển thị khi đơn hàng đã delivered */}
+                          {order.trangthai === 'delivered' && (
+                            <div className="mt-3">
+                              <button
+                                className="btn btn-warning btn-sm"
+                                onClick={() => {
+                                  setSelectedItemId(item.id);
+                                  setReviewRating(5);
+                                  setReviewComment('');
+                                  setReviewImages([]);
+                                  setShowReviewModal(true);
+                                }}
+                                style={{ borderRadius: '8px' }}
+                              >
+                                <i className="bi bi-star me-2"></i>
+                                Đánh giá sản phẩm
+                              </button>
+                            </div>
+                          )}
 
                         </div>
 
@@ -1149,6 +1301,156 @@ export default function OrderDetailPage() {
         </div>
 
       )}
+
+
+
+      {/* Modal đánh giá sản phẩm */}
+      {showReviewModal && (
+        <div 
+          className="modal show d-block" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !submittingReview) {
+              setShowReviewModal(false);
+            }
+          }}
+        >
+          <div 
+            className="modal-dialog modal-lg modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content" style={{ borderRadius: '16px' }}>
+              <div className="modal-header border-0 pb-0">
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-star-fill text-warning me-2"></i>
+                  Đánh giá sản phẩm
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => !submittingReview && setShowReviewModal(false)}
+                  disabled={submittingReview}
+                />
+              </div>
+              <div className="modal-body">
+                {/* Rating Stars */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold mb-3">Đánh giá của bạn</label>
+                  <div className="d-flex gap-2 align-items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className="btn btn-link p-0"
+                        onClick={() => setReviewRating(star)}
+                        disabled={submittingReview}
+                        style={{ fontSize: '2rem', lineHeight: 1 }}
+                      >
+                        <i 
+                          className={`bi ${star <= reviewRating ? 'bi-star-fill' : 'bi-star'}`}
+                          style={{ color: star <= reviewRating ? '#FFC107' : '#ddd' }}
+                        />
+                      </button>
+                    ))}
+                    <span className="ms-2 text-muted">({reviewRating}/5)</span>
+                  </div>
+                </div>
+
+                {/* Comment */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold mb-2">Nhận xét</label>
+                  <textarea
+                    className="form-control"
+                    rows={5}
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                    disabled={submittingReview}
+                    style={{ borderRadius: '12px', border: '2px solid #e0e0e0' }}
+                  />
+                </div>
+
+                {/* Images Upload */}
+                <div className="mb-4">
+                  <label className="form-label fw-semibold mb-2">Hình ảnh (tối đa 5 ảnh)</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 5) {
+                        alert('Chỉ được chọn tối đa 5 ảnh');
+                        return;
+                      }
+                      setReviewImages(files.slice(0, 5));
+                    }}
+                    disabled={submittingReview}
+                    style={{ borderRadius: '12px', border: '2px solid #e0e0e0' }}
+                  />
+                  {reviewImages.length > 0 && (
+                    <div className="mt-3 d-flex gap-2 flex-wrap">
+                      {reviewImages.map((file, idx) => (
+                        <div key={idx} className="position-relative" style={{ width: '80px', height: '80px' }}>
+                          <Image
+                            src={URL.createObjectURL(file)}
+                            alt={`Preview ${idx + 1}`}
+                            fill
+                            style={{ objectFit: 'cover', borderRadius: '8px' }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                            onClick={() => setReviewImages(reviewImages.filter((_, i) => i !== idx))}
+                            disabled={submittingReview}
+                            style={{ padding: '2px 6px', fontSize: '12px' }}
+                          >
+                            <i className="bi bi-x"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer border-0 pt-0">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowReviewModal(false)}
+                  disabled={submittingReview}
+                  style={{ borderRadius: '12px' }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview || !reviewComment.trim()}
+                  style={{ borderRadius: '12px' }}
+                >
+                  {submittingReview ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Đang gửi...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle me-2"></i>
+                      Gửi đánh giá
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
 
     </>
 

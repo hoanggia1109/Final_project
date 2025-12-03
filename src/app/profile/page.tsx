@@ -67,6 +67,19 @@ export default function ProfilePage() {
       }
 
       const data = await response.json();
+      console.log('[Profile] Received data:', data);
+      console.log('[Profile] User data:', data.user);
+      console.log('[Profile] ngaysinh:', data.user?.ngaysinh);
+      console.log('[Profile] gioitinh:', data.user?.gioitinh);
+      
+      // Format ngày sinh nếu có (đảm bảo format YYYY-MM-DD cho input type="date")
+      if (data.user?.ngaysinh) {
+        const date = new Date(data.user.ngaysinh);
+        if (!isNaN(date.getTime())) {
+          data.user.ngaysinh = date.toISOString().split('T')[0];
+        }
+      }
+      
       setUserData(data.user);
       setStats(data.stats);
     } catch (error) {
@@ -114,13 +127,23 @@ export default function ProfilePage() {
       }
 
       const data = await response.json();
+      console.log('[Profile] Update response:', data);
+      
+      // Format ngày sinh nếu có
+      if (data.user?.ngaysinh) {
+        const date = new Date(data.user.ngaysinh);
+        if (!isNaN(date.getTime())) {
+          data.user.ngaysinh = date.toISOString().split('T')[0];
+        }
+      }
+      
       setUserData(data.user);
-    alert('Cập nhật thông tin thành công!');
-    setEditing(false);
+      alert('Cập nhật thông tin thành công!');
+      setEditing(false);
       
       // Update localStorage for header display
-      localStorage.setItem('userName', userData.ho_ten);
-    window.dispatchEvent(new Event('loginSuccess'));
+      localStorage.setItem('userName', data.user.ho_ten || userData.ho_ten);
+      window.dispatchEvent(new Event('loginSuccess'));
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Không thể cập nhật thông tin');

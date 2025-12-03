@@ -7,6 +7,7 @@ interface BackendArticle {
   tieude: string;
   noidung: string;
   hinh_anh: string | null;
+  luotxem?: number;
   anhien: number;
   created_at: string;
   danhmuc?: {
@@ -39,16 +40,28 @@ export async function GET(
 
     const article = await response.json() as BackendArticle;
 
+    // Xử lý URL hình ảnh
+    let imageUrl = article.hinh_anh || '';
+    console.log('[News Detail API] Original hinh_anh:', imageUrl);
+    
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      // Nếu là relative path, thêm backend URL
+      imageUrl = `${BACKEND_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    }
+    
+    console.log('[News Detail API] Processed image URL:', imageUrl);
+
     // Map data từ backend sang format frontend
     const mappedArticle = {
       id: article.id,
       title: article.tieude,
       slug: article.tieude.toLowerCase().replace(/\s+/g, '-'),
       excerpt: article.tieude, 
+      image: imageUrl,
       category: article.danhmuc?.tendanhmuc || 'Tin tức', 
       author: article.user?.ho_ten || article.user?.email || 'VANTAYdecor', 
       publishDate: article.created_at,
-      views: 0, 
+      views: article.luotxem || 0, 
       content: article.noidung || '<p>Nội dung đang được cập nhật...</p>',
       tags: [], 
       relatedNews: [] 

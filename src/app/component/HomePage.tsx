@@ -133,7 +133,7 @@ function Banner() {
             <p className="mb-4 mx-auto hero-desc">
               {banner.mota}
             </p>
-            <Link href="/contact" className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold banner-button btn-lg-responsive">
+            <Link href={banner.link || "/contact"} className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold banner-button btn-lg-responsive">
               Xem thêm
             </Link>
           </div>
@@ -1218,7 +1218,7 @@ function ContactInfo() {
       title: 'Văn phòng',
       description: 'Số 50 Đường số 3, KDT Vạn Phúc, Hiệp Bình Phước, TP Thủ Đức, TP Hồ Chí Minh',
       linkText: 'Xem địa chỉ',
-      link: '#',
+      link: '/contact',
     },
     {
       id: 2,
@@ -1226,7 +1226,7 @@ function ContactInfo() {
       title: 'Tư vấn',
       description: 'Để lại thông tin của bạn để được báo giá ngay',
       linkText: 'Nhận báo giá',
-      link: '#quote',
+      link: '/contact',
     },
     {
       id: 3,
@@ -1234,7 +1234,7 @@ function ContactInfo() {
       title: 'Hỗ trợ',
       description: 'Liên lạc ngay cho chúng tôi qua số hotline',
       linkText: 'Gọi ngay',
-      link: 'tel:0123456789',
+      link: 'tel:0909123456',
     },
   ];
 
@@ -1306,26 +1306,49 @@ function ContactInfo() {
                 </p>
 
                 {/* Link */}
-                <a 
-                  href={item.link}
-                  className="text-decoration-none fw-semibold d-inline-block feature-desc"
-                  style={{ 
-                    color: '#FFC107',
-                    borderBottom: '2px solid #FFC107',
-                    paddingBottom: '4px',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#333';
-                    e.currentTarget.style.color = '#333';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#FFC107';
-                    e.currentTarget.style.color = '#FFC107';
-                  }}
-                >
-                  {item.linkText}
-                </a>
+                {item.link.startsWith('tel:') || item.link.startsWith('mailto:') ? (
+                  <a 
+                    href={item.link}
+                    className="text-decoration-none fw-semibold d-inline-block feature-desc"
+                    style={{ 
+                      color: '#FFC107',
+                      borderBottom: '2px solid #FFC107',
+                      paddingBottom: '4px',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#333';
+                      e.currentTarget.style.color = '#333';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#FFC107';
+                      e.currentTarget.style.color = '#FFC107';
+                    }}
+                  >
+                    {item.linkText}
+                  </a>
+                ) : (
+                  <Link 
+                    href={item.link}
+                    className="text-decoration-none fw-semibold d-inline-block feature-desc"
+                    style={{ 
+                      color: '#FFC107',
+                      borderBottom: '2px solid #FFC107',
+                      paddingBottom: '4px',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#333';
+                      e.currentTarget.style.color = '#333';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#FFC107';
+                      e.currentTarget.style.color = '#FFC107';
+                    }}
+                  >
+                    {item.linkText}
+                  </Link>
+                )}
               </div>
             </div>
           ))}

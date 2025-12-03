@@ -29,12 +29,19 @@ export default function AuthPage() {
     agreeTerms: false,
   });
 
+  const [loginErrors, setLoginErrors] = useState<Record<string, string>>({});
+  const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
+
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setLoginData({
       ...loginData,
       [name]: type === 'checkbox' ? checked : value,
     });
+    // Clear error khi user bắt đầu nhập
+    if (loginErrors[name]) {
+      setLoginErrors({ ...loginErrors, [name]: '' });
+    }
   };
 
   const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,10 +50,64 @@ export default function AuthPage() {
       ...registerData,
       [name]: type === 'checkbox' ? checked : value,
     });
+    // Clear error khi user bắt đầu nhập
+    if (registerErrors[name]) {
+      setRegisterErrors({ ...registerErrors, [name]: '' });
+    }
+  };
+
+  const validateLogin = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!loginData.email.trim()) {
+      errors.email = 'Vui lòng nhập email';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginData.email)) {
+      errors.email = 'Email không hợp lệ';
+    }
+    if (!loginData.password.trim()) {
+      errors.password = 'Vui lòng nhập mật khẩu';
+    }
+    setLoginErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateRegister = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!registerData.fullName.trim()) {
+      errors.fullName = 'Vui lòng nhập họ tên';
+    }
+    if (!registerData.email.trim()) {
+      errors.email = 'Vui lòng nhập email';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerData.email)) {
+      errors.email = 'Email không hợp lệ';
+    }
+    if (!registerData.phone.trim()) {
+      errors.phone = 'Vui lòng nhập số điện thoại';
+    } else if (!/^[0-9]{10,11}$/.test(registerData.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Số điện thoại không hợp lệ';
+    }
+    if (!registerData.password.trim()) {
+      errors.password = 'Vui lòng nhập mật khẩu';
+    } else if (registerData.password.length < 6) {
+      errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
+    }
+    if (!registerData.confirmPassword.trim()) {
+      errors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
+    } else if (registerData.password !== registerData.confirmPassword) {
+      errors.confirmPassword = 'Mật khẩu không khớp';
+    }
+    if (!registerData.agreeTerms) {
+      errors.agreeTerms = 'Vui lòng đồng ý với điều khoản sử dụng';
+    }
+    setRegisterErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateLogin()) {
+      return;
+    }
     
     try {
       const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
@@ -59,7 +120,14 @@ export default function AuthPage() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Đăng nhập thất bại');
+      if (!response.ok) {
+        // Kiểm tra nếu email chưa xác thực
+        if (data.requiresVerification) {
+          alert(data.message + '\n\nVui lòng kiểm tra email và click vào link xác nhận để kích hoạt tài khoản.');
+          return;
+        }
+        throw new Error(data.message || 'Đăng nhập thất bại');
+      }
 
       if (data.token) {
         localStorage.setItem('token', data.token);
@@ -91,13 +159,7 @@ export default function AuthPage() {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (registerData.password !== registerData.confirmPassword) {
-      alert('Mật khẩu không khớp!');
-      return;
-    }
-
-    if (!registerData.agreeTerms) {
-      alert('Vui lòng đồng ý với điều khoản sử dụng!');
+    if (!validateRegister()) {
       return;
     }
 
@@ -110,6 +172,12 @@ export default function AuthPage() {
           password: registerData.password,
           fullName: registerData.fullName,
           phone: registerData.phone,
+          ngaysinh: registerData.birthDate || null,
+          gioitinh: registerData.gender || null,
+          address: registerData.address || null,
+          city: registerData.city || null,
+          district: registerData.district || null,
+          ward: registerData.ward || null,
         }),
       });
 
@@ -306,9 +374,16 @@ export default function AuthPage() {
                           placeholder="your@email.com"
                           value={loginData.email}
                           onChange={handleLoginChange}
-                          required
+                          style={{
+                            borderColor: loginErrors.email ? '#dc3545' : undefined
+                          }}
                         />
                       </div>
+                      {loginErrors.email && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {loginErrors.email}
+                        </small>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -322,7 +397,9 @@ export default function AuthPage() {
                           placeholder="Nhập mật khẩu"
                           value={loginData.password}
                           onChange={handleLoginChange}
-                          required
+                          style={{
+                            borderColor: loginErrors.password ? '#dc3545' : undefined
+                          }}
                         />
                         <button
                           type="button"
@@ -332,6 +409,11 @@ export default function AuthPage() {
                           <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
                         </button>
                       </div>
+                      {loginErrors.password && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {loginErrors.password}
+                        </small>
+                      )}
                     </div>
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -423,8 +505,15 @@ export default function AuthPage() {
                         placeholder="Nguyễn Văn A"
                         value={registerData.fullName}
                         onChange={handleRegisterChange}
-                        required
+                        style={{
+                          borderColor: registerErrors.fullName ? '#dc3545' : undefined
+                        }}
                       />
+                      {registerErrors.fullName && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {registerErrors.fullName}
+                        </small>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -436,8 +525,15 @@ export default function AuthPage() {
                         placeholder="your@email.com"
                         value={registerData.email}
                         onChange={handleRegisterChange}
-                        required
+                        style={{
+                          borderColor: registerErrors.email ? '#dc3545' : undefined
+                        }}
                       />
+                      {registerErrors.email && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {registerErrors.email}
+                        </small>
+                      )}
                     </div>
 
                     <div className="row">
@@ -450,8 +546,15 @@ export default function AuthPage() {
                           placeholder="0123456789"
                           value={registerData.phone}
                           onChange={handleRegisterChange}
-                          required
+                          style={{
+                            borderColor: registerErrors.phone ? '#dc3545' : undefined
+                          }}
                         />
+                        {registerErrors.phone && (
+                          <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                            {registerErrors.phone}
+                          </small>
+                        )}
                       </div>
                       <div className="col-md-6 mb-3">
                         <label className="form-label fw-semibold small">Ngày sinh</label>
@@ -513,7 +616,9 @@ export default function AuthPage() {
                           placeholder="Tối thiểu 6 ký tự"
                           value={registerData.password}
                           onChange={handleRegisterChange}
-                          required
+                          style={{
+                            borderColor: registerErrors.password ? '#dc3545' : undefined
+                          }}
                         />
                         <button
                           type="button"
@@ -523,6 +628,11 @@ export default function AuthPage() {
                           <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
                         </button>
                       </div>
+                      {registerErrors.password && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {registerErrors.password}
+                        </small>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -535,7 +645,9 @@ export default function AuthPage() {
                           placeholder="Nhập lại mật khẩu"
                           value={registerData.confirmPassword}
                           onChange={handleRegisterChange}
-                          required
+                          style={{
+                            borderColor: registerErrors.confirmPassword ? '#dc3545' : undefined
+                          }}
                         />
                         <button
                           type="button"
@@ -545,6 +657,11 @@ export default function AuthPage() {
                           <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
                         </button>
                       </div>
+                      {registerErrors.confirmPassword && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {registerErrors.confirmPassword}
+                        </small>
+                      )}
                     </div>
 
                     <div className="form-check mb-3">
@@ -555,6 +672,9 @@ export default function AuthPage() {
                         id="agreeTerms"
                         checked={registerData.agreeTerms}
                         onChange={handleRegisterChange}
+                        style={{
+                          borderColor: registerErrors.agreeTerms ? '#dc3545' : undefined
+                        }}
                       />
                       <label className="form-check-label small" htmlFor="agreeTerms">
                         Tôi đồng ý với <Link 
@@ -567,6 +687,11 @@ export default function AuthPage() {
                           Điều khoản sử dụng
                         </Link>
                       </label>
+                      {registerErrors.agreeTerms && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                          {registerErrors.agreeTerms}
+                        </small>
+                      )}
                     </div>
 
                     <button 
