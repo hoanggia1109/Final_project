@@ -146,18 +146,12 @@ process.on('uncaughtException', (error) => {
   // KHÔNG tắt server để tiếp tục debug
 });
 
+// Import error handler từ utils
+const { errorHandler } = require('./utils/errors');
+
 // Middleware bắt lỗi Express (phải đặt SAU tất cả routes)
-app.use((err, req, res, next) => {
-  console.error('🔥 EXPRESS ERROR HANDLER:');
-  console.error('URL:', req.url);
-  console.error('Method:', req.method);
-  console.error('Error:', err.message);
-  console.error('Stack:', err.stack);
-  res.status(500).json({ 
-    message: 'Server error', 
-    error: err.message 
-  });
-});
+// Sử dụng errorHandler từ utils để xử lý đúng AppError với status code
+app.use(errorHandler);
 
 /* ---------------- START SERVER ---------------- */
 app.listen(port, () => console.log(` Server chạy http://localhost:${port}`));

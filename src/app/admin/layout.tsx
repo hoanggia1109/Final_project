@@ -18,7 +18,9 @@ import {
   Image,
   FolderOpen,
   FileText,
-  Archive
+  Archive,
+  Mail,
+  Star
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -111,6 +113,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Users,
       path: '/admin/users',
       active: pathname?.startsWith('/admin/users'),
+    },
+    {
+      title: 'Mã giảm giá',
+      icon: Tag,
+      path: '/admin/magiamgia',
+      active: pathname?.startsWith('/admin/magiamgia'),
+    },
+    {
+      title: 'Liên hệ',
+      icon: Mail,
+      path: '/admin/lienhe',
+      active: pathname?.startsWith('/admin/lienhe'),
+    },
+    {
+      title: 'Đánh giá',
+      icon: Star,
+      path: '/admin/reviews',
+      active: pathname?.startsWith('/admin/reviews'),
     },
     {
       title: 'Cài đặt',

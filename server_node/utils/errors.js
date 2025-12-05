@@ -49,6 +49,16 @@ const errorHandler = (err, req, res, next) => {
     body: req.body,
   });
 
+  // Xử lý AppError - giữ nguyên status code và message
+  if (err instanceof AppError) {
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message || 'Lỗi server',
+      // Chỉ hiển thị stack trace trong development mode để bảo mật
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
+  }
+
   // Xử lý Sequelize Validation Error
   // Khi validate dữ liệu không đúng format (ví dụ: email không hợp lệ)
   if (err.name === 'SequelizeValidationError') {

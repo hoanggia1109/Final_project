@@ -146,6 +146,9 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
       code,
       tensp,
       mota,
+      mota_chitiet,
+      dacdiem_noibat,
+      thongsokythuat,
       anhien,
       slug,
       danhmuc_id,
@@ -173,6 +176,9 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
         code,
         tensp,
         mota,
+        mota_chitiet: mota_chitiet || null,
+        dacdiem_noibat: dacdiem_noibat || null,
+        thongsokythuat: thongsokythuat || null,
         thumbnail: thumbnailPath,
         anhien: anhien ?? 1,
         slug: finalSlug,
@@ -222,7 +228,7 @@ router.put("/:id", upload.any(), async (req, res) => {
     const sp = await SanPhamModel.findByPk(req.params.id, { transaction: t });
     if (!sp) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
 
-    let { tensp, mota, anhien, danhmuc_id, thuonghieu_id, bienthe } = req.body;
+    let { tensp, mota, mota_chitiet, dacdiem_noibat, thongsokythuat, anhien, danhmuc_id, thuonghieu_id, bienthe } = req.body;
     if (typeof bienthe === "string") bienthe = JSON.parse(bienthe || "[]");
 
     const thumbnailFile = req.files.find((f) => f.fieldname === "thumbnail");
@@ -230,7 +236,17 @@ router.put("/:id", upload.any(), async (req, res) => {
       ? `/uploads/sanpham/${thumbnailFile.filename}`
       : sp.thumbnail;
     await sp.update(
-      { tensp, mota, anhien, danhmuc_id, thuonghieu_id, thumbnail: thumbnailPath },
+      { 
+        tensp, 
+        mota, 
+        mota_chitiet: mota_chitiet !== undefined ? mota_chitiet : sp.mota_chitiet,
+        dacdiem_noibat: dacdiem_noibat !== undefined ? dacdiem_noibat : sp.dacdiem_noibat,
+        thongsokythuat: thongsokythuat !== undefined ? thongsokythuat : sp.thongsokythuat,
+        anhien, 
+        danhmuc_id, 
+        thuonghieu_id, 
+        thumbnail: thumbnailPath 
+      },
       { transaction: t }
     );
 

@@ -35,6 +35,8 @@ const {
 
   DanhGiaModel,
 
+  ReviewImageModel,
+
   ImageModel,
 
   sequelize,
@@ -1180,9 +1182,74 @@ router.delete("/lienhe/:id", auth, isAdmin, async (req, res) => {
 
 router.get("/review", auth, isAdmin, async (_, res) => {
 
-  const rv = await DanhGiaModel.findAll();
+  try {
+    const rv = await DanhGiaModel.findAll({
+      include: [
+        {
+          model: UserModel,
+          as: "user",
+          attributes: ["id", "ho_ten", "email", "avatar"],
+          required: false,
+        },
+        {
+          model: DonHangChiTietModel,
+          as: "chitiet_donhang",
+          required: false,
+          include: [
+            {
+              model: SanPhamBienTheModel,
+              as: "bienthe",
+              required: false,
+              include: [
+                {
+                  model: SanPhamModel,
+                  as: "sanpham",
+                  attributes: ["id", "tensp", "thumbnail"],
+                  required: false,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          model: ReviewImageModel,
+          as: "hinhanh",
+          required: false,
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
 
-  res.json(rv);
+    // Format data để frontend dễ sử dụng
+    const formattedReviews = rv.map((review) => {
+      const plain = review.get({ plain: true });
+      return {
+        id: plain.id,
+        user_id: plain.user_id,
+        sanpham_id: plain.sanpham_id || plain.chitiet_donhang?.bienthe?.sanpham_id,
+        chitiet_donhang_id: plain.chitiet_donhang_id,
+        diem: plain.rating || plain.diem,
+        noidung: plain.binhluan || plain.noidung || '',
+        created_at: plain.created_at,
+        user: plain.user ? {
+          ho_ten: plain.user.ho_ten,
+          email: plain.user.email,
+          avatar: plain.user.avatar,
+        } : null,
+        sanpham: plain.chitiet_donhang?.bienthe?.sanpham ? {
+          id: plain.chitiet_donhang.bienthe.sanpham.id,
+          tensp: plain.chitiet_donhang.bienthe.sanpham.tensp,
+          thumbnail: plain.chitiet_donhang.bienthe.sanpham.thumbnail,
+        } : null,
+        images: plain.hinhanh || [],
+      };
+    });
+
+    res.json(formattedReviews);
+  } catch (err) {
+    console.error("Lỗi lấy danh sách đánh giá:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 
 });
 

@@ -56,11 +56,13 @@ export default function CheckoutPage() {
     note: '',
     paymentMethod: 'cod',
   });
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [showAddressSelector, setShowAddressSelector] = useState(false);
 
   // Check authentication and load cart
   useEffect(() => {
-    // Load cart từ API backend
-    const loadCartFromAPI = async () => {
+    // Load cart và thông tin user từ API backend
+    const loadData = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -69,14 +71,15 @@ export default function CheckoutPage() {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/giohang', {
+        // Load cart
+        const cartResponse = await fetch('http://localhost:5000/api/giohang', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
-        if (!response.ok) {
-          if (response.status === 401) {
+        if (!cartResponse.ok) {
+          if (cartResponse.status === 401) {
             localStorage.removeItem('token');
             setLoading(false);
             router.push('/cart');
@@ -85,20 +88,79 @@ export default function CheckoutPage() {
           throw new Error('Failed to load cart');
         }
 
-        // CHANGED: Đã xóa emoji/sticker khỏi console logs
-        const data = await response.json();
-        console.log('Cart data from checkout:', data);
+        const cartData = await cartResponse.json();
+        console.log('Cart data from checkout:', cartData);
         
-        const items = data.san_pham || [];
+        const items = cartData.san_pham || [];
         
         // Nếu giỏ hàng trống, redirect về trang cart
-          if (items.length === 0) {
-            router.push('/cart');
-            return;
-          }
+        if (items.length === 0) {
+          router.push('/cart');
+          return;
+        }
         
-          setCartItems(items);
-        setTotalAmount(data.tong_tien || 0);
+        setCartItems(items);
+        setTotalAmount(cartData.tong_tien || 0);
+
+        // Load thông tin user và địa chỉ
+        try {
+          // Load profile
+          const profileResponse = await fetch('http://localhost:5000/api/profile', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            console.log('Profile data:', profileData);
+            
+            // API trả về trong object user
+            const userInfo = profileData.user || profileData;
+            
+            // Điền thông tin user vào form
+            setFormData(prev => ({
+              ...prev,
+              fullName: userInfo.ho_ten || prev.fullName,
+              email: userInfo.email || prev.email,
+              phone: userInfo.sdt || prev.phone,
+            }));
+          }
+
+          // Load địa chỉ mặc định
+          const addressesResponse = await fetch('http://localhost:5000/api/diachi', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (addressesResponse.ok) {
+            const addressesData = await addressesResponse.json();
+            console.log('Addresses data:', addressesData);
+            
+            if (Array.isArray(addressesData) && addressesData.length > 0) {
+              setSavedAddresses(addressesData);
+              
+              // Tìm địa chỉ mặc định hoặc lấy địa chỉ đầu tiên
+              const defaultAddress = addressesData.find((addr: any) => addr.macdinh === 1) || addressesData[0];
+
+              if (defaultAddress) {
+                setFormData(prev => ({
+                  ...prev,
+                  fullName: defaultAddress.hoten || prev.fullName,
+                  phone: defaultAddress.sdt || prev.phone,
+                  address: defaultAddress.diachichitiet || prev.address,
+                  city: defaultAddress.tinh_thanh || prev.city,
+                  district: defaultAddress.quan_huyen || prev.district,
+                  ward: defaultAddress.phuong_xa || prev.ward,
+                }));
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user info:', error);
+          // Không block checkout nếu không load được thông tin user
+        }
       } catch (error) {
         console.error('Error loading cart:', error);
         router.push('/cart');
@@ -107,7 +169,7 @@ export default function CheckoutPage() {
       }
     };
 
-    loadCartFromAPI();
+    loadData();
   }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -450,10 +512,81 @@ export default function CheckoutPage() {
               {/* Thông tin giao hàng */}
               <div className="card border-0 shadow-sm rounded-4 mb-4">
                 <div className="card-body p-4">
-                  <h5 className="fw-bold mb-4">
-                    <i className="bi bi-truck me-2" style={{ color: '#FF8E53' }}></i>
-                    Thông tin giao hàng
-                  </h5>
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="fw-bold mb-0">
+                      <i className="bi bi-truck me-2" style={{ color: '#FF8E53' }}></i>
+                      Thông tin giao hàng
+                    </h5>
+                    {savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => setShowAddressSelector(!showAddressSelector)}
+                        style={{ borderRadius: '8px' }}
+                      >
+                        <i className="bi bi-bookmark me-2"></i>
+                        Chọn từ địa chỉ đã lưu
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Danh sách địa chỉ đã lưu */}
+                  {showAddressSelector && savedAddresses.length > 0 && (
+                    <div className="mb-4 p-3 border rounded-3" style={{ background: '#f8f9fa' }}>
+                      <h6 className="fw-semibold mb-3">Địa chỉ đã lưu:</h6>
+                      <div className="row g-2">
+                        {savedAddresses.map((addr) => (
+                          <div key={addr.id} className="col-12">
+                            <button
+                              type="button"
+                              className="btn btn-outline-secondary w-100 text-start"
+                              onClick={() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  fullName: addr.hoten || prev.fullName,
+                                  phone: addr.sdt || prev.phone,
+                                  address: addr.diachichitiet || prev.address,
+                                  city: addr.tinh_thanh || prev.city,
+                                  district: addr.quan_huyen || prev.district,
+                                  ward: addr.phuong_xa || prev.ward,
+                                }));
+                                setShowAddressSelector(false);
+                              }}
+                              style={{ borderRadius: '8px', padding: '12px' }}
+                            >
+                              <div className="d-flex justify-content-between align-items-start">
+                                <div>
+                                  <div className="fw-semibold">{addr.hoten || 'N/A'}</div>
+                                  <small className="text-muted d-block">
+                                    {addr.diachichitiet}, {addr.phuong_xa}, {addr.quan_huyen}, {addr.tinh_thanh}
+                                  </small>
+                                  {addr.sdt && (
+                                    <small className="text-muted d-block mt-1">
+                                      <i className="bi bi-telephone me-1"></i>
+                                      {addr.sdt}
+                                    </small>
+                                  )}
+                                </div>
+                                {addr.macdinh === 1 && (
+                                  <span className="badge bg-success">Mặc định</span>
+                                )}
+                              </div>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-center">
+                        <Link
+                          href="/addresses"
+                          className="btn btn-sm btn-link text-primary"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          <i className="bi bi-plus-circle me-1"></i>
+                          Thêm địa chỉ mới
+                        </Link>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="row g-3">
                     <div className="col-12">

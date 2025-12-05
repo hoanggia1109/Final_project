@@ -32,11 +32,17 @@ export default function CreateProductPage() {
     code: '',
     tensp: '',
     mota: '',
+    mota_chitiet: '',
     thumbnail: null as File | null,
     anhien: 1,
     danhmuc_id: '',
     thuonghieu_id: '',
   });
+  
+  const [dacdiem, setDacdiem] = useState<string[]>(['']);
+  const [thongsokythuat, setThongsokythuat] = useState<Array<{ key: string; value: string }>>([
+    { key: '', value: '' }
+  ]);
 
   const [bienthe, setBienthe] = useState<BienThe[]>([
     { mausac: '', kichthuoc: '', chatlieu: '', gia: '', sl_tonkho: '', images: [] },
@@ -105,6 +111,16 @@ export default function CreateProductPage() {
       formData.append('code', form.code);
       formData.append('tensp', form.tensp);
       formData.append('mota', form.mota);
+      formData.append('mota_chitiet', form.mota_chitiet);
+      formData.append('dacdiem_noibat', JSON.stringify(dacdiem.filter(d => d.trim() !== '')));
+      formData.append('thongsokythuat', JSON.stringify(
+        thongsokythuat
+          .filter(t => t.key.trim() !== '' && t.value.trim() !== '')
+          .reduce((acc, item) => {
+            acc[item.key] = item.value;
+            return acc;
+          }, {} as Record<string, string>)
+      ));
       formData.append('anhien', form.anhien.toString());
       formData.append('danhmuc_id', form.danhmuc_id || '');
       formData.append('thuonghieu_id', form.thuonghieu_id || '');
@@ -288,9 +304,135 @@ export default function CreateProductPage() {
                 </div>
               </div>
 
+              {/* Mô tả ngắn */}
               <div className="mb-4 mt-4">
-                <label className="form-label">Mô tả sản phẩm</label>
-                <textarea name="mota" value={form.mota} onChange={handleChange} className="form-control" rows={4} placeholder="Nhập mô tả chi tiết về sản phẩm..." />
+                <label className="form-label">Mô tả ngắn</label>
+                <textarea 
+                  name="mota" 
+                  value={form.mota} 
+                  onChange={handleChange} 
+                  className="form-control" 
+                  rows={3} 
+                  placeholder="Mô tả ngắn gọn về sản phẩm (hiển thị ở danh sách sản phẩm)..." 
+                />
+                <small className="text-muted">Mô tả ngắn gọn, khoảng 100-200 ký tự</small>
+              </div>
+
+              {/* Mô tả chi tiết */}
+              <div className="mb-4">
+                <label className="form-label fw-bold">
+                  <i className="bi bi-file-text me-2" style={{ color: '#FF8E53' }}></i>
+                  Mô tả chi tiết <span className="text-danger">*</span>
+                </label>
+                <textarea 
+                  name="mota_chitiet" 
+                  value={form.mota_chitiet} 
+                  onChange={handleChange} 
+                  className="form-control" 
+                  rows={6} 
+                  placeholder="Nhập mô tả chi tiết về sản phẩm. Mô tả này sẽ hiển thị trong tab 'Mô tả sản phẩm'..." 
+                  required
+                />
+                <small className="text-muted">Mô tả chi tiết về sản phẩm, chất liệu, công dụng, v.v.</small>
+              </div>
+
+              {/* Đặc điểm nổi bật */}
+              <div className="mb-4">
+                <label className="form-label fw-bold">
+                  <i className="bi bi-star-fill me-2" style={{ color: '#FF8E53' }}></i>
+                  Đặc điểm nổi bật
+                </label>
+                {dacdiem.map((item, index) => (
+                  <div key={index} className="d-flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={item}
+                      onChange={(e) => {
+                        const updated = [...dacdiem];
+                        updated[index] = e.target.value;
+                        setDacdiem(updated);
+                      }}
+                      placeholder={`Đặc điểm ${index + 1} (VD: Chất liệu cao cấp, Thiết kế hiện đại...)`}
+                    />
+                    {dacdiem.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        onClick={() => setDacdiem(dacdiem.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm mt-2"
+                  onClick={() => setDacdiem([...dacdiem, ''])}
+                >
+                  <PlusCircle size={16} className="me-1" />
+                  Thêm đặc điểm
+                </button>
+                <small className="text-muted d-block mt-2">Các đặc điểm nổi bật sẽ hiển thị dưới dạng danh sách bullet points</small>
+              </div>
+
+              {/* Thông số kỹ thuật */}
+              <div className="mb-4">
+                <label className="form-label fw-bold">
+                  <i className="bi bi-gear me-2" style={{ color: '#FF8E53' }}></i>
+                  Thông số kỹ thuật
+                </label>
+                {thongsokythuat.map((item, index) => (
+                  <div key={index} className="row g-2 mb-2">
+                    <div className="col-md-5">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={item.key}
+                        onChange={(e) => {
+                          const updated = [...thongsokythuat];
+                          updated[index].key = e.target.value;
+                          setThongsokythuat(updated);
+                        }}
+                        placeholder="Tên thông số (VD: Kích thước, Chất liệu...)"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={item.value}
+                        onChange={(e) => {
+                          const updated = [...thongsokythuat];
+                          updated[index].value = e.target.value;
+                          setThongsokythuat(updated);
+                        }}
+                        placeholder="Giá trị (VD: 120x60x75cm, Gỗ MDF...)"
+                      />
+                    </div>
+                    <div className="col-md-1">
+                      {thongsokythuat.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger w-100"
+                          onClick={() => setThongsokythuat(thongsokythuat.filter((_, i) => i !== index))}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm mt-2"
+                  onClick={() => setThongsokythuat([...thongsokythuat, { key: '', value: '' }])}
+                >
+                  <PlusCircle size={16} className="me-1" />
+                  Thêm thông số
+                </button>
+                <small className="text-muted d-block mt-2">Thông số kỹ thuật sẽ hiển thị trong tab 'Thông số kỹ thuật'</small>
               </div>
 
               <div className="mb-4">

@@ -14,6 +14,9 @@ interface BackendProduct {
   tensp?: string;
   code?: string;
   mota?: string;
+  mota_chitiet?: string;
+  dacdiem_noibat?: string;
+  thongsokythuat?: string;
   thumbnail?: string;
   luotxem?: number;
   bienthe?: BienThe[];
@@ -68,23 +71,49 @@ export async function GET(
       views: product.luotxem || 0,
       rating: 4.8,
       reviews: 0,
-      description: product.mota || 'Sản phẩm chất lượng cao từ VANTAYdecor',
-      features: [
-        'Chất liệu cao cấp',
-        'Thiết kế hiện đại',
-        'Bền bỉ theo thời gian',
-        'Dễ dàng vệ sinh',
-        'Bảo hành chính hãng'
-      ],
-      specifications: {
-        'Mã sản phẩm': product.code || `SP-${product.id}`,
-        'Thương hiệu': product.thuonghieu?.tenbrand || 'VANTAYdecor',
-        'Danh mục': product.danhmuc?.tendm || 'Chưa phân loại',
-        'Màu sắc': product.bienthe?.map((bt: BienThe) => bt.mausac).filter(Boolean).join(', ') || 'Nhiều màu',
-        'Kích thước': product.bienthe?.map((bt: BienThe) => bt.kichthuoc).filter(Boolean).join(', ') || 'Liên hệ',
-        'Xuất xứ': 'Việt Nam',
-        'Bảo hành': '12 tháng'
-      },
+      description: product.mota_chitiet || product.mota || 'Sản phẩm chất lượng cao từ VANTAYdecor',
+      features: (() => {
+        try {
+          if (product.dacdiem_noibat) {
+            const parsed = JSON.parse(product.dacdiem_noibat);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing dacdiem_noibat:', e);
+        }
+        // Fallback nếu không có dữ liệu
+        return [
+          'Chất liệu cao cấp',
+          'Thiết kế hiện đại',
+          'Bền bỉ theo thời gian',
+          'Dễ dàng vệ sinh',
+          'Bảo hành chính hãng'
+        ];
+      })(),
+      specifications: (() => {
+        try {
+          if (product.thongsokythuat) {
+            const parsed = JSON.parse(product.thongsokythuat);
+            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing thongsokythuat:', e);
+        }
+        // Fallback nếu không có dữ liệu
+        return {
+          'Mã sản phẩm': product.code || `SP-${product.id}`,
+          'Thương hiệu': product.thuonghieu?.tenbrand || 'VANTAYdecor',
+          'Danh mục': product.danhmuc?.tendm || 'Chưa phân loại',
+          'Màu sắc': product.bienthe?.map((bt: BienThe) => bt.mausac).filter(Boolean).join(', ') || 'Nhiều màu',
+          'Kích thước': product.bienthe?.map((bt: BienThe) => bt.kichthuoc).filter(Boolean).join(', ') || 'Liên hệ',
+          'Xuất xứ': 'Việt Nam',
+          'Bảo hành': '12 tháng'
+        };
+      })(),
       // Lấy images từ biến thể hoặc dùng thumbnail
       images: product.bienthe?.[0]?.images && product.bienthe[0].images.length > 0
         ? product.bienthe[0].images.map((img: { url: string }) => img.url)

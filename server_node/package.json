@@ -14,7 +14,9 @@
     "admin:promote": "node scripts/promote-to-admin.js",
     "discount:create": "node scripts/create-discount.js",
     "migrate:review": "node scripts/check_and_add_chitiet_donhang_id.js",
-    "migrate:views": "node scripts/check_and_add_luotxem_to_bai_viet.js"
+    "migrate:views": "node scripts/check_and_add_luotxem_to_bai_viet.js",
+    "migrate:review-images": "node scripts/create_hinhanh_danhgia.js",
+    "migrate:product-content": "node scripts/run-product-content-migration.js"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^5.3.0",

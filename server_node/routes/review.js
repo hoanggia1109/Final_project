@@ -219,6 +219,8 @@ router.get("/sanpham/:sanpham_id", async (req, res) => {
 
           as: "chitiet_donhang",
 
+          required: true, // Phải có chitiet_donhang
+
           include: [
 
             {
@@ -227,9 +229,11 @@ router.get("/sanpham/:sanpham_id", async (req, res) => {
 
               as: "bienthe",
 
-              where: { sanpham_id: req.params.sanpham_id },
+              required: true, // Phải có bienthe
 
-              include: [{ model: SanPhamModel, as: "sanpham" }],
+              where: { sanpham_id: req.params.sanpham_id }, // Filter theo sanpham_id
+
+              include: [{ model: SanPhamModel, as: "sanpham", required: false }],
 
             },
 
@@ -237,7 +241,15 @@ router.get("/sanpham/:sanpham_id", async (req, res) => {
 
         },
 
-        { model: ReviewImageModel, as: "hinhanh" },
+        { 
+
+          model: ReviewImageModel, 
+
+          as: "hinhanh",
+
+          required: false // Images là optional
+
+        },
 
       ],
 
@@ -247,11 +259,76 @@ router.get("/sanpham/:sanpham_id", async (req, res) => {
 
 
 
-    res.json(reviews);
+    // Convert Sequelize instances to plain objects
+    const plainReviews = reviews.map(review => {
+      const plain = review.get({ plain: true });
+      // Đảm bảo hinhanh là array ngay cả khi null
+      if (!plain.hinhanh) {
+        plain.hinhanh = [];
+      }
+      return plain;
+    });
+
+    console.log(`[Review] Found ${plainReviews.length} reviews for product ${req.params.sanpham_id}`);
+    res.json(plainReviews);
 
   } catch (err) {
 
     console.error("Lỗi lấy review:", err);
+    
+    // Nếu lỗi do bảng không tồn tại, vẫn cố lấy reviews không có images
+    if (err.message && err.message.includes("hinhanh_danhgia")) {
+      console.log("⚠️ Bảng hinhanh_danhgia chưa tồn tại, lấy reviews không có images");
+      try {
+        const reviewsWithoutImages = await DanhGiaModel.findAll({
+
+          include: [
+
+            {
+
+              model: DonHangChiTietModel,
+
+              as: "chitiet_donhang",
+
+              required: false,
+
+              include: [
+
+                {
+
+                  model: SanPhamBienTheModel,
+
+                  as: "bienthe",
+
+                  required: false,
+
+                  where: { sanpham_id: req.params.sanpham_id },
+
+                  include: [{ model: SanPhamModel, as: "sanpham", required: false }],
+
+                },
+
+              ],
+
+            },
+
+          ],
+
+          order: [["created_at", "DESC"]],
+
+        });
+
+        const plainReviews = reviewsWithoutImages.map(review => {
+          const plain = review.get({ plain: true });
+          plain.hinhanh = []; // Set empty array cho images
+          return plain;
+        });
+
+        return res.json(plainReviews);
+      } catch (fallbackErr) {
+        console.error("Lỗi fallback:", fallbackErr);
+      }
+    }
 
     res.status(500).json({ message: "Lỗi server", error: err.message });
 

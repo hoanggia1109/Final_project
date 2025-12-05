@@ -116,17 +116,61 @@ export default function ProductDetailPage() {
       .catch(err => console.error('Error fetching related products:', err));
   }, []);
 
-  // Fetch reviews
-  useEffect(() => {
-    if (params?.id) {
-      fetch(`/api/reviews/${params.id}`)
-        .then(res => res.json())
-        .then(data => {
-          setReviewData(data);
-        })
-        .catch(err => console.error('Error fetching reviews:', err));
+  // Function to load reviews
+  const loadReviews = useCallback(async () => {
+    if (!params?.id) return;
+    
+    try {
+      console.log(`[Product Detail] Loading reviews for product: ${params.id}`);
+      const res = await fetch(`/api/reviews/${params.id}`);
+      console.log(`[Product Detail] Reviews response status: ${res.status}`);
+      
+      if (!res.ok) {
+        console.error(`[Product Detail] Failed to fetch reviews: ${res.status}`);
+        setReviewData({ reviews: [], rating: { average_rating: 0, count: 0 } });
+        return;
+      }
+      
+      const data = await res.json();
+      console.log(`[Product Detail] Reviews data received:`, {
+        reviewsCount: Array.isArray(data.reviews) ? data.reviews.length : 0,
+        rating: data.rating
+      });
+      
+      // Đảm bảo data có đúng structure
+      setReviewData({
+        reviews: Array.isArray(data.reviews) ? data.reviews : [],
+        rating: data.rating || { average_rating: 0, count: 0 }
+      });
+    } catch (err) {
+      console.error('[Product Detail] Error fetching reviews:', err);
+      setReviewData({ reviews: [], rating: { average_rating: 0, count: 0 } });
     }
   }, [params?.id]);
+
+  // Fetch reviews on mount and when product ID changes
+  useEffect(() => {
+    loadReviews();
+  }, [loadReviews]);
+
+  // Refresh reviews when switching to reviews tab
+  useEffect(() => {
+    if (activeTab === 'reviews') {
+      loadReviews();
+    }
+  }, [activeTab, loadReviews]);
+
+  // Refresh reviews when window gains focus (user returns from another page)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (activeTab === 'reviews') {
+        loadReviews();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [activeTab, loadReviews]);
 
   // Check if product is in wishlist
   useEffect(() => {
@@ -1654,19 +1698,44 @@ export default function ProductDetailPage() {
               <div className="tab-content-reviews">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <h4 className="section-title mb-0">Đánh giá từ khách hàng</h4>
-                  <button 
-                    className="btn btn-warning"
-                    onClick={() => setShowReviewForm(true)}
-                    style={{
-                      fontWeight: '600',
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 8px rgba(255, 193, 7, 0.3)'
-                    }}
-                  >
-                    <i className="bi bi-pencil-square me-2"></i>
-                    Viết đánh giá
-                  </button>
+                  <div className="d-flex gap-2">
+                    <button 
+                      className="btn btn-outline-secondary"
+                      onClick={loadReviews}
+                      style={{
+                        fontWeight: '500',
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        transition: 'all 0.3s ease'
+                      }}
+                      title="Làm mới danh sách đánh giá"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.borderColor = '#adb5bd';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.borderColor = '#ddd';
+                      }}
+                    >
+                      <i className="bi bi-arrow-clockwise me-2"></i>
+                      Làm mới
+                    </button>
+                    <button 
+                      className="btn btn-warning"
+                      onClick={() => setShowReviewForm(true)}
+                      style={{
+                        fontWeight: '600',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 8px rgba(255, 193, 7, 0.3)'
+                      }}
+                    >
+                      <i className="bi bi-pencil-square me-2"></i>
+                      Viết đánh giá
+                    </button>
+                  </div>
                 </div>
 
                 {/* Review Summary */}

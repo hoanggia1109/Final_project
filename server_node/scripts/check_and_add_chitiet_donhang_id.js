@@ -69,3 +69,6 @@ async function checkAndAddColumn() {
 
 checkAndAddColumn();
 
+
+
+
