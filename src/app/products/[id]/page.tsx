@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PromoModal from '@/app/component/PromoModal';
 import Toast from '@/app/component/Toast';
 import { addToCart } from '@/app/utils/cart';
+import { useIsMobile, useIsDesktop } from '@/app/hooks/useMediaQuery';
 
 interface ProductDetail {
   id: number;
@@ -47,6 +48,7 @@ interface Review {
     bienthe: {
       mausac?: string;
       kichthuoc?: string;
+      sanpham_id?: string;
     };
   };
   hinhanh?: Array<{
@@ -66,6 +68,8 @@ interface ReviewData {
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -87,6 +91,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (params?.id) {
       console.log(' Fetching product from frontend, ID:', params.id);
+      // Reset review data khi chuyển sản phẩm
+      setReviewData({ reviews: [], rating: { average_rating: 0, count: 0 } });
       fetch(`/api/products/${params.id}`)
         .then(res => {
           console.log(' Frontend response status:', res.status);
@@ -118,11 +124,20 @@ export default function ProductDetailPage() {
 
   // Function to load reviews
   const loadReviews = useCallback(async () => {
-    if (!params?.id) return;
+    if (!params?.id) {
+      setReviewData({ reviews: [], rating: { average_rating: 0, count: 0 } });
+      return;
+    }
     
     try {
       console.log(`[Product Detail] Loading reviews for product: ${params.id}`);
-      const res = await fetch(`/api/reviews/${params.id}`);
+      // Thêm cache: 'no-store' để đảm bảo luôn lấy data mới nhất
+      const res = await fetch(`/api/reviews/${params.id}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       console.log(`[Product Detail] Reviews response status: ${res.status}`);
       
       if (!res.ok) {
@@ -132,15 +147,24 @@ export default function ProductDetailPage() {
       }
       
       const data = await res.json();
-      console.log(`[Product Detail] Reviews data received:`, {
+      console.log(`[Product Detail] Reviews data received for product ${params.id}:`, {
         reviewsCount: Array.isArray(data.reviews) ? data.reviews.length : 0,
-        rating: data.rating
+        rating: data.rating,
+        productId: params.id
       });
       
-      // Đảm bảo data có đúng structure
+      // Đảm bảo data có đúng structure và thuộc về sản phẩm đúng
+      const filteredReviews = Array.isArray(data.reviews) ? data.reviews.filter((review: Review) => {
+        // Double check: đảm bảo review thuộc về sản phẩm đúng
+        if (review.chitiet_donhang?.bienthe?.sanpham_id) {
+          return review.chitiet_donhang.bienthe.sanpham_id === params.id;
+        }
+        return false;
+      }) : [];
+      
       setReviewData({
-        reviews: Array.isArray(data.reviews) ? data.reviews : [],
-        rating: data.rating || { average_rating: 0, count: 0 }
+        reviews: filteredReviews,
+        rating: data.rating || { average_rating: 0, count: filteredReviews.length }
       });
     } catch (err) {
       console.error('[Product Detail] Error fetching reviews:', err);
@@ -700,6 +724,16 @@ export default function ProductDetailPage() {
           padding-top: 100px;
           padding-bottom: 80px;
           background: linear-gradient(180deg, #FFF9F0 0%, #ffffff 50%, #FFF5E8 100%);
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 100%;
+        }
+
+        @media (max-width: 768px) {
+          .product-detail-container {
+            padding-top: 80px;
+            padding-bottom: 40px;
+          }
         }
 
         .breadcrumb-modern {
@@ -732,11 +766,18 @@ export default function ProductDetailPage() {
           position: relative;
           width: 100%;
           height: 550px;
-          border: 1px solid rgba(212, 175, 55, 0.2);
+          border: 1px solid rgba(255, 193, 7, 0.2);
           overflow: hidden;
           background: linear-gradient(135deg, #FAF8F3 0%, #F5F2E8 100%);
           border-radius: 20px;
           box-shadow: 0 8px 32px rgba(139, 115, 85, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+          .image-gallery-main {
+            height: 350px;
+            border-radius: 16px;
+          }
         }
 
         .image-gallery-thumbs {
@@ -758,6 +799,14 @@ export default function ProductDetailPage() {
           flex-shrink: 0;
           background: #FFFFFF;
           border-radius: 12px;
+        }
+        
+        @media (max-width: 768px) {
+          .thumb-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
+          }
         }
 
         .thumb-image:hover {
@@ -781,6 +830,16 @@ export default function ProductDetailPage() {
           top: 100px;
           border-radius: 16px;
         }
+        
+        @media (max-width: 768px) {
+          .product-info-card {
+            position: relative;
+            top: 0;
+            padding: 24px 20px;
+            margin-top: 20px;
+            border-radius: 12px;
+          }
+        }
 
         .price-section {
           background: linear-gradient(135deg, #FFF5F0 0%, #FFE5E0 100%);
@@ -802,6 +861,12 @@ export default function ProductDetailPage() {
           font-size: 2.2rem;
           font-weight: 700;
           margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+          .current-price {
+            font-size: 1.8rem;
+          }
         }
 
         .discount-badge {
@@ -863,6 +928,14 @@ export default function ProductDetailPage() {
           color: #FF6B6B;
           font-weight: 600;
         }
+        
+        @media (max-width: 768px) {
+          .quantity-btn {
+            width: 44px;
+            height: 44px;
+            font-size: 1.1rem;
+          }
+        }
 
         .quantity-btn:hover:not(:disabled) {
           background: linear-gradient(135deg, #FFF5F0, #FFE5E0);
@@ -888,6 +961,16 @@ export default function ProductDetailPage() {
           color: #FF6B6B;
           background: #FFFFFF;
           outline: none;
+        }
+        
+        @media (max-width: 768px) {
+          .quantity-input {
+            flex: 1;
+            min-width: auto;
+            max-width: none;
+            padding: 0 16px;
+            font-size: 1rem;
+          }
         }
 
         .quantity-input:focus {
@@ -917,6 +1000,15 @@ export default function ProductDetailPage() {
           border-radius: 12px;
           box-shadow: 0 4px 15px rgba(255, 142, 83, 0.3);
         }
+        
+        @media (max-width: 768px) {
+          .btn-add-cart {
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            width: 100%;
+            margin-bottom: 12px;
+          }
+        }
 
         .btn-add-cart:hover:not(:disabled) {
           background: linear-gradient(135deg, #FFA726 0%, #FF8E53 100%);
@@ -943,6 +1035,14 @@ export default function ProductDetailPage() {
           border-radius: 12px;
           box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
+        
+        @media (max-width: 768px) {
+          .btn-buy-now {
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            width: 100%;
+          }
+        }
 
         .btn-buy-now:hover:not(:disabled) {
           background: linear-gradient(135deg, #FF5252 0%, #FF6B6B 100%);
@@ -965,6 +1065,14 @@ export default function ProductDetailPage() {
           box-shadow: 0 8px 30px rgba(255, 107, 107, 0.08);
           border-radius: 16px;
         }
+        
+        @media (max-width: 768px) {
+          .info-tabs {
+            padding: 24px 16px;
+            margin-top: 30px;
+            border-radius: 12px;
+          }
+        }
 
         .tab-buttons {
           display: flex;
@@ -984,6 +1092,13 @@ export default function ProductDetailPage() {
           position: relative;
           transition: all 0.3s ease;
           letter-spacing: 0.5px;
+        }
+        
+        @media (max-width: 768px) {
+          .tab-btn {
+            padding: 12px 16px;
+            font-size: 0.85rem;
+          }
         }
 
         .tab-btn:hover {
@@ -1089,6 +1204,13 @@ export default function ProductDetailPage() {
           margin-bottom: 20px;
           letter-spacing: -0.5px;
         }
+        
+        @media (max-width: 768px) {
+          .product-name-title {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+          }
+        }
 
         .section-title {
           font-size: 1.4rem;
@@ -1136,10 +1258,10 @@ export default function ProductDetailPage() {
 
         @keyframes pulse {
           0%, 100% { 
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
           }
           50% { 
-            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.5);
           }
         }
 
@@ -1183,9 +1305,9 @@ export default function ProductDetailPage() {
             </ol>
           </nav>
 
-          <div className="row g-5">
+          <div className="row g-5" style={{ marginLeft: 0, marginRight: 0 }}>
             {/* Image Gallery */}
-            <div className="col-lg-6">
+            <div className="col-12 col-lg-6">
               <div 
                 className="image-gallery-main"
                 onClick={() => openLightbox(selectedImage)}
@@ -1197,14 +1319,14 @@ export default function ProductDetailPage() {
                     position: 'absolute',
                     top: '16px',
                     left: '16px',
-                    background: 'linear-gradient(135deg, #D4AF37, #C4A855)',
+                    background: 'linear-gradient(135deg, #FFC107, #FFD54F)',
                     color: '#fff',
                     padding: '8px 16px',
                     borderRadius: '25px',
                     fontWeight: '700',
                     fontSize: '0.9rem',
                     letterSpacing: '0.5px',
-                    boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)',
+                    boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
                     zIndex: 2
                   }}>
                     -{product.discount}%
@@ -1244,7 +1366,7 @@ export default function ProductDetailPage() {
                     position: 'absolute',
                     top: '16px',
                     right: '16px',
-                    background: 'linear-gradient(135deg, #D4AF37, #C4A855)',
+                    background: 'linear-gradient(135deg, #FFC107, #FFD54F)',
                     color: '#fff',
                     width: '48px',
                     height: '48px',
@@ -1253,17 +1375,17 @@ export default function ProductDetailPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '20px',
-                    boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)',
+                    boxShadow: '0 4px 12px rgba(255, 193, 7, 0.3)',
                     transition: 'all 0.3s ease',
                     zIndex: 2
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.1)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(212, 175, 55, 0.4)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.4)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(212, 175, 55, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.3)';
                   }}
                 >
                   <i className="bi bi-zoom-in"></i>
@@ -1292,64 +1414,64 @@ export default function ProductDetailPage() {
                 <div className="col-6">
                   <div className="p-3 rounded text-center" style={{ 
                     background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
-                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    border: '1px solid rgba(255, 193, 7, 0.2)',
                     transition: 'all 0.3s ease'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.4)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.2)'}
                   >
-                    <i className="bi bi-shield-check" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
+                    <i className="bi bi-shield-check" style={{ fontSize: '2rem', color: '#FFC107', marginBottom: '8px' }}></i>
                     <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Bảo hành chính hãng</p>
                     <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>12 tháng</p>
                   </div>
                 </div>
-                <div className="col-6">
-                  <div className="p-3 rounded text-center" style={{ 
+                <div className={isMobile ? "col-6" : "col-6"}>
+                  <div className={isMobile ? "p-2 rounded text-center" : "p-3 rounded text-center"} style={{ 
                     background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
-                    border: '1px solid rgba(212, 175, 55, 0.2)',
-                    transition: 'all 0.3s ease'
+                    border: '1px solid rgba(255, 193, 7, 0.2)',
+                    transition: isDesktop ? 'all 0.3s ease' : 'none'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  onMouseEnter={isDesktop ? (e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.4)' : undefined}
+                  onMouseLeave={isDesktop ? (e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.2)' : undefined}
                   >
-                    <i className="bi bi-truck" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
-                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Giao hàng nhanh</p>
-                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Miễn phí 5 triệu</p>
+                    <i className="bi bi-truck" style={{ fontSize: isMobile ? '1.5rem' : '2rem', color: '#FFC107', marginBottom: isMobile ? '4px' : '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#3D3D3D' }}>Giao hàng nhanh</p>
+                    <p className="mb-0" style={{ fontSize: isMobile ? '0.7rem' : '0.75rem', color: '#7A7A7A' }}>Miễn phí 5 triệu</p>
                   </div>
                 </div>
-                <div className="col-6">
-                  <div className="p-3 rounded text-center" style={{ 
+                <div className={isMobile ? "col-6" : "col-6"}>
+                  <div className={isMobile ? "p-2 rounded text-center" : "p-3 rounded text-center"} style={{ 
                     background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
-                    border: '1px solid rgba(212, 175, 55, 0.2)',
-                    transition: 'all 0.3s ease'
+                    border: '1px solid rgba(255, 193, 7, 0.2)',
+                    transition: isDesktop ? 'all 0.3s ease' : 'none'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  onMouseEnter={isDesktop ? (e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.4)' : undefined}
+                  onMouseLeave={isDesktop ? (e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.2)' : undefined}
                   >
-                    <i className="bi bi-arrow-counterclockwise" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
-                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Đổi trả 7 ngày</p>
-                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Miễn phí</p>
+                    <i className="bi bi-arrow-counterclockwise" style={{ fontSize: isMobile ? '1.5rem' : '2rem', color: '#FFC107', marginBottom: isMobile ? '4px' : '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#3D3D3D' }}>Đổi trả 7 ngày</p>
+                    <p className="mb-0" style={{ fontSize: isMobile ? '0.7rem' : '0.75rem', color: '#7A7A7A' }}>Miễn phí</p>
                   </div>
                 </div>
-                <div className="col-6">
-                  <div className="p-3 rounded text-center" style={{ 
+                <div className={isMobile ? "col-6" : "col-6"}>
+                  <div className={isMobile ? "p-2 rounded text-center" : "p-3 rounded text-center"} style={{ 
                     background: 'linear-gradient(135deg, #FAF8F3, #F5F2E8)',
-                    border: '1px solid rgba(212, 175, 55, 0.2)',
-                    transition: 'all 0.3s ease'
+                    border: '1px solid rgba(255, 193, 7, 0.2)',
+                    transition: isDesktop ? 'all 0.3s ease' : 'none'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.4)'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)'}
+                  onMouseEnter={isDesktop ? (e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.4)' : undefined}
+                  onMouseLeave={isDesktop ? (e) => e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.2)' : undefined}
                   >
-                    <i className="bi bi-star-fill" style={{ fontSize: '2rem', color: '#D4AF37', marginBottom: '8px' }}></i>
-                    <p className="mb-0 fw-semibold" style={{ fontSize: '0.85rem', color: '#3D3D3D' }}>Chất lượng cao</p>
-                    <p className="mb-0" style={{ fontSize: '0.75rem', color: '#7A7A7A' }}>Hàng chính hãng</p>
+                    <i className="bi bi-star-fill" style={{ fontSize: isMobile ? '1.5rem' : '2rem', color: '#FFC107', marginBottom: isMobile ? '4px' : '8px' }}></i>
+                    <p className="mb-0 fw-semibold" style={{ fontSize: isMobile ? '0.75rem' : '0.85rem', color: '#3D3D3D' }}>Chất lượng cao</p>
+                    <p className="mb-0" style={{ fontSize: isMobile ? '0.7rem' : '0.75rem', color: '#7A7A7A' }}>Hàng chính hãng</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Product Info */}
-            <div className="col-lg-6">
+            <div className={isMobile ? "col-12" : "col-lg-6"}>
               <div className="product-info-card">
                 {/* Brand & Category */}
                 <div className="mb-3">
@@ -1505,7 +1627,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="d-flex flex-column gap-3">
+                <div className={isMobile ? "d-flex flex-column gap-2" : "d-flex flex-column gap-3"}>
                   <button 
                     className="btn btn-add-cart w-100"
                     onClick={handleAddToCart}
@@ -1534,7 +1656,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Social Share & Wishlist */}
-                <div className="mt-3 pt-3 pb-3" style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)', borderBottom: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                <div className="mt-3 pt-3 pb-3" style={{ borderTop: '1px solid rgba(255, 193, 7, 0.2)', borderBottom: '1px solid rgba(255, 193, 7, 0.2)' }}>
                   <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                     <div className="d-flex flex-wrap align-items-center gap-2">
                       <span style={{ fontSize: '0.85rem', color: '#5A5A5A', fontWeight: '600', letterSpacing: '0.3px' }}>Chia sẻ:</span>
@@ -1558,22 +1680,22 @@ export default function ProductDetailPage() {
                         fontWeight: '600',
                         borderWidth: '2px',
                         borderStyle: 'solid',
-                        borderColor: isWishlisted ? '#dc3545' : '#D4AF37',
-                        color: isWishlisted ? '#fff' : '#D4AF37',
+                        borderColor: isWishlisted ? '#dc3545' : '#FFC107',
+                        color: isWishlisted ? '#fff' : '#FFC107',
                         background: isWishlisted ? '#dc3545' : 'transparent',
                         transition: 'all 0.3s ease',
                         fontSize: '0.85rem'
                       }}
                       onMouseEnter={(e) => {
                         if (!isWishlisted) {
-                          e.currentTarget.style.background = '#D4AF37';
+                          e.currentTarget.style.background = '#FFC107';
                           e.currentTarget.style.color = '#fff';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isWishlisted) {
                           e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = '#D4AF37';
+                          e.currentTarget.style.color = '#FFC107';
                         }
                       }}
                     >
@@ -1592,21 +1714,21 @@ export default function ProductDetailPage() {
                   href="tel:1900xxxx" 
                   className="hotline-floating-btn d-flex align-items-center justify-content-between gap-3 text-decoration-none mt-3 p-3 rounded"
                   style={{ 
-                    background: 'linear-gradient(135deg, #D4AF37, #C4A855)', 
+                    background: 'linear-gradient(135deg, #FFC107, #FFD54F)', 
                     color: '#fff',
-                    boxShadow: '0 4px 16px rgba(212, 175, 55, 0.3)',
+                    boxShadow: '0 4px 16px rgba(255, 193, 7, 0.3)',
                     transition: 'all 0.3s ease',
                     animation: 'pulse 2s ease-in-out infinite',
                     border: '2px solid rgba(255, 255, 255, 0.2)'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'scale(1.02)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(212, 175, 55, 0.4)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 193, 7, 0.4)';
                     e.currentTarget.style.animation = 'none';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(212, 175, 55, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(255, 193, 7, 0.3)';
                     e.currentTarget.style.animation = 'pulse 2s ease-in-out infinite';
                   }}
                 >
@@ -1661,19 +1783,29 @@ export default function ProductDetailPage() {
             {activeTab === 'description' && (
               <div className="tab-content-description">
                 <h4 className="section-title">Mô tả chi tiết</h4>
-                <p className="mb-4" style={{ fontSize: '1rem', lineHeight: '1.9', color: '#6B5D52' }}>
-                  {product.description}
-                </p>
+                {product.description && product.description.trim() ? (
+                  <p className="mb-4" style={{ fontSize: '1rem', lineHeight: '1.9', color: '#6B5D52', whiteSpace: 'pre-wrap' }}>
+                    {product.description}
+                  </p>
+                ) : (
+                  <p className="mb-4 text-muted" style={{ fontSize: '0.95rem', fontStyle: 'italic' }}>
+                    Chưa có mô tả chi tiết cho sản phẩm này.
+                  </p>
+                )}
                 
-                <h5 className="fw-semibold mb-4" style={{ color: '#5C4A3A', fontSize: '1.1rem' }}>Đặc điểm nổi bật</h5>
-                <div>
-                  {product.features?.map((feature, index) => (
-                    <div key={index} className="feature-item">
-                      <div className="feature-icon"></div>
-                      <span style={{ fontSize: '0.95rem', color: '#6B5D52', lineHeight: '1.7' }}>{feature}</span>
+                {product.features && product.features.length > 0 && (
+                  <>
+                    <h5 className="fw-semibold mb-4" style={{ color: '#5C4A3A', fontSize: '1.1rem' }}>Đặc điểm nổi bật</h5>
+                    <div>
+                      {product.features.map((feature, index) => (
+                        <div key={index} className="feature-item">
+                          <div className="feature-icon"></div>
+                          <span style={{ fontSize: '0.95rem', color: '#6B5D52', lineHeight: '1.7' }}>{feature}</span>
+                        </div>
+                      ))}
                     </div>
-                  )) || <p style={{ color: '#999' }}>Chưa có thông tin chi tiết</p>}
-                </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1681,14 +1813,17 @@ export default function ProductDetailPage() {
               <div className="tab-content-specifications">
                 <h4 className="section-title">Thông số kỹ thuật</h4>
                 <div className="spec-table">
-                  {product.specifications && Object.entries(product.specifications).map(([key, value], index) => (
-                    <div key={index} className="spec-row">
-                      <div className="spec-label">{key}</div>
-                      <div className="spec-value">{value}</div>
-                    </div>
-                  ))}
-                  {!product.specifications && (
-                    <p className="text-muted text-center">Chưa có thông số kỹ thuật</p>
+                  {product.specifications && Object.keys(product.specifications).length > 0 ? (
+                    Object.entries(product.specifications).map(([key, value], index) => (
+                      <div key={index} className="spec-row">
+                        <div className="spec-label">{key}</div>
+                        <div className="spec-value">{value}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted text-center py-4" style={{ fontSize: '0.95rem', fontStyle: 'italic' }}>
+                      Chưa có thông số kỹ thuật cho sản phẩm này.
+                    </p>
                   )}
                 </div>
               </div>
@@ -1920,9 +2055,9 @@ export default function ProductDetailPage() {
           {relatedProducts.length > 0 && (
             <div className="related-products-section mt-5">
               <h3 className="section-title mb-4">Sản phẩm liên quan</h3>
-              <div className="row g-4">
+              <div className="row g-3 g-md-4">
                 {relatedProducts.map((item) => (
-                  <div key={item.id} className="col-6 col-md-3">
+                  <div key={item.id} className={isMobile ? "col-12 col-sm-6" : "col-6 col-md-3"}>
                     <div 
                       className="related-product-card"
                       onClick={() => router.push(`/products/${item.id}`)}
@@ -1952,7 +2087,7 @@ export default function ProductDetailPage() {
                         </h6>
                         <div className="d-flex justify-content-between align-items-center">
                           <span style={{ 
-                            color: '#D4AF37',
+                            color: '#FFC107',
                             fontWeight: '600',
                             fontSize: '1.1rem',
                             letterSpacing: '0.5px'
@@ -1964,7 +2099,7 @@ export default function ProductDetailPage() {
                           <button 
                             className="btn btn-sm"
                             style={{
-                              background: 'linear-gradient(135deg, #D4AF37, #C4A855)',
+                              background: 'linear-gradient(135deg, #FFC107, #FFD54F)',
                               color: '#FFFFFF',
                               border: 'none',
                               padding: '8px 18px',
@@ -1974,17 +2109,17 @@ export default function ProductDetailPage() {
                               letterSpacing: '1px',
                               textTransform: 'uppercase',
                               transition: 'all 0.3s ease',
-                              boxShadow: '0 2px 8px rgba(212, 175, 55, 0.25)'
+                              boxShadow: '0 2px 8px rgba(255, 193, 7, 0.25)'
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, #C4A855, #D4AF37)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #FFD54F, #FFC107)';
                               e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(212, 175, 55, 0.4)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.4)';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, #D4AF37, #C4A855)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #FFC107, #FFD54F)';
                               e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(212, 175, 55, 0.25)';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 193, 7, 0.25)';
                             }}
                           >
                             Xem
@@ -2008,6 +2143,18 @@ export default function ProductDetailPage() {
           box-shadow: 0 8px 32px rgba(139, 115, 85, 0.08);
           border: 1px solid rgba(139, 115, 85, 0.08);
         }
+        
+        @media (max-width: 768px) {
+          .related-products-section {
+            padding: 20px 16px;
+            border-radius: 16px;
+            margin-left: -15px;
+            margin-right: -15px;
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+          }
+        }
 
         .related-product-card {
           background: #FFFFFF;
@@ -2016,12 +2163,28 @@ export default function ProductDetailPage() {
           transition: all 0.4s ease;
           box-shadow: 0 4px 16px rgba(139, 115, 85, 0.08);
           border: 1px solid rgba(139, 115, 85, 0.08);
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        @media (max-width: 768px) {
+          .related-product-card {
+            border-radius: 12px;
+            margin-bottom: 12px;
+          }
         }
 
         .related-product-card:hover {
           transform: translateY(-8px);
           box-shadow: 0 12px 32px rgba(139, 115, 85, 0.16);
-          border-color: rgba(212, 175, 55, 0.3);
+          border-color: rgba(255, 193, 7, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+          .related-product-card:hover {
+            transform: translateY(-4px);
+          }
         }
 
         .related-product-image {
@@ -2030,6 +2193,13 @@ export default function ProductDetailPage() {
           height: 200px;
           overflow: hidden;
           background: linear-gradient(135deg, #FAF8F3 0%, #F5F2E8 100%);
+          flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+          .related-product-image {
+            height: 180px;
+          }
         }
 
         .related-product-card:hover .related-product-image img {
@@ -2042,6 +2212,141 @@ export default function ProductDetailPage() {
 
         .related-product-info {
           background: #FFFFFF;
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        
+        @media (max-width: 768px) {
+          .related-product-info {
+            padding: 12px !important;
+          }
+          
+          .related-product-info h6 {
+            font-size: 0.85rem !important;
+            min-height: 2.4rem !important;
+            margin-bottom: 8px !important;
+          }
+          
+          .related-product-info span {
+            font-size: 0.95rem !important;
+          }
+          
+          .related-product-info button {
+            padding: 6px 14px !important;
+            font-size: 0.7rem !important;
+          }
+        }
+        
+        /* Prevent horizontal overflow */
+        .product-detail-container .container {
+          max-width: 100%;
+          padding-left: 15px;
+          padding-right: 15px;
+          overflow-x: hidden;
+        }
+        
+        @media (max-width: 768px) {
+          .product-detail-container .container {
+            padding-left: 12px;
+            padding-right: 12px;
+            overflow-x: hidden;
+          }
+
+          .product-detail-container .row.g-5 {
+            margin-left: -8px;
+            margin-right: -8px;
+          }
+
+          .product-detail-container .row.g-5 > * {
+            padding-left: 8px;
+            padding-right: 8px;
+          }
+
+          .breadcrumb-modern {
+            font-size: 0.8rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+          }
+
+          .breadcrumb-modern .breadcrumb-item {
+            white-space: nowrap;
+          }
+
+          .product-info-card {
+            padding: 20px 16px !important;
+          }
+
+          .hotline-floating-btn {
+            padding: 12px 16px !important;
+            font-size: 0.85rem !important;
+          }
+
+          .hotline-floating-btn p {
+            font-size: 0.85rem !important;
+          }
+
+          .hotline-floating-btn strong {
+            font-size: 0.9rem !important;
+          }
+
+          /* Social share buttons */
+          .d-flex.flex-wrap.gap-2 button {
+            font-size: 0.75rem !important;
+            padding: 4px 8px !important;
+          }
+
+          .d-flex.flex-wrap.gap-2 span {
+            font-size: 0.8rem !important;
+          }
+
+          /* Price section */
+          .price-section {
+            padding: 20px 16px !important;
+          }
+
+          /* Quantity control */
+          .quantity-control {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          /* Info tabs */
+          .info-tabs {
+            padding: 20px 12px !important;
+          }
+
+          .tab-buttons {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            flex-wrap: nowrap;
+          }
+
+          .tab-btn {
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+
+          /* Related products */
+          .related-products-section {
+            padding: 20px 12px !important;
+            margin-left: -12px;
+            margin-right: -12px;
+            border-radius: 0 !important;
+          }
+
+          .related-products-section .row {
+            margin-left: -4px;
+            margin-right: -4px;
+          }
+
+          .related-products-section .row > * {
+            padding-left: 4px;
+            padding-right: 4px;
+          }
         }
       `}</style>
     </>

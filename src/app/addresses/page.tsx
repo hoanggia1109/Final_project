@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import LocationSelector from '../component/LocationSelector';
+import { validatePhone, validateRequired, validateMinLength, ValidationMessages } from '../utils/validation';
 
 interface Address {
   id: string;
@@ -32,6 +33,7 @@ export default function AddressesPage() {
     macdinh: false,
     loaidiachi: 'home'
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadAddresses();
@@ -141,8 +143,45 @@ export default function AddressesPage() {
     }
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate hoten
+    if (!validateRequired(formData.hoten)) {
+      newErrors.hoten = ValidationMessages.required('họ và tên');
+    } else if (!validateMinLength(formData.hoten, 2)) {
+      newErrors.hoten = ValidationMessages.minLength('Họ và tên', 2);
+    }
+
+    // Validate sdt
+    if (!validateRequired(formData.sdt)) {
+      newErrors.sdt = ValidationMessages.required('số điện thoại');
+    } else if (!validatePhone(formData.sdt)) {
+      newErrors.sdt = ValidationMessages.phone;
+    }
+
+    // Validate diachichitiet
+    if (!validateRequired(formData.diachichitiet)) {
+      newErrors.diachichitiet = ValidationMessages.required('địa chỉ chi tiết');
+    }
+
+    // Validate tinh_thanh
+    if (!validateRequired(formData.tinh_thanh)) {
+      newErrors.tinh_thanh = ValidationMessages.required('tỉnh/thành phố');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -209,6 +248,7 @@ export default function AddressesPage() {
         macdinh: false,
         loaidiachi: 'home'
       });
+      setErrors({});
       loadAddresses();
     } catch (error) {
       console.error('Error saving address:', error);
@@ -420,53 +460,112 @@ export default function AddressesPage() {
               </div>
               <div className="modal-body">
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
+                {/* Thông báo lỗi tổng hợp */}
+                {Object.keys(errors).length > 0 && (
+                  <div className="alert alert-danger d-flex align-items-start mb-3" role="alert" style={{ borderRadius: '12px' }}>
+                    <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                    <div>
+                      <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                      <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                        {Object.values(errors).map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold">Họ và tên</label>
+                    <label className="form-label fw-semibold">Họ và tên <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
                       value={formData.hoten}
-                      onChange={(e) => setFormData({ ...formData, hoten: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, hoten: e.target.value });
+                        if (errors.hoten) setErrors({ ...errors, hoten: '' });
+                      }}
                       required
-                      style={{ padding: '12px 16px', borderRadius: '12px' }}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderRadius: '12px',
+                        border: errors.hoten ? '2px solid #dc3545' : undefined
+                      }}
                     />
+                    {errors.hoten && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {errors.hoten}
+                      </small>
+                    )}
                   </div>
 
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold">Số điện thoại</label>
+                    <label className="form-label fw-semibold">Số điện thoại <span className="text-danger">*</span></label>
                     <input
                       type="tel"
                       className="form-control"
                       value={formData.sdt}
-                      onChange={(e) => setFormData({ ...formData, sdt: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, sdt: e.target.value });
+                        if (errors.sdt) setErrors({ ...errors, sdt: '' });
+                      }}
                       required
-                      style={{ padding: '12px 16px', borderRadius: '12px' }}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderRadius: '12px',
+                        border: errors.sdt ? '2px solid #dc3545' : undefined
+                      }}
                     />
+                    {errors.sdt && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {errors.sdt}
+                      </small>
+                    )}
                   </div>
 
                   <div className="col-12">
-                    <label className="form-label fw-semibold">Địa chỉ</label>
+                    <label className="form-label fw-semibold">Địa chỉ <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       className="form-control"
                       value={formData.diachichitiet}
-                      onChange={(e) => setFormData({ ...formData, diachichitiet: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, diachichitiet: e.target.value });
+                        if (errors.diachichitiet) setErrors({ ...errors, diachichitiet: '' });
+                      }}
                       required
-                      style={{ padding: '12px 16px', borderRadius: '12px' }}
+                      style={{ 
+                        padding: '12px 16px', 
+                        borderRadius: '12px',
+                        border: errors.diachichitiet ? '2px solid #dc3545' : undefined
+                      }}
                     />
+                    {errors.diachichitiet && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {errors.diachichitiet}
+                      </small>
+                    )}
                   </div>
 
                   <LocationSelector
                     selectedCity={formData.tinh_thanh}
                     selectedDistrict={formData.quan_huyen}
                     selectedWard={formData.phuong_xa}
-                    onCityChange={(city) => setFormData(prev => ({ ...prev, tinh_thanh: city }))}
+                    onCityChange={(city) => {
+                      setFormData(prev => ({ ...prev, tinh_thanh: city }));
+                      if (errors.tinh_thanh) setErrors(prev => ({ ...prev, tinh_thanh: '' }));
+                    }}
                     onDistrictChange={(district) => setFormData(prev => ({ ...prev, quan_huyen: district }))}
                     onWardChange={(ward) => setFormData(prev => ({ ...prev, phuong_xa: ward }))}
                     required
                   />
+                  {errors.tinh_thanh && (
+                    <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                      {errors.tinh_thanh}
+                    </small>
+                  )}
 
                   <div className="col-12">
                     <div className="form-check">
@@ -509,6 +608,90 @@ export default function AddressesPage() {
           </div>
         </div>
       )}
+      
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 h2 {
+            font-size: 1.5rem !important;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 .btn {
+            width: 100%;
+          }
+          
+          .card {
+            border-radius: 12px !important;
+            margin-bottom: 1rem;
+          }
+          
+          .card-body {
+            padding: 1rem !important;
+          }
+          
+          .row.g-3 > *,
+          .row.g-4 > * {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+          
+          .row.g-3 .col-md-6,
+          .row.g-4 .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            margin-bottom: 1rem;
+          }
+          
+          .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+          }
+          
+          .modal-content {
+            border-radius: 12px;
+          }
+          
+          .modal-body {
+            padding: 1rem !important;
+          }
+          
+          .d-flex.gap-2,
+          .d-flex.gap-3 {
+            flex-direction: column;
+          }
+          
+          .d-flex.gap-2 .btn,
+          .d-flex.gap-3 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+          
+          .form-control,
+          .form-select {
+            font-size: 16px; /* Prevent zoom on iOS */
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .card-body {
+            padding: 0.75rem !important;
+          }
+          
+          .modal-body {
+            padding: 0.75rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

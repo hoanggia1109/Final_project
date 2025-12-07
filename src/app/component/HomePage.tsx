@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import PromoModal from './PromoModal';
 import ChatBox from './ChatBox';
+import { useIsMobile, useIsDesktop } from '../hooks/useMediaQuery';
 
 //INTERFACES
 interface Product {
@@ -39,6 +40,8 @@ interface BannerType {
 function Banner() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [banners, setBanners] = useState<BannerType[]>([]);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   // Fetch banners từ API
   useEffect(() => {
@@ -127,38 +130,80 @@ function Banner() {
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1 }}
           ></div>
           <div className="container position-relative text-center px-3" style={{ zIndex: 2 }}>
-            <h1 className="fw-bold hero-title mb-3">
-              {banner.tieude}
-            </h1>
-            <p className="mb-4 mx-auto hero-desc">
-              {banner.mota}
-            </p>
-            <Link href={banner.link || "/contact"} className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold banner-button btn-lg-responsive">
-              Xem thêm
-            </Link>
+            {isMobile ? (
+              <>
+                <h1 className="fw-bold mb-3" style={{ fontSize: '1.5rem', lineHeight: '1.3' }}>
+                  {banner.tieude}
+                </h1>
+                <p className="mb-4 mx-auto" style={{ fontSize: '0.9rem', maxWidth: '95%' }}>
+                  {banner.mota}
+                </p>
+                <Link href={banner.link || "/contact"} className="btn btn-warning text-white px-4 py-2 fw-semibold" style={{ fontSize: '0.85rem' }}>
+                  Xem thêm
+                </Link>
+              </>
+            ) : (
+              <>
+                <h1 className="fw-bold hero-title mb-3">
+                  {banner.tieude}
+                </h1>
+                <p className="mb-4 mx-auto hero-desc">
+                  {banner.mota}
+                </p>
+                <Link href={banner.link || "/contact"} className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold banner-button btn-lg-responsive">
+                  Xem thêm
+                </Link>
+              </>
+            )}
           </div>
         </div>
       ))}
 
-      {/* Previous Button */}
-      <button
-        onClick={prevSlide}
-        className="btn btn-light rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3"
-        style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
-        suppressHydrationWarning
-      >
-        <i className="bi bi-chevron-left"></i>
-      </button>
+      {/* Navigation Buttons - Desktop only */}
+      {isDesktop && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="btn btn-light rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3"
+            style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
+            suppressHydrationWarning
+          >
+            <i className="bi bi-chevron-left"></i>
+          </button>
 
-      {/* Next Button */}
-      <button
-        onClick={nextSlide}
-        className="btn btn-light rounded-circle position-absolute top-50 end-0 translate-middle-y me-3"
-        style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
-        suppressHydrationWarning
-      >
-        <i className="bi bi-chevron-right"></i>
-      </button>
+          <button
+            onClick={nextSlide}
+            className="btn btn-light rounded-circle position-absolute top-50 end-0 translate-middle-y me-3"
+            style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
+            suppressHydrationWarning
+          >
+            <i className="bi bi-chevron-right"></i>
+          </button>
+        </>
+      )}
+      
+      {/* Mobile: Swipe indicators */}
+      {isMobile && banners.length > 1 && (
+        <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3" style={{ zIndex: 10 }}>
+          <div className="d-flex gap-2">
+            {banners.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                style={{
+                  width: idx === currentSlide ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: idx === currentSlide ? '#FFC107' : 'rgba(255,255,255,0.5)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
     </section>
   );
@@ -171,6 +216,8 @@ function ProductCategories() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     fetch('/api/categories')
@@ -266,35 +313,62 @@ function ProductCategories() {
         </div>
         
         <div className="position-relative">
-          {/* Previous Arrow */}
-          <button
-            onClick={handlePrev}
-            className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginLeft: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
-          </button>
+          {/* Navigation Arrows - Chỉ hiển thị trên desktop */}
+          {isDesktop && (
+            <>
+              <button
+                onClick={handlePrev}
+                className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginLeft: '-22px'
+                }}
+              >
+                <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
+              </button>
 
-          {/* Next Arrow */}
-          <button
-            onClick={handleNext}
-            className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginRight: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
-          </button>
+              <button
+                onClick={handleNext}
+                className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginRight: '-22px'
+                }}
+              >
+                <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
+              </button>
+            </>
+          )}
+          
+          {/* Mobile: Swipe indicators */}
+          {isMobile && (
+            <div className="d-flex justify-content-center gap-2 mb-3">
+              {categories.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSlideDirection(idx < currentIndex ? 'right' : 'left');
+                    setCurrentIndex(idx);
+                  }}
+                  style={{
+                    width: idx === currentIndex ? '24px' : '8px',
+                    height: '8px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: idx === currentIndex ? '#FFC107' : '#ddd',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="row g-4">
             {visibleCategories.length === 0 && (
@@ -333,49 +407,103 @@ function ProductCategories() {
                       e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.08)';
                     }}
                   >
-                    <div className="position-relative overflow-hidden category-image" style={{ height: '250px' }}>
-                      <div 
-                        className="position-absolute top-0 start-0 w-100 h-100"
-                        style={{ transition: 'transform 0.4s ease' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                      >
-                        <Image src={cat.image} alt={cat.title} fill style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                      </div>
-                      {/* Overlay on hover */}
-                      <div 
-                        className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                        style={{ 
-                          backgroundColor: 'rgba(255, 193, 7, 0)', 
-                          transition: 'background-color 0.3s ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0)'; }}
-                      >
-                        <i className="bi bi-arrow-right-circle text-white" style={{ fontSize: '40px', opacity: 0, transition: 'opacity 0.3s ease' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
-                        ></i>
-                      </div>
-                    </div>
-                    <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
-                      <h6 className="card-title text-dark mb-0 fw-bold" style={{ 
-                        transition: 'all 0.3s ease', 
-                        fontSize: '1rem',
-                        letterSpacing: '0.5px'
-                      }}
-                        onMouseEnter={(e) => { 
-                          e.currentTarget.style.color = '#FFC107';
-                          e.currentTarget.style.transform = 'scale(1.05)';
-                        }}
-                        onMouseLeave={(e) => { 
-                          e.currentTarget.style.color = '#2c3e50';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                      >
-                        {cat.title}
-                      </h6>
-                    </div>
+                    {/* Mobile: Hiển thị đơn giản hơn */}
+                    {isMobile ? (
+                      <>
+                        <div className="position-relative overflow-hidden category-image" style={{ 
+                          height: '180px',
+                          background: '#f8f9fa'
+                        }}>
+                          <Image 
+                            src={cat.image} 
+                            alt={cat.title} 
+                            fill 
+                            sizes="100vw"
+                            style={{ 
+                              objectFit: 'cover',
+                              objectPosition: 'center'
+                            }}
+                            className="category-img"
+                          />
+                        </div>
+                        <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
+                          <h6 className="card-title text-dark mb-0 fw-bold" style={{ 
+                            fontSize: '0.95rem',
+                            letterSpacing: '0.3px'
+                          }}>
+                            {cat.title}
+                          </h6>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Desktop: Có hover effects và animations */}
+                        <div className="position-relative overflow-hidden category-image" style={{ 
+                          height: '250px',
+                          background: '#f8f9fa'
+                        }}>
+                          <Image 
+                            src={cat.image} 
+                            alt={cat.title} 
+                            fill 
+                            sizes="(max-width: 1200px) 50vw, 33vw"
+                            style={{ 
+                              objectFit: 'cover',
+                              objectPosition: 'center'
+                            }}
+                            className="category-img"
+                          />
+                          <div 
+                            className="position-absolute top-0 start-0 w-100 h-100"
+                            style={{ 
+                              transition: 'transform 0.4s ease',
+                              pointerEvents: 'none'
+                            }}
+                            onMouseEnter={(e) => { 
+                              const img = e.currentTarget.previousElementSibling as HTMLElement;
+                              if (img) img.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => { 
+                              const img = e.currentTarget.previousElementSibling as HTMLElement;
+                              if (img) img.style.transform = 'scale(1)';
+                            }}
+                          />
+                          {/* Overlay on hover - chỉ desktop */}
+                          <div 
+                            className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                            style={{ 
+                              backgroundColor: 'rgba(255, 193, 7, 0)', 
+                              transition: 'background-color 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0)'; }}
+                          >
+                            <i className="bi bi-arrow-right-circle text-white" style={{ fontSize: '40px', opacity: 0, transition: 'opacity 0.3s ease' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
+                            ></i>
+                          </div>
+                        </div>
+                        <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
+                          <h6 className="card-title text-dark mb-0 fw-bold" style={{ 
+                            transition: 'all 0.3s ease', 
+                            fontSize: '1rem',
+                            letterSpacing: '0.5px'
+                          }}
+                            onMouseEnter={(e) => { 
+                              e.currentTarget.style.color = '#FFC107';
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => { 
+                              e.currentTarget.style.color = '#2c3e50';
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                          >
+                            {cat.title}
+                          </h6>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </Link>
               </div>
@@ -392,6 +520,8 @@ function HotProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     fetch('/api/products')
@@ -507,19 +637,19 @@ function HotProducts() {
                       overflow: 'hidden',
                       boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={isDesktop ? (e) => {
                       e.currentTarget.style.transform = 'translateY(-12px) scale(1.02)';
                       e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)';
-                    }}
-                    onMouseLeave={(e) => {
+                    } : undefined}
+                    onMouseLeave={isDesktop ? (e) => {
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
                       e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.08)';
-                    }}
+                    } : undefined}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '220px' }}>
-                      <div className="position-absolute top-0 start-0 text-white px-3 py-2 fw-bold" 
+                    <div className="position-relative overflow-hidden" style={{ height: isMobile ? '180px' : '220px' }}>
+                      <div className="position-absolute top-0 start-0 text-white px-2 py-1 fw-bold" 
                         style={{ 
-                          fontSize: '12px', 
+                          fontSize: isMobile ? '10px' : '12px', 
                           zIndex: 2,
                           background: 'linear-gradient(135deg, #ff6b6b, #ff8787)',
                           borderRadius: '0 0 15px 0',
@@ -532,12 +662,23 @@ function HotProducts() {
                           width: '100%', 
                           height: '100%', 
                           position: 'relative',
-                          transition: 'transform 0.4s ease'
+                          transition: isDesktop ? 'transform 0.4s ease' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.12)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                        onMouseEnter={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1.12)'; } : undefined}
+                        onMouseLeave={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1)'; } : undefined}
                       >
-                        <Image src={product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
+                        <Image 
+                          src={product.image} 
+                          alt={product.name} 
+                          fill 
+                          style={{ 
+                            objectFit: 'cover',
+                            objectPosition: 'center'
+                          }} 
+                        />
                       </div>
                       {/* Gradient overlay */}
                       <div className="position-absolute bottom-0 start-0 w-100" style={{
@@ -573,6 +714,8 @@ function DiscountProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     fetch('/api/discount-products')
@@ -645,65 +788,70 @@ function DiscountProducts() {
           </Link>
         </div>
         <div className="position-relative">
-          {/* Previous Arrow */}
-          <button
-            onClick={prevProducts}
-            disabled={currentIndex === 0}
-            className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginLeft: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
-          </button>
+          {/* Navigation - Desktop only */}
+          {isDesktop && (
+            <>
+              <button
+                onClick={prevProducts}
+                disabled={currentIndex === 0}
+                className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginLeft: '-22px',
+                  backgroundColor: 'rgba(255,255,255,0.9)'
+                }}
+              >
+                <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
+              </button>
 
-          {/* Next Arrow */}
-          <button
-            onClick={nextProducts}
-            disabled={currentIndex >= maxIndex}
-            className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginRight: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
-          </button>
+              <button
+                onClick={nextProducts}
+                disabled={currentIndex >= maxIndex}
+                className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginRight: '-22px',
+                  backgroundColor: 'rgba(255,255,255,0.9)'
+                }}
+              >
+                <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
+              </button>
+            </>
+          )}
 
           <div className="row g-4">
             {visibleProducts.map((product) => (
-              <div key={product.id} className="col-6 col-md-4 col-lg-3">
+              <div key={product.id} className={isMobile ? "col-6" : "col-6 col-md-4 col-lg-3"}>
                 <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
                     className="card border-0 product-card"
                     style={{ 
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      transition: isDesktop ? 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'none', 
                       cursor: 'pointer',
                       background: '#ffffff',
                       borderRadius: '20px',
                       overflow: 'hidden',
                       boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
                     }}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={isDesktop ? (e) => {
                       e.currentTarget.style.transform = 'translateY(-15px) scale(1.03)';
                       e.currentTarget.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
-                    }}
-                    onMouseLeave={(e) => {
+                    } : undefined}
+                    onMouseLeave={isDesktop ? (e) => {
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
                       e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
-                    }}
+                    } : undefined}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '220px' }}>
-                      <div className="position-absolute top-0 start-0 text-white px-3 py-2 fw-bold" 
+                    <div className="position-relative overflow-hidden" style={{ height: isMobile ? '180px' : '220px' }}>
+                      <div className="position-absolute top-0 start-0 text-white px-2 py-1 fw-bold" 
                         style={{ 
-                          fontSize: '12px', 
+                          fontSize: isMobile ? '10px' : '12px', 
                           zIndex: 2,
                           background: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)',
                           borderRadius: '0 0 15px 0',
@@ -716,12 +864,23 @@ function DiscountProducts() {
                           width: '100%', 
                           height: '100%', 
                           position: 'relative',
-                          transition: 'transform 0.4s ease'
+                          transition: isDesktop ? 'transform 0.4s ease' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.15) rotate(2deg)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; }}
+                        onMouseEnter={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1.15) rotate(2deg)'; } : undefined}
+                        onMouseLeave={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; } : undefined}
                       >
-                        <Image src={product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
+                        <Image 
+                          src={product.image} 
+                          alt={product.name} 
+                          fill 
+                          style={{ 
+                            objectFit: 'cover',
+                            objectPosition: 'center'
+                          }} 
+                        />
                       </div>
                       {/* Gradient overlay */}
                       <div className="position-absolute bottom-0 start-0 w-100" style={{
@@ -730,7 +889,11 @@ function DiscountProducts() {
                       }}></div>
                     </div>
                     <div className="card-body py-3 px-3">
-                      <h6 className="card-title mb-2 text-dark fw-semibold product-card-title" style={{ minHeight: '40px', fontSize: '0.95rem', lineHeight: '1.4' }}>{product.name}</h6>
+                      <h6 className="card-title mb-2 text-dark fw-semibold product-card-title" style={{ 
+                        minHeight: isMobile ? '35px' : '40px', 
+                        fontSize: isMobile ? '0.85rem' : '0.95rem', 
+                        lineHeight: '1.4' 
+                      }}>{product.name}</h6>
                       <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex flex-column">
                           <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
@@ -870,56 +1033,48 @@ function Features() {
 
 // PARTNERS 
 function Partners() {
-  const partners = [
-    { 
-      name: 'Bến xe Miền Đông', 
-      logo: '/logo/benxe.png' 
-    },
-    { 
-      name: 'Wolffun Game', 
-      logo: '/logo/game.png' 
-    },
-    { 
-      name: 'Flash Fitness', 
-      logo: '/logo/flash.png' 
-    },
-    { 
-      name: 'An Lạc Gia Estate', 
-      logo: '/logo/anlac.png' 
-    },
-    { 
-      name: 'Gạo Vĩnh Hiển', 
-      logo: '/logo/gao.png' 
-    },
-    { 
-      name: '25FIT', 
-      logo: '/logo/25fit.png' 
-    },
-    { 
-      name: 'Vua Cua', 
-      logo: '/logo/vuacua.png' 
-    },
-    { 
-      name: 'Chi Pilates', 
-      logo: '/logo/phongtap.png' 
-    },
-    { 
-      name: 'Vạn Xuân Holding', 
-      logo: '/logo/VXH.png' 
-    },
-    { 
-      name: 'Boost Juice Bars', 
-      logo: '/logo/boost.png' 
-    },
-    { 
-      name: 'Đăng Gia Trang', 
-      logo: '/logo/danggiatrang.png' 
-    },
-    { 
-      name: 'Otoke Chicken', 
-      logo: '/logo/chicken.png' 
-    }
-  ];
+  const [brands, setBrands] = useState<Array<{ id: string; tenbrand: string; logo: string; thutu: number; anhien: number }>>([]);
+  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
+
+  // Fetch brands từ API
+  useEffect(() => {
+    fetch('http://localhost:5000/api/thuonghieu')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Chỉ lấy brand có anhien = 1, sắp xếp theo thutu
+          const activeBrands = data
+            .filter(b => b.anhien === 1)
+            .sort((a, b) => (a.thutu || 0) - (b.thutu || 0));
+          setBrands(activeBrands);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Lỗi khi tải thương hiệu:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}>
+        <div className="container">
+          <div className="text-center">
+            <div className="spinner-border text-warning" role="status">
+              <span className="visually-hidden">Đang tải...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (brands.length === 0) {
+    return null; // Không hiển thị section nếu không có brand
+  }
 
   return (
     <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}>
@@ -929,56 +1084,60 @@ function Partners() {
           <h2 className="text-uppercase fw-bold section-title responsive-title" style={{ color: '#2c3e50' }}>CÁC THƯƠNG HIỆU HỢP TÁC</h2>
         </div>
         <div className="row g-4">
-          {partners.map((partner, partnerIndex) => (
-            <div key={partnerIndex} className="col-6 col-md-4 col-lg-3">
+          {brands.map((brand) => (
+            <div key={brand.id} className={isMobile ? "col-6 col-md-4" : "col-6 col-md-4 col-lg-3"}>
               <div 
                 className="card border-0 shadow-sm overflow-hidden partner-card"
                 style={{ 
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: isDesktop ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
                   cursor: 'pointer',
-                  height: '200px',
-                  backgroundColor: '#fff', // Nền trắng
+                  height: isMobile ? '160px' : '200px',
+                  backgroundColor: '#fff',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={isDesktop ? (e) => {
                   e.currentTarget.style.transform = 'translateY(-8px)';
                   e.currentTarget.style.boxShadow = '0 12px 28px rgba(255, 193, 7, 0.2)';
-                }}
-                onMouseLeave={(e) => {
+                } : undefined}
+                onMouseLeave={isDesktop ? (e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                }}
+                } : undefined}
               >
                 {/* Logo Image - Grayscale/Đen trắng */}
                 <div 
                   className="position-relative w-100 h-100 d-flex align-items-center justify-content-center"
                   style={{ 
-                    padding: '30px',
+                    padding: isMobile ? '20px' : '30px',
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  <Image 
-                    src={partner.logo} 
-                    alt={partner.name}
-                    fill
-                    style={{ 
-                      objectFit: 'contain', // Giữ nguyên tỷ lệ logo
-                      filter: 'grayscale(100%) contrast(1.2) brightness(0.9)', // Đen trắng
-                      transition: 'all 0.3s ease',
-                      padding: '30px' // Padding để logo không chạm viền
-                    }}
-                    onMouseEnter={(e) => { 
-                      // Khi hover: thêm màu nhẹ
-                      e.currentTarget.style.filter = 'grayscale(0%) brightness(1.1)';
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                    }}
-                    onMouseLeave={(e) => { 
-                      e.currentTarget.style.filter = 'grayscale(100%) contrast(1.2) brightness(0.9)';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                  />
+                  {brand.logo ? (
+                    <Image 
+                      src={brand.logo} 
+                      alt={brand.tenbrand}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
+                      style={{ 
+                        objectFit: 'contain',
+                        filter: isDesktop ? 'grayscale(100%) contrast(1.2) brightness(0.9)' : 'grayscale(0%)',
+                        transition: 'all 0.3s ease',
+                        padding: isMobile ? '20px' : '30px'
+                      }}
+                      onMouseEnter={isDesktop ? (e) => { 
+                        e.currentTarget.style.filter = 'grayscale(0%) brightness(1.1)';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      } : undefined}
+                      onMouseLeave={isDesktop ? (e) => { 
+                        e.currentTarget.style.filter = 'grayscale(100%) contrast(1.2) brightness(0.9)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      } : undefined}
+                    />
+                  ) : (
+                    <div className="text-muted small">No Logo</div>
+                  )}
                 </div>
                 
-                {/* Tên thương hiệu bên dưới (optional) */}
+                {/* Tên thương hiệu bên dưới */}
                 <div 
                   className="position-absolute bottom-0 start-0 w-100 text-center py-2"
                   style={{
@@ -989,11 +1148,11 @@ function Partners() {
                   <p 
                     className="mb-0 small text-muted" 
                     style={{ 
-                      fontSize: '0.85rem',
+                      fontSize: isMobile ? '0.75rem' : '0.85rem',
                       fontWeight: '500'
                     }}
                   >
-                    {partner.name}
+                    {brand.tenbrand}
                   </p>
                 </div>
               </div>
@@ -1784,6 +1943,26 @@ export default function HomePage() {
           .category-image {
             height: 180px !important;
           }
+        }
+        
+        /* Fix category image display - ensure full image coverage */
+        .category-image {
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .category-image .category-img,
+        .category-image img,
+        .category-image [data-next-image],
+        .category-image span[style*="object-fit"] {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          object-position: center !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          transition: transform 0.4s ease !important;
         }
 
         /* Features Section Responsive */

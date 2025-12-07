@@ -3,12 +3,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { validateEmail, validatePhone, validateRequired, ValidationMessages } from '../utils/validation';
 // CHANGED: Đã xóa import Stripe components vì chuyển sang trang riêng /checkout/stripe
 
 interface CartItem {
   id: string;
   user_id: string;
-  bienthe_id: string;
+  bienthe_id: string; 
   soluong: number;
   bienthe?: {
     id: string;
@@ -56,8 +57,18 @@ export default function CheckoutPage() {
     note: '',
     paymentMethod: 'cod',
   });
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<Array<{
+    id: string;
+    hoten?: string;
+    sdt?: string;
+    diachichitiet?: string;
+    tinh_thanh?: string;
+    quan_huyen?: string;
+    phuong_xa?: string;
+    macdinh?: number;
+  }>>([]);
   const [showAddressSelector, setShowAddressSelector] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Check authentication and load cart
   useEffect(() => {
@@ -142,7 +153,7 @@ export default function CheckoutPage() {
               setSavedAddresses(addressesData);
               
               // Tìm địa chỉ mặc định hoặc lấy địa chỉ đầu tiên
-              const defaultAddress = addressesData.find((addr: any) => addr.macdinh === 1) || addressesData[0];
+              const defaultAddress = addressesData.find((addr: { macdinh?: number }) => addr.macdinh === 1) || addressesData[0];
 
               if (defaultAddress) {
                 setFormData(prev => ({
@@ -173,14 +184,64 @@ export default function CheckoutPage() {
   }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+    // Clear error khi user bắt đầu nhập
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate fullName
+    if (!validateRequired(formData.fullName)) {
+      newErrors.fullName = ValidationMessages.required('họ và tên');
+    }
+
+    // Validate email
+    if (!validateRequired(formData.email)) {
+      newErrors.email = ValidationMessages.required('email');
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = ValidationMessages.email;
+    }
+
+    // Validate phone
+    if (!validateRequired(formData.phone)) {
+      newErrors.phone = ValidationMessages.required('số điện thoại');
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = ValidationMessages.phone;
+    }
+
+    // Validate address
+    if (!validateRequired(formData.address)) {
+      newErrors.address = ValidationMessages.required('địa chỉ');
+    }
+
+    // Validate city
+    if (!validateRequired(formData.city)) {
+      newErrors.city = ValidationMessages.required('thành phố');
+    }
+
+    // District và ward là optional nhưng nếu có thì phải validate
+    // (có thể bỏ qua nếu không bắt buộc)
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+    
     setProcessing(true);
 
     try {
@@ -474,9 +535,10 @@ export default function CheckoutPage() {
       className="min-vh-100 py-5"
       style={{
         background: 'linear-gradient(180deg, #FFF9F0 0%, #ffffff 50%, #FFF5E8 100%)',
+        paddingTop: '120px', // Thêm padding-top để tránh bị đè với header
       }}
     >
-      <div className="container">
+      <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <div className="d-flex align-items-center mb-4">
           <Link 
@@ -505,7 +567,22 @@ export default function CheckoutPage() {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Thông báo lỗi tổng hợp */}
+          {Object.keys(errors).length > 0 && (
+            <div className="alert alert-danger d-flex align-items-center mb-4" role="alert" style={{ borderRadius: '12px' }}>
+              <i className="bi bi-exclamation-triangle-fill me-2" style={{ fontSize: '1.2rem' }}></i>
+              <div>
+                <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                  {Object.values(errors).map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           <div className="row g-4">
             {/* Form Section */}
             <div className="col-lg-7">
@@ -604,9 +681,14 @@ export default function CheckoutPage() {
                         style={{
                           padding: '12px 16px',
                           borderRadius: '12px',
-                          border: '2px solid #e9ecef',
+                          border: errors.fullName ? '2px solid #dc3545' : '2px solid #e9ecef',
                         }}
                       />
+                      {errors.fullName && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                          {errors.fullName}
+                        </small>
+                      )}
                     </div>
 
                     <div className="col-md-6">
@@ -624,9 +706,14 @@ export default function CheckoutPage() {
                         style={{
                           padding: '12px 16px',
                           borderRadius: '12px',
-                          border: '2px solid #e9ecef',
+                          border: errors.email ? '2px solid #dc3545' : '2px solid #e9ecef',
                         }}
                       />
+                      {errors.email && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                          {errors.email}
+                        </small>
+                      )}
                     </div>
 
                     <div className="col-md-6">
@@ -644,9 +731,14 @@ export default function CheckoutPage() {
                         style={{
                           padding: '12px 16px',
                           borderRadius: '12px',
-                          border: '2px solid #e9ecef',
+                          border: errors.phone ? '2px solid #dc3545' : '2px solid #e9ecef',
                         }}
                       />
+                      {errors.phone && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                          {errors.phone}
+                        </small>
+                      )}
                     </div>
 
                     <div className="col-12">
@@ -664,9 +756,14 @@ export default function CheckoutPage() {
                         style={{
                           padding: '12px 16px',
                           borderRadius: '12px',
-                          border: '2px solid #e9ecef',
+                          border: errors.address ? '2px solid #dc3545' : '2px solid #e9ecef',
                         }}
                       />
+                      {errors.address && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                          {errors.address}
+                        </small>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -684,9 +781,14 @@ export default function CheckoutPage() {
                         style={{
                           padding: '12px 16px',
                           borderRadius: '12px',
-                          border: '2px solid #e9ecef',
+                          border: errors.city ? '2px solid #dc3545' : '2px solid #e9ecef',
                         }}
                       />
+                      {errors.city && (
+                        <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                          {errors.city}
+                        </small>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -822,7 +924,7 @@ export default function CheckoutPage() {
 
             {/* Order Summary */}
             <div className="col-lg-5">
-              <div className="card border-0 shadow-sm rounded-4 sticky-top" style={{ top: '100px' }}>
+              <div className="card border-0 shadow-sm rounded-4 sticky-top" style={{ top: '120px', zIndex: 10 }}>
                 <div className="card-body p-4">
                   <h5 className="fw-bold mb-4">Đơn hàng của bạn</h5>
 
@@ -1063,6 +1165,121 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
+      
+      <style jsx global>{`
+        @media (max-width: 992px) {
+          .row.g-4 .col-lg-7,
+          .row.g-4 .col-lg-5 {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 0;
+          }
+          
+          /* Đảm bảo sticky card không bị đè với header trên mobile */
+          .sticky-top {
+            position: relative !important;
+            top: auto !important;
+          }
+          
+          .d-flex.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          
+          .d-flex.align-items-center.mb-4 h1 {
+            font-size: 1.5rem !important;
+          }
+          
+          .card {
+            border-radius: 12px !important;
+            margin-bottom: 1rem;
+          }
+          
+          .card-body {
+            padding: 1rem !important;
+          }
+          
+          .row.g-3 > *,
+          .row.g-4 > * {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+          
+          .row.g-3 .col-md-6,
+          .row.g-4 .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            margin-bottom: 1rem;
+          }
+          
+          .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            width: 100%;
+          }
+          
+          .form-control,
+          .form-select {
+            font-size: 16px; /* Prevent zoom on iOS */
+          }
+          
+          .table {
+            font-size: 0.85rem;
+          }
+          
+          .table td,
+          .table th {
+            padding: 0.5rem;
+          }
+          
+          .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          
+          .d-flex.gap-3 {
+            flex-direction: column;
+            gap: 0.75rem !important;
+          }
+          
+          .d-flex.gap-3 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .py-5 {
+            padding-top: 100px !important; /* Đảm bảo có đủ không gian cho header trên mobile */
+            padding-bottom: 1rem !important;
+          }
+          
+          .card-body {
+            padding: 0.75rem !important;
+          }
+          
+          h5 {
+            font-size: 1.1rem !important;
+          }
+          
+          .table {
+            font-size: 0.75rem;
+          }
+          
+          .table img {
+            width: 50px !important;
+            height: 50px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

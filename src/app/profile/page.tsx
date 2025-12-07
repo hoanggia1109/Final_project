@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { validatePhone, validateRequired, validateMinLength, validateDateNotFuture, ValidationMessages } from '../utils/validation';
 
 interface UserData {
   id: string;
@@ -40,6 +41,7 @@ export default function ProfilePage() {
     wishlistCount: 0,
     addressCount: 0,
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadProfile();
@@ -91,13 +93,47 @@ export default function ProfilePage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setUserData({
       ...userData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    // Clear error khi user bắt đầu nhập
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateProfile = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate ho_ten
+    if (!validateRequired(userData.ho_ten)) {
+      newErrors.ho_ten = ValidationMessages.required('họ và tên');
+    } else if (!validateMinLength(userData.ho_ten, 2)) {
+      newErrors.ho_ten = ValidationMessages.minLength('Họ và tên', 2);
+    }
+
+    // Validate sdt (optional nhưng nếu có thì phải đúng format)
+    if (userData.sdt && !validatePhone(userData.sdt)) {
+      newErrors.sdt = ValidationMessages.phone;
+    }
+
+    // Validate ngaysinh (nếu có thì không được là tương lai)
+    if (userData.ngaysinh && !validateDateNotFuture(userData.ngaysinh)) {
+      newErrors.ngaysinh = ValidationMessages.dateNotFuture;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
+    // Validate form trước khi save
+    if (!validateProfile()) {
+      return;
+    }
+
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -369,9 +405,24 @@ export default function ProfilePage() {
                   )}
                 </div>
 
+                {/* Thông báo lỗi tổng hợp */}
+                {editing && Object.keys(errors).length > 0 && (
+                  <div className="alert alert-danger d-flex align-items-start mb-4" role="alert" style={{ borderRadius: '12px' }}>
+                    <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                    <div>
+                      <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                      <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                        {Object.values(errors).map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
                 <div className="row g-4">
                   <div className="col-md-6">
-                    <label className="form-label fw-semibold">Họ và tên</label>
+                    <label className="form-label fw-semibold">Họ và tên <span className="text-danger">*</span></label>
                     <input
                       type="text"
                       name="ho_ten"
@@ -382,10 +433,15 @@ export default function ProfilePage() {
                       style={{
                         padding: '12px 16px',
                         borderRadius: '12px',
-                        border: '2px solid #e9ecef',
+                        border: errors.ho_ten ? '2px solid #dc3545' : '2px solid #e9ecef',
                         backgroundColor: editing ? 'white' : '#f8f9fa'
                       }}
                     />
+                    {errors.ho_ten && editing && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {errors.ho_ten}
+                      </small>
+                    )}
                   </div>
 
                   <div className="col-md-6">
@@ -419,10 +475,15 @@ export default function ProfilePage() {
                       style={{
                         padding: '12px 16px',
                         borderRadius: '12px',
-                        border: '2px solid #e9ecef',
+                        border: errors.sdt ? '2px solid #dc3545' : '2px solid #e9ecef',
                         backgroundColor: editing ? 'white' : '#f8f9fa'
                       }}
                     />
+                    {errors.sdt && editing && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {errors.sdt}
+                      </small>
+                    )}
                   </div>
 
                   <div className="col-md-6">
@@ -437,10 +498,15 @@ export default function ProfilePage() {
                       style={{
                         padding: '12px 16px',
                         borderRadius: '12px',
-                        border: '2px solid #e9ecef',
+                        border: errors.ngaysinh ? '2px solid #dc3545' : '2px solid #e9ecef',
                         backgroundColor: editing ? 'white' : '#f8f9fa'
                       }}
                     />
+                    {errors.ngaysinh && editing && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {errors.ngaysinh}
+                      </small>
+                    )}
                   </div>
 
                   <div className="col-md-6">
@@ -513,6 +579,79 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 h2 {
+            font-size: 1.5rem !important;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 .btn {
+            width: 100%;
+          }
+          
+          .card {
+            border-radius: 12px !important;
+            margin-bottom: 1rem;
+          }
+          
+          .card-body {
+            padding: 1rem !important;
+          }
+          
+          .row.g-4 > * {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+          
+          .row.g-4 .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            margin-bottom: 1rem;
+          }
+          
+          .d-flex.gap-2,
+          .d-flex.gap-3 {
+            flex-direction: column;
+          }
+          
+          .d-flex.gap-2 .btn,
+          .d-flex.gap-3 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+          
+          .form-control,
+          .form-select {
+            font-size: 16px; /* Prevent zoom on iOS */
+          }
+          
+          .stats-card {
+            margin-bottom: 1rem;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .card-body {
+            padding: 0.75rem !important;
+          }
+          
+          .stats-card {
+            padding: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

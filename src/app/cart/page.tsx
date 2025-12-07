@@ -1107,6 +1107,103 @@ export default function CartPage() {
           -moz-appearance: textfield;
 
         }
+        
+        @media (max-width: 768px) {
+          .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          
+          .d-flex.justify-content-between.align-items-center.mb-4 h2 {
+            font-size: 1.5rem !important;
+          }
+          
+          .card {
+            border-radius: 12px !important;
+            margin-bottom: 1rem;
+          }
+          
+          .card-body {
+            padding: 1rem !important;
+          }
+          
+          .row.g-3 > *,
+          .row.g-4 > * {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+          }
+          
+          .row.g-3 .col-md-6,
+          .row.g-4 .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            margin-bottom: 1rem;
+          }
+          
+          .table {
+            font-size: 0.85rem;
+          }
+          
+          .table td,
+          .table th {
+            padding: 0.5rem;
+          }
+          
+          .table img {
+            width: 60px !important;
+            height: 60px !important;
+          }
+          
+          .d-flex.gap-2,
+          .d-flex.gap-3 {
+            flex-direction: column;
+          }
+          
+          .d-flex.gap-2 .btn,
+          .d-flex.gap-3 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+          
+          .form-control {
+            font-size: 16px; /* Prevent zoom on iOS */
+          }
+          
+          .input-group {
+            flex-wrap: wrap;
+          }
+          
+          .input-group .btn {
+            width: 100%;
+            margin-top: 0.5rem;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .card-body {
+            padding: 0.75rem !important;
+          }
+          
+          .table {
+            font-size: 0.75rem;
+          }
+          
+          .table img {
+            width: 50px !important;
+            height: 50px !important;
+          }
+          
+          .table .d-flex {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+        }
 
       `}</style>
 

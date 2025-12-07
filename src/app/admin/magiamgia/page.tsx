@@ -256,7 +256,7 @@ export default function MaGiamGiaPage() {
                   }}
                 ></button>
               </div>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="modal-body">
                   <div className="row g-3">
                     <div className="col-md-6">

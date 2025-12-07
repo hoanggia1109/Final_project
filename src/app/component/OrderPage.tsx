@@ -129,7 +129,7 @@ export default function OrderPage() {
         <div className="row g-4">
           {/* Form đặt hàng - Bên trái */}
           <div className="col-lg-7">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               {/* Thông tin khách hàng */}
               <div className="card shadow-sm mb-4">
                 <div className="card-body p-4">

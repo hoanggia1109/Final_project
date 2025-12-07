@@ -59,7 +59,7 @@ export async function GET(
       excerpt: article.tieude, 
       image: imageUrl,
       category: article.danhmuc?.tendanhmuc || 'Tin tức', 
-      author: article.user?.ho_ten || article.user?.email || 'VANTAYdecor', 
+      author: article.user?.ho_ten || article.user?.email || 'DANNYdecor', 
       publishDate: article.created_at,
       views: article.luotxem || 0, 
       content: article.noidung || '<p>Nội dung đang được cập nhật...</p>',

@@ -84,6 +84,9 @@ export default function ProductPage() {
           padding-bottom: 80px;
           background: linear-gradient(180deg, #FAFAF8 0%, #F5F4F0 50%, #FAFAF8 100%);
           min-height: 100vh;
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 100%;
         }
 
         .layout {
@@ -96,6 +99,13 @@ export default function ProductPage() {
         @media (max-width: 992px) {
           .layout {
             grid-template-columns: 1fr;
+            gap: 20px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .layout {
+            gap: 16px;
           }
         }
 
@@ -111,6 +121,16 @@ export default function ProductPage() {
           border: 1px solid rgba(139, 115, 85, 0.08);
         }
 
+        @media (max-width: 768px) {
+          .sidebar {
+            position: relative;
+            top: 0;
+            padding: 20px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+          }
+        }
+
         .sidebar-title {
           color: #3D3D3D;
           font-size: 1.4rem;
@@ -118,8 +138,16 @@ export default function ProductPage() {
           letter-spacing: 2px;
           margin-bottom: 28px;
           padding-bottom: 18px;
-          border-bottom: 2px solid #D4AF37;
+          border-bottom: 2px solid #FFC107;
           text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+          .sidebar-title {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+          }
         }
 
         .sidebar-item {
@@ -143,7 +171,7 @@ export default function ProductPage() {
           top: 0;
           height: 100%;
           width: 3px;
-          background: linear-gradient(180deg, #D4AF37 0%, #B8941E 100%);
+          background: linear-gradient(180deg, #FFC107 0%, #FFB300 100%);
           transform: scaleY(0);
           transition: transform 0.4s ease;
         }
@@ -159,10 +187,10 @@ export default function ProductPage() {
         }
 
         .sidebar-item.active {
-          background: linear-gradient(135deg, #D4AF37 0%, #C4A855 100%);
+          background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
           color: #FFFFFF;
           font-weight: 600;
-          box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+          box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
           padding-left: 26px;
         }
 
@@ -182,12 +210,23 @@ export default function ProductPage() {
           height: 100%;
           display: flex;
           flex-direction: column;
+          align-items: stretch;
+        }
+        
+        .product-img-wrapper {
+          flex-shrink: 0;
+        }
+        
+        .product-body {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
         }
 
         .product-card:hover {
           transform: translateY(-12px);
           box-shadow: 0 16px 40px rgba(139, 115, 85, 0.18);
-          border-color: rgba(212, 175, 55, 0.3);
+          border-color: rgba(255, 193, 7, 0.3);
         }
 
         .product-img-wrapper {
@@ -196,13 +235,20 @@ export default function ProductPage() {
           height: 280px;
           overflow: hidden;
           background: linear-gradient(135deg, #FAF8F3 0%, #F5F2E8 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .product-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          object-position: center !important;
           transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
         }
 
         .product-card:hover .product-img {
@@ -234,7 +280,7 @@ export default function ProductPage() {
         }
 
         .product-price {
-          color: #D4AF37;
+          color: #FFC107;
           font-weight: 600;
           font-size: 1.3rem;
           margin-bottom: 16px;
@@ -242,7 +288,7 @@ export default function ProductPage() {
         }
 
         .btn-detail {
-          background: linear-gradient(135deg, #D4AF37 0%, #C4A855 100%);
+          background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
           border: none;
           color: #FFFFFF;
           font-weight: 600;
@@ -252,13 +298,13 @@ export default function ProductPage() {
           font-size: 0.9rem;
           text-transform: uppercase;
           letter-spacing: 1.5px;
-          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+          box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
         }
 
         .btn-detail:hover {
           transform: translateY(-3px);
-          box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
-          background: linear-gradient(135deg, #C4A855 0%, #D4AF37 100%);
+          box-shadow: 0 8px 24px rgba(255, 193, 7, 0.4);
+          background: linear-gradient(135deg, #FFD54F 0%, #FFC107 100%);
           color: #FFFFFF;
         }
 
@@ -272,9 +318,18 @@ export default function ProductPage() {
           letter-spacing: 0.3px;
         }
 
+        @media (max-width: 768px) {
+          .search-input {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+        }
+
         .search-input:focus {
-          border-color: #D4AF37;
-          box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+          border-color: #FFC107;
+          box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.12);
           outline: none;
           background: #FFFFFF;
         }
@@ -289,6 +344,13 @@ export default function ProductPage() {
           font-size: 2rem;
         }
 
+        @media (max-width: 768px) {
+          .page-title {
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+          }
+        }
+
         .page-title::after {
           content: '';
           position: absolute;
@@ -296,7 +358,7 @@ export default function ProductPage() {
           left: 0;
           width: 80px;
           height: 3px;
-          background: linear-gradient(90deg, #D4AF37 0%, #B8941E 100%);
+          background: linear-gradient(90deg, #FFC107 0%, #FFB300 100%);
           border-radius: 2px;
         }
 
@@ -310,16 +372,16 @@ export default function ProductPage() {
         }
 
         .pagination .btn-warning {
-          background: linear-gradient(135deg, #D4AF37 0%, #C4A855 100%);
+          background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
           border: none;
           color: #FFFFFF;
-          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+          box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
         }
 
         .pagination .btn-warning:hover {
-          background: linear-gradient(135deg, #C4A855 0%, #D4AF37 100%);
+          background: linear-gradient(135deg, #FFD54F 0%, #FFC107 100%);
           transform: translateY(-3px);
-          box-shadow: 0 6px 18px rgba(212, 175, 55, 0.4);
+          box-shadow: 0 6px 18px rgba(255, 193, 7, 0.4);
         }
 
         .pagination .btn-light {
@@ -330,7 +392,7 @@ export default function ProductPage() {
 
         .pagination .btn-light:hover:not(:disabled) {
           background: linear-gradient(135deg, #FAF8F3 0%, #F5F2E8 100%);
-          border-color: #D4AF37;
+          border-color: #FFC107;
           color: #3D3D3D;
           transform: translateY(-2px);
         }
@@ -339,10 +401,94 @@ export default function ProductPage() {
           opacity: 0.3;
           cursor: not-allowed;
         }
+        
+        @media (max-width: 768px) {
+          .products-page-container {
+            padding-top: 80px;
+            padding-bottom: 40px;
+            padding-left: 12px;
+            padding-right: 12px;
+          }
+
+          .products-page-container .container {
+            padding-left: 0;
+            padding-right: 0;
+            max-width: 100%;
+            overflow-x: hidden;
+          }
+
+          .product-img-wrapper {
+            height: 220px;
+          }
+          
+          .product-body {
+            padding: 16px 12px;
+          }
+          
+          .product-title {
+            font-size: 0.9rem;
+            min-height: 40px;
+          }
+          
+          .product-price {
+            font-size: 1rem;
+          }
+
+          .btn-detail {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+          }
+
+          .row.g-4 {
+            margin-left: -8px;
+            margin-right: -8px;
+          }
+
+          .row.g-4 > * {
+            padding-left: 8px;
+            padding-right: 8px;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .product-img-wrapper {
+            height: 180px;
+          }
+
+          .product-body {
+            padding: 12px 10px;
+          }
+
+          .product-title {
+            font-size: 0.85rem;
+            min-height: 36px;
+          }
+
+          .product-price {
+            font-size: 0.95rem;
+          }
+
+          .btn-detail {
+            padding: 8px 16px;
+            font-size: 0.75rem;
+          }
+
+          .pagination {
+            flex-wrap: wrap;
+            gap: 4px !important;
+          }
+
+          .pagination button {
+            min-width: 40px;
+            height: 40px;
+            font-size: 0.85rem;
+          }
+        }
       `}</style>
 
       <div className="products-page-container">
-        <div className="container">
+        <div className="container" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
         <div className="layout">
           {/* Sidebar danh mục */}
           <div className="sidebar">
@@ -399,9 +545,9 @@ export default function ProductPage() {
               </div>
             ) : currentProducts.length > 0 ? (
               <>
-                <div className="row g-4">
+                <div className="row g-4" style={{ marginLeft: 0, marginRight: 0 }}>
                   {currentProducts.map((p, index) => (
-                    <div key={p.id} className="col-6 col-md-4 col-lg-3" style={{ animationDelay: `${index * 0.05}s` }}>
+                    <div key={p.id} className="col-6 col-md-4 col-lg-3" style={{ animationDelay: `${index * 0.05}s`, paddingLeft: '8px', paddingRight: '8px' }}>
                       <div className="product-card">
                         <div className="product-img-wrapper">
                           <Image

@@ -1,7 +1,15 @@
 'use client';
 import Link from 'next/link';
+import { useIsMobile } from '@/app/hooks/useMediaQuery';
 
 export default function HomeButton() {
+  const isMobile = useIsMobile();
+  
+  // Ẩn trên mobile
+  if (isMobile) {
+    return null;
+  }
+  
   return (
     <Link
       href="/"

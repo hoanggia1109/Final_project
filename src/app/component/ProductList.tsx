@@ -78,13 +78,23 @@ export default function ProductList({
                   >
                     <div
                       className="position-relative"
-                      style={{ height: '240px', background: '#f8f9fa' }}
+                      style={{ 
+                        height: '240px', 
+                        background: '#f8f9fa',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
                     >
                       <Image
                         src={p.thumbnail}
                         alt={p.tensp}
                         fill
-                        style={{ objectFit: 'cover' }}
+                        style={{ 
+                          objectFit: 'cover',
+                          objectPosition: 'center'
+                        }}
                       />
                       {p.discount && (
                         <span className="badge bg-danger position-absolute top-0 end-0 m-2">

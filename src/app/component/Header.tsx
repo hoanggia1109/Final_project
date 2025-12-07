@@ -630,7 +630,7 @@ export default function Header() {
                       right: 0,
                       marginTop: '12px',
                       minWidth: '260px',
-                      zIndex: 1000,
+                      zIndex: 1050,
                       animation: 'dropdownSlide 0.2s ease-out',
                       border: '1px solid rgba(0,0,0,0.08)',
                     }}

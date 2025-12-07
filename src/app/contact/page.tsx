@@ -471,7 +471,7 @@ export default function ContactPage() {
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} noValidate>
                     <div className="row g-3">
                       {/* Name */}
                       <div className="col-md-6">

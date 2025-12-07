@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Trash2, Shield, User, Mail, Phone, Calendar, Search, Filter, Edit } from 'lucide-react';
+import { validatePhone, validateRequired, validateMinLength, ValidationMessages } from '../../utils/validation';
 
 interface UserData {
   id: string;
@@ -30,6 +31,7 @@ export default function UserManagement() {
     role: 'customer' as 'admin' | 'customer',
     trangthai: 1,
   });
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Kiểm tra quyền admin
@@ -92,8 +94,32 @@ export default function UserManagement() {
     });
   };
 
+  const validateEditForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate ho_ten
+    if (!validateRequired(editForm.ho_ten)) {
+      newErrors.ho_ten = ValidationMessages.required('họ và tên');
+    } else if (!validateMinLength(editForm.ho_ten, 2)) {
+      newErrors.ho_ten = ValidationMessages.minLength('Họ và tên', 2);
+    }
+
+    // Validate sdt (optional nhưng nếu có thì phải đúng format)
+    if (editForm.sdt && !validatePhone(editForm.sdt)) {
+      newErrors.sdt = ValidationMessages.phone;
+    }
+
+    setEditErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleUpdate = async () => {
     if (!editingUser) return;
+
+    // Validate form trước khi update
+    if (!validateEditForm()) {
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -116,6 +142,7 @@ export default function UserManagement() {
       if (response.ok) {
         alert('Cập nhật người dùng thành công!');
         setEditingUser(null);
+        setEditErrors({});
         loadUsers();
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -892,18 +919,42 @@ export default function UserManagement() {
                   <button className="modal-close" onClick={() => setEditingUser(null)}>×</button>
                 </div>
                 <div className="modal-body">
+                  {/* Thông báo lỗi tổng hợp */}
+                  {Object.keys(editErrors).length > 0 && (
+                    <div className="alert alert-danger d-flex align-items-start mb-3" role="alert" style={{ borderRadius: '12px' }}>
+                      <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                      <div>
+                        <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                        <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                          {Object.values(editErrors).map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-3">
                     <label className="form-label">Email (không thể thay đổi)</label>
                     <input type="text" className="form-control" value={editingUser.email} disabled />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Họ tên</label>
+                    <label className="form-label">Họ tên <span className="text-danger">*</span></label>
                     <input 
                       type="text" 
                       className="form-control" 
                       value={editForm.ho_ten}
-                      onChange={(e) => setEditForm({...editForm, ho_ten: e.target.value})}
+                      onChange={(e) => {
+                        setEditForm({...editForm, ho_ten: e.target.value});
+                        if (editErrors.ho_ten) setEditErrors({ ...editErrors, ho_ten: '' });
+                      }}
+                      style={{ borderColor: editErrors.ho_ten ? '#dc3545' : undefined }}
                     />
+                    {editErrors.ho_ten && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {editErrors.ho_ten}
+                      </small>
+                    )}
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Số điện thoại</label>
@@ -911,8 +962,17 @@ export default function UserManagement() {
                       type="text" 
                       className="form-control" 
                       value={editForm.sdt}
-                      onChange={(e) => setEditForm({...editForm, sdt: e.target.value})}
+                      onChange={(e) => {
+                        setEditForm({...editForm, sdt: e.target.value});
+                        if (editErrors.sdt) setEditErrors({ ...editErrors, sdt: '' });
+                      }}
+                      style={{ borderColor: editErrors.sdt ? '#dc3545' : undefined }}
                     />
+                    {editErrors.sdt && (
+                      <small className="text-danger d-block mt-1" style={{ fontSize: '13px' }}>
+                        {editErrors.sdt}
+                      </small>
+                    )}
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Vai trò</label>

@@ -410,7 +410,7 @@ router.get("/:sanpham_id/average", async (req, res) => {
 
     const sanphamId = req.params.sanpham_id;
 
-
+    console.log(`[Review Average] Calculating average for product: ${sanphamId}`);
 
     const reviews = await DanhGiaModel.findAll({
 
@@ -422,6 +422,8 @@ router.get("/:sanpham_id/average", async (req, res) => {
 
           as: "chitiet_donhang",
 
+          required: true, // Phải có chitiet_donhang
+
           include: [
 
             {
@@ -430,7 +432,9 @@ router.get("/:sanpham_id/average", async (req, res) => {
 
               as: "bienthe",
 
-              where: { sanpham_id: sanphamId },
+              required: true, // Phải có bienthe
+
+              where: { sanpham_id: sanphamId }, // Filter chính xác theo sanpham_id
 
             },
 
@@ -442,19 +446,34 @@ router.get("/:sanpham_id/average", async (req, res) => {
 
     });
 
+    console.log(`[Review Average] Found ${reviews.length} reviews for product ${sanphamId}`);
 
-
-    if (!reviews.length)
-
+    if (!reviews.length) {
+      console.log(`[Review Average] No reviews found for product ${sanphamId}`);
       return res.json({ sanpham_id: sanphamId, average_rating: 0, count: 0 });
+    }
 
+    // Đảm bảo chỉ tính reviews có rating hợp lệ và thuộc về sản phẩm đúng
+    const validReviews = reviews.filter(r => {
+      // Kiểm tra rating hợp lệ
+      if (!r.rating || r.rating <= 0 || r.rating > 5) return false;
+      
+      // Kiểm tra bienthe có sanpham_id đúng không (double check)
+      if (r.chitiet_donhang && r.chitiet_donhang.bienthe) {
+        return r.chitiet_donhang.bienthe.sanpham_id === sanphamId;
+      }
+      return false;
+    });
+    
+    if (!validReviews.length) {
+      console.log(`[Review Average] No valid reviews found for product ${sanphamId}`);
+      return res.json({ sanpham_id: sanphamId, average_rating: 0, count: 0 });
+    }
 
+    const total = validReviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+    const average = Number((total / validReviews.length).toFixed(1));
 
-    const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
-
-    const average = Number((total / reviews.length).toFixed(1));
-
-
+    console.log(`[Review Average] Product ${sanphamId}: ${validReviews.length} valid reviews, average: ${average}`);
 
     res.json({
 
@@ -462,7 +481,7 @@ router.get("/:sanpham_id/average", async (req, res) => {
 
       average_rating: average,
 
-      count: reviews.length,
+      count: validReviews.length,
 
     });
 

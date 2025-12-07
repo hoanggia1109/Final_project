@@ -15,8 +15,7 @@ interface Review {
   sanpham_id: string;
   chitiet_donhang_id?: string;
   diem: number;
-  noidung?: string;
-  binhluan?: string;
+  noidung: string;
   created_at: string;
   user?: {
     ho_ten: string;
@@ -96,9 +95,8 @@ export default function ReviewsPage() {
   };
 
   const filteredData = reviews.filter((review) => {
-    const reviewContent = review.noidung || review.binhluan || '';
     const matchesSearch =
-      reviewContent.toLowerCase().includes(search.toLowerCase()) ||
+      (review.noidung?.toLowerCase() || '').includes(search.toLowerCase()) ||
       (review.user?.ho_ten?.toLowerCase() || '').includes(search.toLowerCase()) ||
       (review.sanpham?.tensp?.toLowerCase() || '').includes(search.toLowerCase());
     
@@ -251,7 +249,7 @@ export default function ReviewsPage() {
                           <td>{renderStars(review.diem)}</td>
                           <td>
                             <div className="text-truncate" style={{ maxWidth: '200px' }}>
-                              {review.noidung || review.binhluan || 'Không có nội dung'}
+                              {review.noidung}
                             </div>
                             {review.images && review.images.length > 0 && (
                               <small className="text-muted d-block">
@@ -363,7 +361,7 @@ export default function ReviewsPage() {
                     className="p-3 bg-light rounded"
                     style={{ whiteSpace: 'pre-wrap', minHeight: '100px' }}
                   >
-                    {selectedReview.noidung || selectedReview.binhluan || 'Không có nội dung'}
+                    {selectedReview.noidung}
                   </div>
                 </div>
 

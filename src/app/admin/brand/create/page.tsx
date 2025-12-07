@@ -147,11 +147,67 @@ export default function CreateBrandPage() {
           border-radius: 12px;
         }
         @media (max-width: 768px) {
+          .form-container {
+            padding: 1rem 0;
+          }
           .form-header {
             padding: 1rem;
+            margin-bottom: 1rem;
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          .form-header h2 {
+            font-size: 1.5rem !important;
+          }
+          .form-header .btn {
+            width: 100%;
           }
           .form-card {
             padding: 1.5rem;
+            border-radius: 12px;
+          }
+          .row.g-4 {
+            margin: 0;
+          }
+          .row.g-4 > * {
+            padding: 0;
+            margin-bottom: 1rem;
+          }
+          .image-upload-area {
+            padding: 1.5rem;
+          }
+          .image-preview {
+            max-width: 100%;
+            height: auto;
+          }
+          .btn-submit {
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            width: 100%;
+          }
+          .d-flex.gap-2 {
+            flex-direction: column;
+          }
+          .d-flex.gap-2 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+          .col-lg-8 {
+            padding: 0;
+          }
+          .col-lg-4 {
+            margin-top: 1.5rem;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .form-card {
+            padding: 1rem;
+          }
+          .row.g-4 .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
           }
         }
       `}</style>
@@ -173,7 +229,7 @@ export default function CreateBrandPage() {
 
           <div className="row g-4">
             <div className="col-lg-8">
-              <form onSubmit={handleSubmit} className="form-card">
+              <form onSubmit={handleSubmit} className="form-card" noValidate>
                 <div className="row g-4">
                   <div className="col-md-6">
                     <label className="form-label">Mã thương hiệu <span className="text-danger">*</span></label>

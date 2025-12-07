@@ -163,7 +163,7 @@ export default function ChangePasswordPage() {
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                   {/* Old Password */}
                   <div className="mb-3">
                     <label className="form-label fw-semibold">

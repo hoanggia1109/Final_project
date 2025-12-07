@@ -91,12 +91,28 @@ export default function DanhMucPage() {
                     <td className="fw-semibold text-primary">{item.tendm}</td>
                     <td className="text-center">
                       {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.tendm}
-                          className="img-thumbnail"
-                          style={{ width: '60px', height: '60px', objectFit: 'cover' }}
-                        />
+                        <div style={{ 
+                          width: '60px', 
+                          height: '60px', 
+                          position: 'relative',
+                          overflow: 'hidden',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto'
+                        }}>
+                          <img
+                            src={item.image}
+                            alt={item.tendm}
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              objectPosition: 'center'
+                            }}
+                          />
+                        </div>
                       ) : (
                         <span className="text-muted fst-italic">Chưa có ảnh</span>
                       )}

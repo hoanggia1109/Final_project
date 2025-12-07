@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                   <div className="mb-4">
                     <label className="form-label fw-semibold">
                       <i className="bi bi-envelope me-2" style={{ color: '#FF8E53' }}></i>

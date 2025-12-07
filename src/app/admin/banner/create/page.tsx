@@ -146,11 +146,57 @@ export default function CreateBannerPage() {
           cursor: not-allowed;
         }
         @media (max-width: 768px) {
+          .form-container {
+            padding: 1rem 0;
+          }
           .form-header {
             padding: 1rem;
+            margin-bottom: 1rem;
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          .form-header h2 {
+            font-size: 1.5rem !important;
+          }
+          .form-header .btn {
+            width: 100%;
           }
           .form-card {
             padding: 1.5rem;
+            border-radius: 12px;
+            margin: 0 1rem;
+            max-width: 100% !important;
+          }
+          .image-upload-area {
+            padding: 1.5rem;
+          }
+          .image-preview {
+            max-width: 100%;
+            height: auto;
+          }
+          .btn-submit {
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            width: 100%;
+          }
+          .d-flex.gap-2 {
+            flex-direction: column;
+          }
+          .d-flex.gap-2 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+          .row.g-3 .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .form-card {
+            padding: 1rem;
+            margin: 0 0.5rem;
           }
         }
       `}</style>
@@ -166,7 +212,7 @@ export default function CreateBannerPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '800px' }}>
+          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '800px' }} noValidate>
             <div className="mb-4">
               <label className="form-label">Tiêu đề <span className="text-danger">*</span></label>
               <input name="tieude" value={form.tieude} onChange={handleChange} className="form-control" placeholder="Nhập tiêu đề banner" required />

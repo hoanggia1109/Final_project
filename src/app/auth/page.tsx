@@ -362,7 +362,7 @@ export default function AuthPage() {
                   <h2 className="fw-bold mb-2">Đăng Nhập</h2>
                   <p className="text-muted mb-4">Nhập thông tin để tiếp tục</p>
 
-                  <form onSubmit={handleLoginSubmit}>
+                  <form onSubmit={handleLoginSubmit} noValidate>
                     <div className="mb-3">
                       <label className="form-label fw-semibold small">Email <span className="text-danger">*</span></label>
                       <div className="input-group">
@@ -495,7 +495,7 @@ export default function AuthPage() {
                   <h2 className="fw-bold mb-2">Đăng Ký</h2>
                   <p className="text-muted mb-4">Tạo tài khoản mới</p>
 
-                  <form onSubmit={handleRegisterSubmit}>
+                  <form onSubmit={handleRegisterSubmit} noValidate>
                     <div className="mb-3">
                       <label className="form-label fw-semibold small">Họ tên <span className="text-danger">*</span></label>
                       <input

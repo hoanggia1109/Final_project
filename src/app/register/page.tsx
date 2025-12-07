@@ -195,7 +195,7 @@ export default function RegisterPage() {
                     <p className="text-muted">Tạo tài khoản mới</p>
                   </div>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} noValidate>
                     {/* Full Name Input */}
                     <div className="mb-3">
                       <label className="form-label fw-semibold small text-dark">

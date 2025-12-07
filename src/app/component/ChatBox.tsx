@@ -272,7 +272,7 @@ export default function ChatBox() {
               pointerEvents: 'none',
             }}
           >
-            💬 Cần hỗ trợ? Nhấn vào đây!
+            {/* 💬 Cần hỗ trợ? Nhấn vào đây! */}
             <div
               style={{
                 position: 'absolute',

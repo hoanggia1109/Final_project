@@ -65,17 +65,21 @@ export async function GET(
       originalPrice: product.bienthe?.[0]?.gia ? Math.round(product.bienthe[0].gia * 1.2) : 0,
       discount: 20,
       category: product.danhmuc?.tendm || 'Chưa phân loại',
-      brand: product.thuonghieu?.tenbrand || 'VANTAYdecor',
+      brand: product.thuonghieu?.tenbrand || 'DANNYdecor',
       sku: product.code || `SP-${product.id}`,
       stock: totalStock, // Tổng tồn kho từ tất cả biến thể
       views: product.luotxem || 0,
       rating: 4.8,
       reviews: 0,
-      description: product.mota_chitiet || product.mota || 'Sản phẩm chất lượng cao từ VANTAYdecor',
+      description: product.mota_chitiet || product.mota || 'Sản phẩm chất lượng cao từ DANNYdecor',
       features: (() => {
         try {
           if (product.dacdiem_noibat) {
-            const parsed = JSON.parse(product.dacdiem_noibat);
+            // Backend đã parse JSON rồi, nên có thể là array hoặc string
+            let parsed = product.dacdiem_noibat;
+            if (typeof parsed === 'string') {
+              parsed = JSON.parse(parsed);
+            }
             if (Array.isArray(parsed) && parsed.length > 0) {
               return parsed;
             }
@@ -84,35 +88,33 @@ export async function GET(
           console.error('Error parsing dacdiem_noibat:', e);
         }
         // Fallback nếu không có dữ liệu
-        return [
-          'Chất liệu cao cấp',
-          'Thiết kế hiện đại',
-          'Bền bỉ theo thời gian',
-          'Dễ dàng vệ sinh',
-          'Bảo hành chính hãng'
-        ];
+        return [];
       })(),
       specifications: (() => {
         try {
           if (product.thongsokythuat) {
-            const parsed = JSON.parse(product.thongsokythuat);
-            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+            // Backend đã parse JSON rồi, nên có thể là object hoặc string
+            let parsed = product.thongsokythuat;
+            if (typeof parsed === 'string') {
+              parsed = JSON.parse(parsed);
+            }
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length > 0) {
               return parsed;
             }
           }
         } catch (e) {
           console.error('Error parsing thongsokythuat:', e);
         }
-        // Fallback nếu không có dữ liệu
-        return {
-          'Mã sản phẩm': product.code || `SP-${product.id}`,
-          'Thương hiệu': product.thuonghieu?.tenbrand || 'VANTAYdecor',
-          'Danh mục': product.danhmuc?.tendm || 'Chưa phân loại',
-          'Màu sắc': product.bienthe?.map((bt: BienThe) => bt.mausac).filter(Boolean).join(', ') || 'Nhiều màu',
-          'Kích thước': product.bienthe?.map((bt: BienThe) => bt.kichthuoc).filter(Boolean).join(', ') || 'Liên hệ',
-          'Xuất xứ': 'Việt Nam',
-          'Bảo hành': '12 tháng'
-        };
+        // Fallback nếu không có dữ liệu - chỉ trả về thông tin cơ bản
+        const fallback: Record<string, string> = {};
+        if (product.code) fallback['Mã sản phẩm'] = product.code;
+        if (product.thuonghieu?.tenbrand) fallback['Thương hiệu'] = product.thuonghieu.tenbrand;
+        if (product.danhmuc?.tendm) fallback['Danh mục'] = product.danhmuc.tendm;
+        const colors = product.bienthe?.map((bt: BienThe) => bt.mausac).filter(Boolean);
+        if (colors && colors.length > 0) fallback['Màu sắc'] = colors.join(', ');
+        const sizes = product.bienthe?.map((bt: BienThe) => bt.kichthuoc).filter(Boolean);
+        if (sizes && sizes.length > 0) fallback['Kích thước'] = sizes.join(', ');
+        return fallback;
       })(),
       // Lấy images từ biến thể hoặc dùng thumbnail
       images: product.bienthe?.[0]?.images && product.bienthe[0].images.length > 0
@@ -132,10 +134,10 @@ export async function GET(
       relatedProducts: []
     };
     
-    console.log('🎯 Transformed product:', transformedProduct);
+    console.log(' Transformed product:', transformedProduct);
     return NextResponse.json(transformedProduct);
   } catch (error) {
-    console.error('❌❌❌ Error fetching product:', error);
+    console.error(' Error fetching product:', error);
     return NextResponse.json(
       { error: 'Lỗi khi tải sản phẩm', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

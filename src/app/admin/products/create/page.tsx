@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, PlusCircle, Trash2 } from 'lucide-react';
+import { validateRequired, validateMinLength, validatePositiveNumber, validateNonNegativeNumber, ValidationMessages } from '../../../utils/validation';
 
 interface DanhMuc {
   id: string;
@@ -38,11 +39,9 @@ export default function CreateProductPage() {
     danhmuc_id: '',
     thuonghieu_id: '',
   });
-  
-  const [dacdiem, setDacdiem] = useState<string[]>(['']);
-  const [thongsokythuat, setThongsokythuat] = useState<Array<{ key: string; value: string }>>([
-    { key: '', value: '' }
-  ]);
+
+  const [dacdiem_noibat, setDacdiem_noibat] = useState<string[]>(['']);
+  const [thongsokythuat, setThongsokythuat] = useState<Array<{ key: string; value: string }>>([{ key: '', value: '' }]);
 
   const [bienthe, setBienthe] = useState<BienThe[]>([
     { mausac: '', kichthuoc: '', chatlieu: '', gia: '', sl_tonkho: '', images: [] },
@@ -50,6 +49,7 @@ export default function CreateProductPage() {
 
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // 🔹 Load danh mục & thương hiệu
   useEffect(() => {
@@ -102,8 +102,67 @@ export default function CreateProductPage() {
     setBienthe(updated);
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate code
+    if (!validateRequired(form.code)) {
+      newErrors.code = ValidationMessages.required('mã sản phẩm');
+    }
+
+    // Validate tensp
+    if (!validateRequired(form.tensp)) {
+      newErrors.tensp = ValidationMessages.required('tên sản phẩm');
+    } else if (!validateMinLength(form.tensp, 3)) {
+      newErrors.tensp = ValidationMessages.minLength('Tên sản phẩm', 3);
+    }
+
+    // Validate danhmuc_id
+    if (!validateRequired(form.danhmuc_id)) {
+      newErrors.danhmuc_id = ValidationMessages.required('danh mục');
+    }
+
+    // Validate thuonghieu_id
+    if (!validateRequired(form.thuonghieu_id)) {
+      newErrors.thuonghieu_id = ValidationMessages.required('thương hiệu');
+    }
+
+    // Validate thumbnail
+    if (!form.thumbnail) {
+      newErrors.thumbnail = ValidationMessages.required('ảnh đại diện');
+    }
+
+    // Validate biến thể
+    if (bienthe.length === 0) {
+      newErrors.bienthe = 'Vui lòng thêm ít nhất 1 biến thể sản phẩm';
+    } else {
+      bienthe.forEach((bt, index) => {
+        // Validate giá
+        if (!validateRequired(bt.gia)) {
+          newErrors[`bienthe_${index}_gia`] = `Biến thể ${index + 1}: ${ValidationMessages.required('giá')}`;
+        } else if (!validatePositiveNumber(bt.gia)) {
+          newErrors[`bienthe_${index}_gia`] = `Biến thể ${index + 1}: ${ValidationMessages.positiveNumber('Giá')}`;
+        }
+
+        // Validate số lượng tồn kho (nếu có)
+        if (bt.sl_tonkho && !validateNonNegativeNumber(bt.sl_tonkho)) {
+          newErrors[`bienthe_${index}_sl_tonkho`] = `Biến thể ${index + 1}: ${ValidationMessages.nonNegativeNumber('Số lượng tồn kho')}`;
+        }
+      });
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -112,19 +171,23 @@ export default function CreateProductPage() {
       formData.append('tensp', form.tensp);
       formData.append('mota', form.mota);
       formData.append('mota_chitiet', form.mota_chitiet);
-      formData.append('dacdiem_noibat', JSON.stringify(dacdiem.filter(d => d.trim() !== '')));
-      formData.append('thongsokythuat', JSON.stringify(
-        thongsokythuat
-          .filter(t => t.key.trim() !== '' && t.value.trim() !== '')
-          .reduce((acc, item) => {
-            acc[item.key] = item.value;
-            return acc;
-          }, {} as Record<string, string>)
-      ));
       formData.append('anhien', form.anhien.toString());
       formData.append('danhmuc_id', form.danhmuc_id || '');
       formData.append('thuonghieu_id', form.thuonghieu_id || '');
       if (form.thumbnail) formData.append('thumbnail', form.thumbnail);
+      
+      // Đặc điểm nổi bật (JSON array)
+      const dacdiemFiltered = dacdiem_noibat.filter(item => item.trim() !== '');
+      formData.append('dacdiem_noibat', JSON.stringify(dacdiemFiltered));
+      
+      // Thông số kỹ thuật (JSON object)
+      const thongsoObj: Record<string, string> = {};
+      thongsokythuat.forEach(item => {
+        if (item.key.trim() && item.value.trim()) {
+          thongsoObj[item.key.trim()] = item.value.trim();
+        }
+      });
+      formData.append('thongsokythuat', JSON.stringify(thongsoObj));
 
       // Biến thể
       formData.append('bienthe', JSON.stringify(bienthe.map(bt => ({
@@ -272,94 +335,148 @@ export default function CreateProductPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="form-card" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <form onSubmit={handleSubmit} className="form-card" style={{ maxWidth: '1000px', margin: '0 auto' }} noValidate>
+            {/* Thông báo lỗi tổng hợp */}
+            {Object.keys(errors).length > 0 && (
+              <div className="alert alert-danger d-flex align-items-start mb-4" role="alert" style={{ borderRadius: '12px', margin: '0 2rem 2rem 2rem' }}>
+                <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                <div>
+                  <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                  <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                    {Object.values(errors).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             <div className="form-section">
               <h5 className="form-section-title">Thông tin sản phẩm</h5>
               
               <div className="mb-4">
                 <label className="form-label">Mã sản phẩm <span className="text-danger">*</span></label>
-                <input name="code" value={form.code} onChange={handleChange} className="form-control" placeholder="VD: SP001" required />
+                <input 
+                  name="code" 
+                  value={form.code} 
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (errors.code) setErrors({ ...errors, code: '' });
+                  }} 
+                  className="form-control" 
+                  placeholder="VD: SP001" 
+                  required
+                  style={{ borderColor: errors.code ? '#dc3545' : undefined }}
+                />
+                {errors.code && (
+                  <small className="text-danger d-block mt-1">{errors.code}</small>
+                )}
                 <small className="text-muted">Mã định danh duy nhất cho sản phẩm</small>
               </div>
 
               <div className="mb-4">
                 <label className="form-label">Tên sản phẩm <span className="text-danger">*</span></label>
-                <input name="tensp" value={form.tensp} onChange={handleChange} className="form-control" placeholder="Nhập tên sản phẩm" required />
+                <input 
+                  name="tensp" 
+                  value={form.tensp} 
+                  onChange={(e) => {
+                    handleChange(e);
+                    if (errors.tensp) setErrors({ ...errors, tensp: '' });
+                  }} 
+                  className="form-control" 
+                  placeholder="Nhập tên sản phẩm" 
+                  required
+                  style={{ borderColor: errors.tensp ? '#dc3545' : undefined }}
+                />
+                {errors.tensp && (
+                  <small className="text-danger d-block mt-1">{errors.tensp}</small>
+                )}
               </div>
 
               <div className="row g-3">
                 <div className="col-md-6">
                   <label className="form-label">Danh mục <span className="text-danger">*</span></label>
-                  <select name="danhmuc_id" value={form.danhmuc_id} onChange={handleChange} className="form-select" required>
+                  <select 
+                    name="danhmuc_id" 
+                    value={form.danhmuc_id} 
+                    onChange={(e) => {
+                      handleChange(e);
+                      if (errors.danhmuc_id) setErrors({ ...errors, danhmuc_id: '' });
+                    }} 
+                    className="form-select" 
+                    required
+                    style={{ borderColor: errors.danhmuc_id ? '#dc3545' : undefined }}
+                  >
                     <option value="">-- Chọn danh mục --</option>
                     {danhmucs.map(dm => <option key={dm.id} value={dm.id}>{dm.tendm}</option>)}
                   </select>
+                  {errors.danhmuc_id && (
+                    <small className="text-danger d-block mt-1">{errors.danhmuc_id}</small>
+                  )}
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Thương hiệu <span className="text-danger">*</span></label>
-                  <select name="thuonghieu_id" value={form.thuonghieu_id} onChange={handleChange} className="form-select" required>
+                  <select 
+                    name="thuonghieu_id" 
+                    value={form.thuonghieu_id} 
+                    onChange={(e) => {
+                      handleChange(e);
+                      if (errors.thuonghieu_id) setErrors({ ...errors, thuonghieu_id: '' });
+                    }} 
+                    className="form-select" 
+                    required
+                    style={{ borderColor: errors.thuonghieu_id ? '#dc3545' : undefined }}
+                  >
                     <option value="">-- Chọn thương hiệu --</option>
                     {thuonghieus.map(th => <option key={th.id} value={th.id}>{th.tenbrand}</option>)}
                   </select>
+                  {errors.thuonghieu_id && (
+                    <small className="text-danger d-block mt-1">{errors.thuonghieu_id}</small>
+                  )}
                 </div>
               </div>
 
-              {/* Mô tả ngắn */}
               <div className="mb-4 mt-4">
-                <label className="form-label">Mô tả ngắn</label>
-                <textarea 
-                  name="mota" 
-                  value={form.mota} 
-                  onChange={handleChange} 
-                  className="form-control" 
-                  rows={3} 
-                  placeholder="Mô tả ngắn gọn về sản phẩm (hiển thị ở danh sách sản phẩm)..." 
-                />
-                <small className="text-muted">Mô tả ngắn gọn, khoảng 100-200 ký tự</small>
+                <label className="form-label">Mô tả sản phẩm</label>
+                <textarea name="mota" value={form.mota} onChange={handleChange} className="form-control" rows={4} placeholder="Nhập mô tả ngắn về sản phẩm..." />
+                <small className="text-muted">Mô tả ngắn gọn, hiển thị ở danh sách sản phẩm</small>
               </div>
 
-              {/* Mô tả chi tiết */}
               <div className="mb-4">
-                <label className="form-label fw-bold">
-                  <i className="bi bi-file-text me-2" style={{ color: '#FF8E53' }}></i>
-                  Mô tả chi tiết <span className="text-danger">*</span>
-                </label>
+                <label className="form-label">Mô tả chi tiết</label>
                 <textarea 
                   name="mota_chitiet" 
                   value={form.mota_chitiet} 
                   onChange={handleChange} 
                   className="form-control" 
                   rows={6} 
-                  placeholder="Nhập mô tả chi tiết về sản phẩm. Mô tả này sẽ hiển thị trong tab 'Mô tả sản phẩm'..." 
-                  required
+                  placeholder="Nhập mô tả chi tiết về sản phẩm (hiển thị ở trang chi tiết)..." 
                 />
-                <small className="text-muted">Mô tả chi tiết về sản phẩm, chất liệu, công dụng, v.v.</small>
+                <small className="text-muted">Mô tả chi tiết, hiển thị ở trang chi tiết sản phẩm</small>
               </div>
 
               {/* Đặc điểm nổi bật */}
               <div className="mb-4">
-                <label className="form-label fw-bold">
-                  <i className="bi bi-star-fill me-2" style={{ color: '#FF8E53' }}></i>
-                  Đặc điểm nổi bật
-                </label>
-                {dacdiem.map((item, index) => (
+                <label className="form-label">Đặc điểm nổi bật</label>
+                <small className="text-muted d-block mb-2">Nhập các đặc điểm nổi bật của sản phẩm (mỗi dòng một đặc điểm)</small>
+                {dacdiem_noibat.map((item, index) => (
                   <div key={index} className="d-flex gap-2 mb-2">
                     <input
                       type="text"
                       className="form-control"
                       value={item}
                       onChange={(e) => {
-                        const updated = [...dacdiem];
+                        const updated = [...dacdiem_noibat];
                         updated[index] = e.target.value;
-                        setDacdiem(updated);
+                        setDacdiem_noibat(updated);
                       }}
-                      placeholder={`Đặc điểm ${index + 1} (VD: Chất liệu cao cấp, Thiết kế hiện đại...)`}
+                      placeholder={`Đặc điểm ${index + 1}...`}
                     />
-                    {dacdiem.length > 1 && (
+                    {dacdiem_noibat.length > 1 && (
                       <button
                         type="button"
-                        className="btn btn-outline-danger"
-                        onClick={() => setDacdiem(dacdiem.filter((_, i) => i !== index))}
+                        className="btn btn-danger btn-sm"
+                        onClick={() => setDacdiem_noibat(dacdiem_noibat.filter((_, i) => i !== index))}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -369,20 +486,17 @@ export default function CreateProductPage() {
                 <button
                   type="button"
                   className="btn btn-outline-primary btn-sm mt-2"
-                  onClick={() => setDacdiem([...dacdiem, ''])}
+                  onClick={() => setDacdiem_noibat([...dacdiem_noibat, ''])}
                 >
                   <PlusCircle size={16} className="me-1" />
                   Thêm đặc điểm
                 </button>
-                <small className="text-muted d-block mt-2">Các đặc điểm nổi bật sẽ hiển thị dưới dạng danh sách bullet points</small>
               </div>
 
               {/* Thông số kỹ thuật */}
               <div className="mb-4">
-                <label className="form-label fw-bold">
-                  <i className="bi bi-gear me-2" style={{ color: '#FF8E53' }}></i>
-                  Thông số kỹ thuật
-                </label>
+                <label className="form-label">Thông số kỹ thuật</label>
+                <small className="text-muted d-block mb-2">Nhập các thông số kỹ thuật (Tên thông số - Giá trị)</small>
                 {thongsokythuat.map((item, index) => (
                   <div key={index} className="row g-2 mb-2">
                     <div className="col-md-5">
@@ -395,7 +509,7 @@ export default function CreateProductPage() {
                           updated[index].key = e.target.value;
                           setThongsokythuat(updated);
                         }}
-                        placeholder="Tên thông số (VD: Kích thước, Chất liệu...)"
+                        placeholder="Tên thông số (VD: Kích thước)"
                       />
                     </div>
                     <div className="col-md-6">
@@ -408,14 +522,14 @@ export default function CreateProductPage() {
                           updated[index].value = e.target.value;
                           setThongsokythuat(updated);
                         }}
-                        placeholder="Giá trị (VD: 120x60x75cm, Gỗ MDF...)"
+                        placeholder="Giá trị (VD: 120x60x75 cm)"
                       />
                     </div>
                     <div className="col-md-1">
                       {thongsokythuat.length > 1 && (
                         <button
                           type="button"
-                          className="btn btn-outline-danger w-100"
+                          className="btn btn-danger btn-sm w-100"
                           onClick={() => setThongsokythuat(thongsokythuat.filter((_, i) => i !== index))}
                         >
                           <Trash2 size={16} />
@@ -432,12 +546,23 @@ export default function CreateProductPage() {
                   <PlusCircle size={16} className="me-1" />
                   Thêm thông số
                 </button>
-                <small className="text-muted d-block mt-2">Thông số kỹ thuật sẽ hiển thị trong tab 'Thông số kỹ thuật'</small>
               </div>
 
               <div className="mb-4">
-                <label className="form-label">Ảnh đại diện</label>
-                <input type="file" accept="image/*" onChange={handleFileChange} className="form-control" />
+                <label className="form-label">Ảnh đại diện <span className="text-danger">*</span></label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => {
+                    handleFileChange(e);
+                    if (errors.thumbnail) setErrors({ ...errors, thumbnail: '' });
+                  }} 
+                  className="form-control"
+                  style={{ borderColor: errors.thumbnail ? '#dc3545' : undefined }}
+                />
+                {errors.thumbnail && (
+                  <small className="text-danger d-block mt-1">{errors.thumbnail}</small>
+                )}
                 {preview && (
                   <div className="mt-3 text-center">
                     <img src={preview} alt="preview" className="image-preview" style={{ width: 200, height: 200, objectFit: 'cover' }} />
@@ -455,6 +580,11 @@ export default function CreateProductPage() {
                   <PlusCircle size={18} /> Thêm biến thể
                 </button>
               </div>
+              {errors.bienthe && (
+                <div className="alert alert-danger mb-3">
+                  {errors.bienthe}
+                </div>
+              )}
               
               {bienthe.map((bt, i) => (
                 <div key={i} className="variant-card">
@@ -506,10 +636,21 @@ export default function CreateProductPage() {
                         type="number"
                         className="form-control"
                         value={bt.gia}
-                        onChange={(e) => updateVariant(i, 'gia', e.target.value)}
+                        onChange={(e) => {
+                          updateVariant(i, 'gia', e.target.value);
+                          if (errors[`bienthe_${i}_gia`]) {
+                            const newErrors = { ...errors };
+                            delete newErrors[`bienthe_${i}_gia`];
+                            setErrors(newErrors);
+                          }
+                        }}
                         placeholder="0"
                         required
+                        style={{ borderColor: errors[`bienthe_${i}_gia`] ? '#dc3545' : undefined }}
                       />
+                      {errors[`bienthe_${i}_gia`] && (
+                        <small className="text-danger d-block mt-1">{errors[`bienthe_${i}_gia`]}</small>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Số lượng tồn kho</label>
@@ -517,9 +658,20 @@ export default function CreateProductPage() {
                         type="number"
                         className="form-control"
                         value={bt.sl_tonkho}
-                        onChange={(e) => updateVariant(i, 'sl_tonkho', e.target.value)}
+                        onChange={(e) => {
+                          updateVariant(i, 'sl_tonkho', e.target.value);
+                          if (errors[`bienthe_${i}_sl_tonkho`]) {
+                            const newErrors = { ...errors };
+                            delete newErrors[`bienthe_${i}_sl_tonkho`];
+                            setErrors(newErrors);
+                          }
+                        }}
                         placeholder="0"
+                        style={{ borderColor: errors[`bienthe_${i}_sl_tonkho`] ? '#dc3545' : undefined }}
                       />
+                      {errors[`bienthe_${i}_sl_tonkho`] && (
+                        <small className="text-danger d-block mt-1">{errors[`bienthe_${i}_sl_tonkho`]}</small>
+                      )}
                     </div>
                   </div>
 

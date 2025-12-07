@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { validateRequired, validateMinLength, validateMaxLength, ValidationMessages } from '../../../utils/validation';
 
 interface DanhMuc {
   id: string;
@@ -27,6 +28,7 @@ export default function CreateBaiVietPage() {
   const [danhmucs, setDanhmucs] = useState<DanhMuc[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch danh mục
   useEffect(() => {
@@ -44,10 +46,44 @@ export default function CreateBaiVietPage() {
       .catch(err => console.error('Lỗi lấy users:', err));
   }, []);
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate tieude
+    if (!validateRequired(tieude)) {
+      newErrors.tieude = ValidationMessages.required('tiêu đề');
+    } else if (!validateMinLength(tieude, 10)) {
+      newErrors.tieude = ValidationMessages.minLength('Tiêu đề', 10);
+    } else if (!validateMaxLength(tieude, 200)) {
+      newErrors.tieude = ValidationMessages.maxLength('Tiêu đề', 200);
+    }
+
+    // Validate noidung
+    if (!validateRequired(noidung)) {
+      newErrors.noidung = ValidationMessages.required('nội dung');
+    } else if (!validateMinLength(noidung, 50)) {
+      newErrors.noidung = ValidationMessages.minLength('Nội dung', 50);
+    }
+
+    // Validate danhmuc
+    if (!validateRequired(selectedDanhMuc)) {
+      newErrors.danhmuc = ValidationMessages.required('danh mục');
+    }
+
+    // Validate user
+    if (!validateRequired(selectedUser)) {
+      newErrors.user = ValidationMessages.required('tác giả');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tieude || !noidung || !selectedDanhMuc || !selectedUser) {
-      alert('Vui lòng nhập đủ thông tin!');
+    
+    // Validate form trước khi submit
+    if (!validateForm()) {
       return;
     }
 
@@ -166,17 +202,40 @@ export default function CreateBaiVietPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '900px' }}>
+          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '900px' }} noValidate>
+            {/* Thông báo lỗi tổng hợp */}
+            {Object.keys(errors).length > 0 && (
+              <div className="alert alert-danger d-flex align-items-start mb-4" role="alert" style={{ borderRadius: '12px' }}>
+                <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                <div>
+                  <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                  <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                    {Object.values(errors).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <label className="form-label">Tiêu đề <span className="text-danger">*</span></label>
               <input
                 type="text"
                 className="form-control"
                 value={tieude}
-                onChange={e => setTieude(e.target.value)}
+                onChange={e => {
+                  setTieude(e.target.value);
+                  if (errors.tieude) setErrors({ ...errors, tieude: '' });
+                }}
                 placeholder="Nhập tiêu đề bài viết"
                 required
+                style={{ borderColor: errors.tieude ? '#dc3545' : undefined }}
               />
+              {errors.tieude && (
+                <small className="text-danger d-block mt-1">{errors.tieude}</small>
+              )}
+              <small className="text-muted">Tối thiểu 10 ký tự, tối đa 200 ký tự</small>
             </div>
 
             <div className="mb-4">
@@ -185,10 +244,18 @@ export default function CreateBaiVietPage() {
                 className="form-control"
                 rows={8}
                 value={noidung}
-                onChange={e => setNoidung(e.target.value)}
+                onChange={e => {
+                  setNoidung(e.target.value);
+                  if (errors.noidung) setErrors({ ...errors, noidung: '' });
+                }}
                 placeholder="Nhập nội dung bài viết..."
                 required
+                style={{ borderColor: errors.noidung ? '#dc3545' : undefined }}
               ></textarea>
+              {errors.noidung && (
+                <small className="text-danger d-block mt-1">{errors.noidung}</small>
+              )}
+              <small className="text-muted">Tối thiểu 50 ký tự</small>
             </div>
 
             <div className="row g-3 mb-4">
@@ -197,8 +264,12 @@ export default function CreateBaiVietPage() {
                 <select
                   className="form-select"
                   value={selectedDanhMuc}
-                  onChange={e => setSelectedDanhMuc(e.target.value)}
+                  onChange={e => {
+                    setSelectedDanhMuc(e.target.value);
+                    if (errors.danhmuc) setErrors({ ...errors, danhmuc: '' });
+                  }}
                   required
+                  style={{ borderColor: errors.danhmuc ? '#dc3545' : undefined }}
                 >
                   <option value="">-- Chọn danh mục --</option>
                   {danhmucs.map(dm => (
@@ -207,6 +278,9 @@ export default function CreateBaiVietPage() {
                     </option>
                   ))}
                 </select>
+                {errors.danhmuc && (
+                  <small className="text-danger d-block mt-1">{errors.danhmuc}</small>
+                )}
               </div>
 
               <div className="col-md-6">
@@ -214,8 +288,12 @@ export default function CreateBaiVietPage() {
                 <select
                   className="form-select"
                   value={selectedUser}
-                  onChange={e => setSelectedUser(e.target.value)}
+                  onChange={e => {
+                    setSelectedUser(e.target.value);
+                    if (errors.user) setErrors({ ...errors, user: '' });
+                  }}
                   required
+                  style={{ borderColor: errors.user ? '#dc3545' : undefined }}
                 >
                   <option value="">-- Chọn tác giả --</option>
                   {users.map(u => (
@@ -224,6 +302,9 @@ export default function CreateBaiVietPage() {
                     </option>
                   ))}
                 </select>
+                {errors.user && (
+                  <small className="text-danger d-block mt-1">{errors.user}</small>
+                )}
               </div>
             </div>
 

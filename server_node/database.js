@@ -117,9 +117,9 @@ const SanPhamModel = sequelize.define(
     code: DataTypes.STRING,
     tensp: DataTypes.STRING,
     mota: DataTypes.TEXT,
-    mota_chitiet: DataTypes.TEXT, // Mô tả chi tiết
-    dacdiem_noibat: DataTypes.TEXT, // Đặc điểm nổi bật (JSON array)
-    thongsokythuat: DataTypes.TEXT, // Thông số kỹ thuật (JSON object)
+    mota_chitiet: DataTypes.TEXT,
+    dacdiem_noibat: DataTypes.TEXT, // JSON array stored as TEXT
+    thongsokythuat: DataTypes.TEXT, // JSON object stored as TEXT
     ngay: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     trangthai : DataTypes.TINYINT,
     ratingTB : { type: DataTypes.DECIMAL(3,1), defaultValue: 0 },

@@ -1,6 +1,21 @@
 'use client';
+import { useState } from 'react';
+import { useIsMobile } from '@/app/hooks/useMediaQuery';
 
 export default function Footer() {
+  const isMobile = useIsMobile();
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    products: false,
+    support: false,
+    contact: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
   // Danh sách sản phẩm (Chỉ để chữ hiển thị)
   const products = [
     'Sofa phòng khách',
@@ -58,10 +73,20 @@ export default function Footer() {
 
             {/* Cột 2: Danh mục Sản phẩm */}
             <div className="col-lg-3 col-md-6">
-              <h5 className="text-warning fw-bold text-uppercase mb-4" style={{ fontSize: '16px' }}>
-                Sản phẩm
+              <h5 
+                className="text-warning fw-bold text-uppercase mb-4 d-flex justify-content-between align-items-center" 
+                style={{ fontSize: '16px', cursor: isMobile ? 'pointer' : 'default' }}
+                onClick={isMobile ? () => toggleSection('products') : undefined}
+              >
+                <span>Sản phẩm</span>
+                {isMobile && (
+                  <i className={`bi bi-chevron-${expandedSections.products ? 'up' : 'down'}`} style={{ fontSize: '14px' }}></i>
+                )}
               </h5>
-              <ul className="list-unstyled">
+              <ul className="list-unstyled" style={{ 
+                display: isMobile && !expandedSections.products ? 'none' : 'block',
+                transition: 'all 0.3s ease'
+              }}>
                 {products.map((item, index) => (
                   <li key={index} className="mb-2">
                     <span className="footer-item text-white-50">
@@ -74,10 +99,20 @@ export default function Footer() {
 
             {/* Cột 3: Hỗ trợ khách hàng */}
             <div className="col-lg-2 col-md-6">
-              <h5 className="text-warning fw-bold text-uppercase mb-4" style={{ fontSize: '16px' }}>
-                Hỗ trợ
+              <h5 
+                className="text-warning fw-bold text-uppercase mb-4 d-flex justify-content-between align-items-center" 
+                style={{ fontSize: '16px', cursor: isMobile ? 'pointer' : 'default' }}
+                onClick={isMobile ? () => toggleSection('support') : undefined}
+              >
+                <span>Hỗ trợ</span>
+                {isMobile && (
+                  <i className={`bi bi-chevron-${expandedSections.support ? 'up' : 'down'}`} style={{ fontSize: '14px' }}></i>
+                )}
               </h5>
-              <ul className="list-unstyled">
+              <ul className="list-unstyled" style={{ 
+                display: isMobile && !expandedSections.support ? 'none' : 'block',
+                transition: 'all 0.3s ease'
+              }}>
                 {supports.map((item, index) => (
                   <li key={index} className="mb-2">
                     <span className="footer-item text-white-50">
@@ -90,10 +125,20 @@ export default function Footer() {
 
             {/* Cột 4: Liên hệ */}
             <div className="col-lg-3 col-md-6">
-              <h5 className="text-warning fw-bold text-uppercase mb-4" style={{ fontSize: '16px' }}>
-                Liên hệ
+              <h5 
+                className="text-warning fw-bold text-uppercase mb-4 d-flex justify-content-between align-items-center" 
+                style={{ fontSize: '16px', cursor: isMobile ? 'pointer' : 'default' }}
+                onClick={isMobile ? () => toggleSection('contact') : undefined}
+              >
+                <span>Liên hệ</span>
+                {isMobile && (
+                  <i className={`bi bi-chevron-${expandedSections.contact ? 'up' : 'down'}`} style={{ fontSize: '14px' }}></i>
+                )}
               </h5>
-              <ul className="list-unstyled small text-white-50">
+              <ul className="list-unstyled small text-white-50" style={{ 
+                display: isMobile && !expandedSections.contact ? 'none' : 'block',
+                transition: 'all 0.3s ease'
+              }}>
                 <li className="mb-3 d-flex">
                   <i className="bi bi-geo-alt-fill text-warning me-2 mt-1"></i>
                   <span>Số Đường 3, KDC Vạn Phúc, Hiệp Bình Phước, Thủ Đức, TP. HCM</span>

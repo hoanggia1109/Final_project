@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { validateRequired, validateMinLength, validateMaxLength, ValidationMessages } from '../../../../utils/validation';
 
 export default function EditBaiViet() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function EditBaiViet() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch('http://localhost:5000/api/baiviet/users/all')
@@ -40,7 +42,15 @@ export default function EditBaiViet() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleChange = (e: any) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    // Clear error khi user bắt đầu nhập
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+  
   const handleFileChange = (e: any) => {
     const f = e.target.files[0];
     if (f) {
@@ -49,8 +59,42 @@ export default function EditBaiViet() {
     }
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate tieude
+    if (!validateRequired(form.tieude)) {
+      newErrors.tieude = ValidationMessages.required('tiêu đề');
+    } else if (!validateMinLength(form.tieude, 10)) {
+      newErrors.tieude = ValidationMessages.minLength('Tiêu đề', 10);
+    } else if (!validateMaxLength(form.tieude, 200)) {
+      newErrors.tieude = ValidationMessages.maxLength('Tiêu đề', 200);
+    }
+
+    // Validate noidung
+    if (!validateRequired(form.noidung)) {
+      newErrors.noidung = ValidationMessages.required('nội dung');
+    } else if (!validateMinLength(form.noidung, 50)) {
+      newErrors.noidung = ValidationMessages.minLength('Nội dung', 50);
+    }
+
+    // Validate user_id
+    if (!validateRequired(form.user_id)) {
+      newErrors.user_id = ValidationMessages.required('tác giả');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -194,15 +238,55 @@ export default function EditBaiViet() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '900px' }}>
+          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '900px' }} noValidate>
+            {/* Thông báo lỗi tổng hợp */}
+            {Object.keys(errors).length > 0 && (
+              <div className="alert alert-danger d-flex align-items-start mb-4" role="alert" style={{ borderRadius: '12px' }}>
+                <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                <div>
+                  <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                  <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                    {Object.values(errors).map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             <div className="mb-4">
               <label className="form-label">Tiêu đề <span className="text-danger">*</span></label>
-              <input name="tieude" value={form.tieude} onChange={handleChange} className="form-control" placeholder="Nhập tiêu đề bài viết" required />
+              <input 
+                name="tieude" 
+                value={form.tieude} 
+                onChange={handleChange} 
+                className="form-control" 
+                placeholder="Nhập tiêu đề bài viết" 
+                required
+                style={{ borderColor: errors.tieude ? '#dc3545' : undefined }}
+              />
+              {errors.tieude && (
+                <small className="text-danger d-block mt-1">{errors.tieude}</small>
+              )}
+              <small className="text-muted">Tối thiểu 10 ký tự, tối đa 200 ký tự</small>
             </div>
 
             <div className="mb-4">
               <label className="form-label">Nội dung <span className="text-danger">*</span></label>
-              <textarea name="noidung" value={form.noidung} onChange={handleChange} className="form-control" rows={10} placeholder="Nhập nội dung bài viết..." required />
+              <textarea 
+                name="noidung" 
+                value={form.noidung} 
+                onChange={handleChange} 
+                className="form-control" 
+                rows={10} 
+                placeholder="Nhập nội dung bài viết..." 
+                required
+                style={{ borderColor: errors.noidung ? '#dc3545' : undefined }}
+              />
+              {errors.noidung && (
+                <small className="text-danger d-block mt-1">{errors.noidung}</small>
+              )}
+              <small className="text-muted">Tối thiểu 50 ký tự</small>
             </div>
 
             <div className="mb-4">
@@ -233,12 +317,22 @@ export default function EditBaiViet() {
             <div className="row g-3 mb-4">
               <div className="col-md-6">
                 <label className="form-label">Tác giả <span className="text-danger">*</span></label>
-                <select name="user_id" value={form.user_id} onChange={handleChange} className="form-select" required>
+                <select 
+                  name="user_id" 
+                  value={form.user_id} 
+                  onChange={handleChange} 
+                  className="form-select" 
+                  required
+                  style={{ borderColor: errors.user_id ? '#dc3545' : undefined }}
+                >
                   <option value="">-- Chọn tác giả --</option>
                   {users.map(u => (
                     <option key={u.id} value={u.id}>{u.name || u.ho_ten}</option>
                   ))}
                 </select>
+                {errors.user_id && (
+                  <small className="text-danger d-block mt-1">{errors.user_id}</small>
+                )}
               </div>
 
               <div className="col-md-6">

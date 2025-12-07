@@ -287,7 +287,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             {/* Email */}
             <div className="mb-3">
               <label className="form-label small fw-semibold text-dark">Email</label>

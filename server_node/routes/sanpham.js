@@ -112,6 +112,24 @@ router.get("/:id", async (req, res) => {
     // Convert to plain object để đảm bảo Sequelize serialize đúng
     const productData = sp.get({ plain: true });
     
+    // Parse JSON fields nếu có
+    if (productData.dacdiem_noibat && typeof productData.dacdiem_noibat === 'string') {
+      try {
+        productData.dacdiem_noibat = JSON.parse(productData.dacdiem_noibat);
+      } catch (e) {
+        console.error('[GET /api/sanpham/:id] Error parsing dacdiem_noibat:', e);
+        productData.dacdiem_noibat = null;
+      }
+    }
+    if (productData.thongsokythuat && typeof productData.thongsokythuat === 'string') {
+      try {
+        productData.thongsokythuat = JSON.parse(productData.thongsokythuat);
+      } catch (e) {
+        console.error('[GET /api/sanpham/:id] Error parsing thongsokythuat:', e);
+        productData.thongsokythuat = null;
+      }
+    }
+    
     console.log(`[GET /api/sanpham/:id] ProductData thumbnail: ${productData.thumbnail || 'N/A'}`);
     console.log(`[GET /api/sanpham/:id] Views: ${productData.luotxem || 0}`);
     
@@ -156,6 +174,22 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
       bienthe,
     } = req.body;
 
+    // Parse JSON fields nếu là string
+    if (typeof dacdiem_noibat === "string") {
+      try {
+        dacdiem_noibat = JSON.parse(dacdiem_noibat);
+      } catch {
+        dacdiem_noibat = null;
+      }
+    }
+    if (typeof thongsokythuat === "string") {
+      try {
+        thongsokythuat = JSON.parse(thongsokythuat);
+      } catch {
+        thongsokythuat = null;
+      }
+    }
+
     if (typeof bienthe === "string") {
       try {
         bienthe = JSON.parse(bienthe);
@@ -177,8 +211,8 @@ router.post("/", upload.single("thumbnail"), async (req, res) => {
         tensp,
         mota,
         mota_chitiet: mota_chitiet || null,
-        dacdiem_noibat: dacdiem_noibat || null,
-        thongsokythuat: thongsokythuat || null,
+        dacdiem_noibat: dacdiem_noibat ? JSON.stringify(dacdiem_noibat) : null,
+        thongsokythuat: thongsokythuat ? JSON.stringify(thongsokythuat) : null,
         thumbnail: thumbnailPath,
         anhien: anhien ?? 1,
         slug: finalSlug,
@@ -230,6 +264,22 @@ router.put("/:id", upload.any(), async (req, res) => {
 
     let { tensp, mota, mota_chitiet, dacdiem_noibat, thongsokythuat, anhien, danhmuc_id, thuonghieu_id, bienthe } = req.body;
     if (typeof bienthe === "string") bienthe = JSON.parse(bienthe || "[]");
+    
+    // Parse JSON fields nếu là string
+    if (typeof dacdiem_noibat === "string") {
+      try {
+        dacdiem_noibat = JSON.parse(dacdiem_noibat);
+      } catch {
+        dacdiem_noibat = null;
+      }
+    }
+    if (typeof thongsokythuat === "string") {
+      try {
+        thongsokythuat = JSON.parse(thongsokythuat);
+      } catch {
+        thongsokythuat = null;
+      }
+    }
 
     const thumbnailFile = req.files.find((f) => f.fieldname === "thumbnail");
     const thumbnailPath = thumbnailFile
@@ -239,9 +289,9 @@ router.put("/:id", upload.any(), async (req, res) => {
       { 
         tensp, 
         mota, 
-        mota_chitiet: mota_chitiet !== undefined ? mota_chitiet : sp.mota_chitiet,
-        dacdiem_noibat: dacdiem_noibat !== undefined ? dacdiem_noibat : sp.dacdiem_noibat,
-        thongsokythuat: thongsokythuat !== undefined ? thongsokythuat : sp.thongsokythuat,
+        mota_chitiet: mota_chitiet || null,
+        dacdiem_noibat: dacdiem_noibat ? JSON.stringify(dacdiem_noibat) : null,
+        thongsokythuat: thongsokythuat ? JSON.stringify(thongsokythuat) : null,
         anhien, 
         danhmuc_id, 
         thuonghieu_id, 

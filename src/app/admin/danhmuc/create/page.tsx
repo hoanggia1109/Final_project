@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { validateRequired, validateMinLength, ValidationMessages } from '../../../utils/validation';
 
 export default function CreateDanhMucPage() {
   const router = useRouter();
@@ -17,10 +18,34 @@ export default function CreateDanhMucPage() {
 
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
+    // Clear error khi user bắt đầu nhập
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Validate code
+    if (!validateRequired(form.code)) {
+      newErrors.code = ValidationMessages.required('mã danh mục');
+    }
+
+    // Validate tendm
+    if (!validateRequired(form.tendm)) {
+      newErrors.tendm = ValidationMessages.required('tên danh mục');
+    } else if (!validateMinLength(form.tendm, 2)) {
+      newErrors.tendm = ValidationMessages.minLength('Tên danh mục', 2);
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +58,12 @@ export default function CreateDanhMucPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -138,8 +169,57 @@ export default function CreateDanhMucPage() {
           background: #fafafa;
         }
         @media (max-width: 768px) {
+          .form-container {
+            padding: 1rem 0;
+          }
           .form-header {
             padding: 1rem;
+            margin-bottom: 1rem;
+          }
+          .form-header h2 {
+            font-size: 1.5rem !important;
+          }
+          .form-card {
+            border-radius: 12px;
+          }
+          .form-card .card-body {
+            padding: 1.5rem !important;
+          }
+          .image-upload-area {
+            padding: 1.5rem;
+          }
+          .image-preview {
+            max-width: 100%;
+            height: auto;
+          }
+          .btn-submit {
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            width: 100%;
+          }
+          .d-flex.gap-3 {
+            flex-direction: column;
+          }
+          .d-flex.gap-3 .btn {
+            width: 100%;
+            margin: 0 !important;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .form-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+          }
+          .form-header .btn {
+            width: 100%;
+          }
+          .col-lg-8 {
+            padding: 0;
+          }
+          .col-lg-4 {
+            margin-top: 1.5rem;
           }
         }
       `}</style>
@@ -163,8 +243,23 @@ export default function CreateDanhMucPage() {
           {/* Form */}
           <div className="row">
             <div className="col-lg-8">
-              <form onSubmit={handleSubmit} className="form-card">
+              <form onSubmit={handleSubmit} className="form-card" noValidate>
                 <div className="card-body p-4">
+                  {/* Thông báo lỗi tổng hợp */}
+                  {Object.keys(errors).length > 0 && (
+                    <div className="alert alert-danger d-flex align-items-start mb-4" role="alert" style={{ borderRadius: '12px' }}>
+                      <i className="bi bi-exclamation-triangle-fill me-2 mt-1" style={{ fontSize: '1.2rem' }}></i>
+                      <div>
+                        <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                        <ul className="mb-0 mt-2" style={{ paddingLeft: '20px' }}>
+                          {Object.values(errors).map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
               {/* Mã danh mục */}
               <div className="mb-4">
                 <label className="form-label fw-semibold">
@@ -176,8 +271,11 @@ export default function CreateDanhMucPage() {
                   onChange={handleChange}
                   className="form-control"
                   placeholder="VD: DM001"
-                  required
+                  style={{ borderColor: errors.code ? '#dc3545' : undefined }}
                 />
+                {errors.code && (
+                  <small className="text-danger d-block mt-1">{errors.code}</small>
+                )}
                 <small className="text-muted">Mã định danh duy nhất cho danh mục</small>
               </div>
 
@@ -192,8 +290,11 @@ export default function CreateDanhMucPage() {
                   onChange={handleChange as React.ChangeEvent<HTMLInputElement>}
                   className="form-control"
                   placeholder="VD: Bàn ghế phòng khách"
-                  required
+                  style={{ borderColor: errors.tendm ? '#dc3545' : undefined }}
                 />
+                {errors.tendm && (
+                  <small className="text-danger d-block mt-1">{errors.tendm}</small>
+                )}
               </div>
 
               {/* Mô tả */}

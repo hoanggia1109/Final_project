@@ -120,17 +120,29 @@ export default function AdminDanhMucPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.tendm}
-                            className="rounded"
-                            style={{ 
-                              width: '50px', 
-                              height: '50px', 
-                              objectFit: 'cover',
-                              border: '2px solid #E9ECEF'
-                            }}
-                          />
+                          <div style={{
+                            width: '50px',
+                            height: '50px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            borderRadius: '4px',
+                            border: '2px solid #E9ECEF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto'
+                          }}>
+                            <img
+                              src={item.image}
+                              alt={item.tendm}
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'cover',
+                                objectPosition: 'center'
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div 
                             className="d-flex align-items-center justify-content-center rounded bg-light"

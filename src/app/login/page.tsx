@@ -233,7 +233,7 @@ export default function LoginPage() {
                     <p className="text-muted">Nhập thông tin để tiếp tục</p>
                   </div>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} noValidate>
                     {/* Email Input */}
                     <div className="mb-4">
                       <label className="form-label fw-semibold small text-dark">

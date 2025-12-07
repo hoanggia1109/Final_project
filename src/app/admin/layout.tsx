@@ -19,8 +19,9 @@ import {
   FolderOpen,
   FileText,
   Archive,
-  Mail,
-  Star
+  Ticket,
+  Star,
+  MessageSquare
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -116,21 +117,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     },
     {
       title: 'Mã giảm giá',
-      icon: Tag,
+      icon: Ticket,
       path: '/admin/magiamgia',
       active: pathname?.startsWith('/admin/magiamgia'),
-    },
-    {
-      title: 'Liên hệ',
-      icon: Mail,
-      path: '/admin/lienhe',
-      active: pathname?.startsWith('/admin/lienhe'),
     },
     {
       title: 'Đánh giá',
       icon: Star,
       path: '/admin/reviews',
       active: pathname?.startsWith('/admin/reviews'),
+    },
+    {
+      title: 'Liên hệ',
+      icon: MessageSquare,
+      path: '/admin/contact',
+      active: pathname?.startsWith('/admin/contact'),
     },
     {
       title: 'Cài đặt',
