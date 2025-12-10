@@ -47,7 +47,9 @@ router.get("/:id", async (req, res) => {
 router.post("/", upload.single("url"), async (req, res) => {
   try {
     const { tieude, mota, thutu, anhien, linksp } = req.body;
-    const url = req.file ? `http://localhost:5000/uploads/banner/${req.file.filename}` : null;
+    // Sử dụng URL động từ request thay vì hardcode localhost:5000
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const url = req.file ? `${baseUrl}/uploads/banner/${req.file.filename}` : null;
 
     const newBanner = await BannerModel.create({
       tieude,
@@ -73,7 +75,9 @@ router.put("/:id", upload.single("url"), async (req, res) => {
 
     let url = banner.url;
     if (req.file) {
-      url = `http://localhost:5000/uploads/banner/${req.file.filename}`;
+      // Sử dụng URL động từ request thay vì hardcode localhost:5000
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      url = `${baseUrl}/uploads/banner/${req.file.filename}`;
       // xóa file cũ nếu có
       if (banner.url) {
         const oldPath = path.join(__dirname, "../uploads/banner", path.basename(banner.url));

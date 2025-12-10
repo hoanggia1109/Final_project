@@ -53,11 +53,6 @@ export default function ProductAdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Load data
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       const [productsRes, danhmucsRes, thuonghieusRes] = await Promise.all([
@@ -79,6 +74,34 @@ export default function ProductAdminPage() {
       setLoading(false);
     }
   };
+
+  // Load data khi component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Tự động refresh khi quay lại tab/window (để cập nhật sau khi thêm/sửa sản phẩm)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Refresh dữ liệu khi quay lại tab
+      loadData();
+    };
+
+    const handleVisibilityChange = () => {
+      // Refresh khi tab trở nên visible
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Toggle ẩn/hiện sản phẩm
   const handleToggleStatus = async (id: string) => {

@@ -2204,6 +2204,57 @@ router.get("/products/out-of-stock", auth, isAdmin, trackUserActivity, async (re
 
 
 
+/**
+ * GET /api/admin/products/new
+ * Lấy danh sách sản phẩm mới (tạo trong N ngày gần đây)
+ * 
+ * Query params:
+ * - days (optional): Số ngày gần đây, mặc định là 7
+ * 
+ * Returns:
+ * - count: Số lượng sản phẩm
+ * - products: Mảng sản phẩm với thông tin đầy đủ
+ */
+router.get("/products/new", auth, isAdmin, trackUserActivity, async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const products = await SanPhamModel.findAll({
+      where: {
+        created_at: {
+          [Op.gte]: startDate,
+        },
+      },
+      include: [
+        {
+          model: LoaiModel,
+          as: "danhmuc",
+          attributes: ["id", "tendm"],
+        },
+        {
+          model: ThuongHieuModel,
+          as: "thuonghieu",
+          attributes: ["id", "tenbrand"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    res.json({
+      count: products.length,
+      products: products,
+    });
+  } catch (err) {
+    console.error("Lỗi GET /api/admin/products/new:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
+
+
+
 /* ========================================
 
    ĐƠN HÀNG

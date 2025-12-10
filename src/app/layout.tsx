@@ -26,6 +26,8 @@ export default function RootLayout({
   // Các trang không hiển thị Header và Footer
   const noLayoutPages = ['/login', '/register', '/auth'];
   const isNoLayoutPage = noLayoutPages.includes(pathname);
+  // Ẩn Header và Footer trong trang admin
+  const isAdminPage = pathname?.startsWith('/admin');
 
   return (
     <html lang="en">
@@ -38,10 +40,10 @@ export default function RootLayout({
       </head>
       <body className={didotFont.variable} style={{ fontFamily: 'var(--font-didot), Didot, "Bodoni MT", "Libre Bodoni", serif' }}>
         <BootstrapClient />
-        {!isNoLayoutPage && <Header />}
+        {!isNoLayoutPage && !isAdminPage && <Header />}
         {children}
-        {!isNoLayoutPage && <Footer />}
-        {!isNoLayoutPage && <HomeButton />}
+        {!isNoLayoutPage && !isAdminPage && <Footer />}
+        {!isNoLayoutPage && !isAdminPage && <HomeButton />}
         {/* <DebugAuth /> */}
       </body>
     </html>

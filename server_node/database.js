@@ -545,6 +545,31 @@ const PhieuNhapXuatKhoModel = sequelize.define(
   { tableName: "phieu_nhap_xuat_kho", timestamps: false }
 );
 
+// CHI NHÁNH
+const ChiNhanhModel = sequelize.define(
+  "chi_nhanh",
+  {
+    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    tenchinhanh: { type: DataTypes.STRING, allowNull: false },
+    diachi: { type: DataTypes.TEXT, allowNull: false },
+    quan: { type: DataTypes.STRING, allowNull: false },
+    thanhpho: { type: DataTypes.STRING, allowNull: false },
+    sdt: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: true },
+    giomocua: { type: DataTypes.STRING, allowNull: true },
+    giodongcua: { type: DataTypes.STRING, allowNull: true },
+    giomocua_cn: { type: DataTypes.STRING, allowNull: true },
+    giodongcua_cn: { type: DataTypes.STRING, allowNull: true },
+    hinhanh: { type: DataTypes.STRING, allowNull: true },
+    mapurl: { type: DataTypes.TEXT, allowNull: true },
+    thutu: { type: DataTypes.INTEGER, defaultValue: 0 },
+    anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "chi_nhanh", timestamps: false }
+);
+
 // ======================
 // Quan hệ phiếu nhập xuất kho
 // ======================
@@ -588,4 +613,5 @@ module.exports = {
   BannerModel,
   PhieuNhapXuatKhoModel,
   YeuThichModel,
+  ChiNhanhModel,
 };

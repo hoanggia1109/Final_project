@@ -64,7 +64,9 @@ router.get("/:id", async (req, res) => {
 router.post("/", upload.single("hinh_anh"), async (req, res) => {
   try {
     const { tieude, noidung, danhmuc_baiviet_id, user_id, anhien } = req.body;
-    const hinh_anh = req.file ? `http://localhost:5000/uploads/blog/${req.file.filename}` : null;
+    // Sử dụng URL động từ request thay vì hardcode localhost:5000
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const hinh_anh = req.file ? `${baseUrl}/uploads/blog/${req.file.filename}` : null;
 
     const newItem = await BaiVietModel.create({
       tieude,
@@ -90,7 +92,9 @@ router.put("/:id", upload.single("hinh_anh"), async (req, res) => {
 
     let hinh_anh = item.hinh_anh;
     if (req.file) {
-      hinh_anh = `http://localhost:5000/uploads/blog/${req.file.filename}`;
+      // Sử dụng URL động từ request thay vì hardcode localhost:5000
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      hinh_anh = `${baseUrl}/uploads/blog/${req.file.filename}`;
       // xóa ảnh cũ nếu có
       if (item.hinh_anh) {
         const oldPath = path.join(__dirname, "../uploads/blog", path.basename(item.hinh_anh));

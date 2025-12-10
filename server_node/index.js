@@ -43,6 +43,7 @@ app.use("/api/banner", require("./routes/banner"));
 app.use("/api/tonkho", require("./routes/tonkho"));
 app.use("/admin", require("./routes/admin"));
 app.use("/api/diachi", require("./routes/diachi"));
+app.use("/api/chinhanh", require("./routes/chinhanh"));
 app.use("/api/thanhtoan", require("./routes/thanhtoan"));
 app.use("/api/yeuthich", require("./routes/yeuthich"));
 app.use("/api/profile", require("./routes/profile"));

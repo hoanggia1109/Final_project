@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useIsMobile } from '@/app/hooks/useMediaQuery';
 
 export default function Footer() {
@@ -30,12 +31,14 @@ export default function Footer() {
 
   // Danh sách hỗ trợ
   const supports = [
-    'Hướng dẫn mua hàng',
-    'Chính sách bảo hành',
-    'Chính sách đổi trả',
-    'Vận chuyển & Lắp đặt',
-    'Hình thức thanh toán',
-    'Bảo mật thông tin'
+    { name: 'Hướng dẫn mua hàng', link: '/faq' },
+    { name: 'Chính sách bảo hành', link: '/faq' },
+    { name: 'Chính sách đổi trả', link: '/faq' },
+    { name: 'Vận chuyển & Lắp đặt', link: '/faq' },
+    { name: 'Hình thức thanh toán', link: '/faq' },
+    { name: 'Bảo mật thông tin', link: '/faq' },
+    { name: 'Hỏi đáp (FAQ)', link: '/faq' },
+    { name: 'Hệ thống cửa hàng', link: '/stores' }
   ];
 
   return (
@@ -115,9 +118,17 @@ export default function Footer() {
               }}>
                 {supports.map((item, index) => (
                   <li key={index} className="mb-2">
-                    <span className="footer-item text-white-50">
-                      {item}
-                    </span>
+                    {item.link ? (
+                      <Link href={item.link} className="text-decoration-none">
+                        <span className="footer-item text-white-50">
+                          {item.name}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span className="footer-item text-white-50">
+                        {item.name}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

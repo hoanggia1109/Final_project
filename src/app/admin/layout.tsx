@@ -21,7 +21,8 @@ import {
   Archive,
   Ticket,
   Star,
-  MessageSquare
+  MessageSquare,
+  MapPin
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -78,6 +79,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Image,
       path: '/admin/banner',
       active: pathname?.startsWith('/admin/banner'),
+    },
+    {
+      title: 'Chi nhánh',
+      icon: MapPin,
+      path: '/admin/chinhanh',
+      active: pathname?.startsWith('/admin/chinhanh'),
     },
     {
       title: 'Danh mục Bài viết',

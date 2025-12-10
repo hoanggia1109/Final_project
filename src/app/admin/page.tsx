@@ -32,6 +32,14 @@ interface DashboardStats {
   lowStockCount: number;
   outOfStockCount: number;
   revenueToday: number;
+  newProductsCount: number; // Sản phẩm mới (7 ngày gần đây)
+}
+
+interface RevenueStats {
+  from_date: string;
+  to_date: string;
+  tong_doanh_thu: number;
+  so_don_hang: number;
 }
 
 export default function AdminDashboard() {
@@ -48,9 +56,16 @@ export default function AdminDashboard() {
     lowStockCount: 0,
     outOfStockCount: 0,
     revenueToday: 0,
+    newProductsCount: 0,
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
+  const [dateRange, setDateRange] = useState({
+    from_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 ngày trước
+    to_date: new Date().toISOString().split('T')[0], // Hôm nay
+  });
+  const [loadingRevenue, setLoadingRevenue] = useState(false);
 
   useEffect(() => {
     // Kiểm tra quyền admin
@@ -88,7 +103,8 @@ export default function AdminDashboard() {
         ordersTodayRes,
         ordersPendingRes,
         lowStockRes,
-        outOfStockRes
+        outOfStockRes,
+        newProductsRes
       ] = await Promise.all([
         fetch('http://localhost:5000/api/admin/dashboard', { headers }),
         fetch('http://localhost:5000/api/admin/revenue/daily', { headers }),
@@ -96,7 +112,8 @@ export default function AdminDashboard() {
         fetch('http://localhost:5000/api/admin/orders/today', { headers }),
         fetch('http://localhost:5000/api/admin/orders/pending', { headers }),
         fetch('http://localhost:5000/api/admin/products/low-stock', { headers }),
-        fetch('http://localhost:5000/api/admin/products/out-of-stock', { headers })
+        fetch('http://localhost:5000/api/admin/products/out-of-stock', { headers }),
+        fetch('http://localhost:5000/api/admin/products/new?days=7', { headers })
       ]);
 
       const dashboardData = dashboardRes.ok ? await dashboardRes.json() : {};
@@ -106,6 +123,7 @@ export default function AdminDashboard() {
       const ordersPendingData = ordersPendingRes.ok ? await ordersPendingRes.json() : { count: 0 };
       const lowStockData = lowStockRes.ok ? await lowStockRes.json() : { count: 0 };
       const outOfStockData = outOfStockRes.ok ? await outOfStockRes.json() : { count: 0 };
+      const newProductsData = newProductsRes.ok ? await newProductsRes.json() : { count: 0 };
 
       setStats({
         totalProducts: dashboardData.sanpham || 0,
@@ -119,6 +137,7 @@ export default function AdminDashboard() {
         lowStockCount: lowStockData.count || 0,
         outOfStockCount: outOfStockData.count || 0,
         revenueToday: revenueData.tong_doanh_thu || 0,
+        newProductsCount: newProductsData.count || 0,
       });
 
       // Set recent orders (lấy từ orders today, tối đa 5 đơn)
@@ -131,6 +150,44 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  const loadRevenueStats = async () => {
+    if (!dateRange.from_date || !dateRange.to_date) {
+      return;
+    }
+
+    setLoadingRevenue(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(
+        `http://localhost:5000/api/admin/revenue/range?from_date=${dateRange.from_date}&to_date=${dateRange.to_date}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setRevenueStats(data);
+      }
+    } catch (error) {
+      console.error('Lỗi tải thống kê doanh thu:', error);
+    } finally {
+      setLoadingRevenue(false);
+    }
+  };
+
+  useEffect(() => {
+    if (dateRange.from_date && dateRange.to_date) {
+      loadRevenueStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange.from_date, dateRange.to_date]);
 
   const StatCard = ({ 
     title, 
@@ -522,75 +579,222 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Dashboard Boxes */}
           <div className="actions-grid">
             <h3 className="section-title">
               <Activity size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-              Thao tác nhanh
+              Thông tin quan trọng
             </h3>
             <div className="row g-4">
+              {/* Sản phẩm mới */}
               <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Quản lý sản phẩm"
-                  description="Xem, thêm, sửa, xóa sản phẩm"
-                  icon={Package}
+                <div 
+                  className="h-100"
                   onClick={() => router.push('/admin/products')}
-                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                />
+                  style={{ 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s ease',
+                    background: '#fff',
+                    borderRadius: '16px',
+                    padding: '28px 20px',
+                    boxShadow: '0 4px 20px rgba(255, 107, 107, 0.08)',
+                    border: '2px solid #FFE5D9'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-8px)';
+                    e.currentTarget.style.boxShadow = '0 12px 35px rgba(255, 107, 107, 0.15)';
+                    e.currentTarget.style.borderColor = '#FF8E53';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 107, 107, 0.08)';
+                    e.currentTarget.style.borderColor = '#FFE5D9';
+                  }}
+                >
+                  <div className="text-center">
+                    <div 
+                      className="d-inline-flex align-items-center justify-content-center mb-3"
+                      style={{ 
+                        width: '70px', 
+                        height: '70px', 
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        boxShadow: '0 6px 20px rgba(255, 107, 107, 0.25)'
+                      }}
+                    >
+                      <Package size={32} color="#fff" strokeWidth={2.5} />
+                    </div>
+                    <h5 className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>Sản phẩm mới</h5>
+                    <h2 className="fw-bold mb-0" style={{ color: '#667eea', fontSize: '2rem' }}>{stats.newProductsCount}</h2>
+                    <p className="text-muted small mb-0 mt-2">Trong 7 ngày gần đây</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Đơn hàng mới */}
               <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Thêm sản phẩm mới"
-                  description="Tạo sản phẩm mới cho cửa hàng"
-                  icon={ShoppingBag}
-                  onClick={() => router.push('/admin/products/create')}
-                  gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-                />
-              </div>
-              <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Quản lý người dùng"
-                  description="Xem và quản lý người dùng"
-                  icon={Users}
-                  onClick={() => router.push('/admin/users')}
-                  gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-                />
-              </div>
-              <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Quản lý đơn hàng"
-                  description="Xem và xử lý đơn hàng"
-                  icon={ShoppingCart}
+                <div 
+                  className="h-100"
                   onClick={() => router.push('/admin/orders')}
-                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
-                />
+                  style={{ 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s ease',
+                    background: '#fff',
+                    borderRadius: '16px',
+                    padding: '28px 20px',
+                    boxShadow: '0 4px 20px rgba(255, 107, 107, 0.08)',
+                    border: '2px solid #FFE5D9'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-8px)';
+                    e.currentTarget.style.boxShadow = '0 12px 35px rgba(255, 107, 107, 0.15)';
+                    e.currentTarget.style.borderColor = '#FF8E53';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 107, 107, 0.08)';
+                    e.currentTarget.style.borderColor = '#FFE5D9';
+                  }}
+                >
+                  <div className="text-center">
+                    <div 
+                      className="d-inline-flex align-items-center justify-content-center mb-3"
+                      style={{ 
+                        width: '70px', 
+                        height: '70px', 
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        boxShadow: '0 6px 20px rgba(255, 107, 107, 0.25)'
+                      }}
+                    >
+                      <ShoppingCart size={32} color="#fff" strokeWidth={2.5} />
+                    </div>
+                    <h5 className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>Đơn hàng mới</h5>
+                    <h2 className="fw-bold mb-0" style={{ color: '#f5576c', fontSize: '2rem' }}>{stats.ordersToday}</h2>
+                    <p className="text-muted small mb-0 mt-2">Hôm nay</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Sản phẩm hết hàng */}
               <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Quản lý tồn kho"
-                  description="Theo dõi tồn kho sản phẩm"
-                  icon={Package}
-                  onClick={() => router.push('/admin/tonkho')}
-                  gradient="linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
-                />
+                <div 
+                  className="h-100"
+                  onClick={() => router.push('/admin/products')}
+                  style={{ 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s ease',
+                    background: '#fff',
+                    borderRadius: '16px',
+                    padding: '28px 20px',
+                    boxShadow: '0 4px 20px rgba(255, 107, 107, 0.08)',
+                    border: '2px solid #FFE5D9'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-8px)';
+                    e.currentTarget.style.boxShadow = '0 12px 35px rgba(255, 107, 107, 0.15)';
+                    e.currentTarget.style.borderColor = '#FF8E53';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 107, 107, 0.08)';
+                    e.currentTarget.style.borderColor = '#FFE5D9';
+                  }}
+                >
+                  <div className="text-center">
+                    <div 
+                      className="d-inline-flex align-items-center justify-content-center mb-3"
+                      style={{ 
+                        width: '70px', 
+                        height: '70px', 
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
+                        boxShadow: '0 6px 20px rgba(255, 107, 107, 0.25)'
+                      }}
+                    >
+                      <AlertTriangle size={32} color="#fff" strokeWidth={2.5} />
+                    </div>
+                    <h5 className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>Sản phẩm hết hàng</h5>
+                    <h2 className="fw-bold mb-0" style={{ color: '#ff6b6b', fontSize: '2rem' }}>{stats.outOfStockCount}</h2>
+                    <p className="text-muted small mb-0 mt-2">Cần nhập hàng</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Thống kê doanh thu theo thời gian */}
               <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Người dùng online"
-                  description={`${stats.onlineUsers} người đang online`}
-                  icon={UserCheck}
-                  onClick={() => router.push('/admin/users')}
-                  gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-                />
-              </div>
-              <div className="col-12 col-md-6 col-lg-3">
-                <QuickActionCard
-                  title="Thống kê chi tiết"
-                  description="Xem báo cáo và phân tích"
-                  icon={TrendingUp}
-                  onClick={() => alert('Chức năng đang phát triển')}
-                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                />
+                <div 
+                  className="h-100"
+                  style={{ 
+                    background: '#fff',
+                    borderRadius: '16px',
+                    padding: '28px 20px',
+                    boxShadow: '0 4px 20px rgba(255, 107, 107, 0.08)',
+                    border: '2px solid #FFE5D9'
+                  }}
+                >
+                  <div className="text-center mb-3">
+                    <div 
+                      className="d-inline-flex align-items-center justify-content-center mb-3"
+                      style={{ 
+                        width: '70px', 
+                        height: '70px', 
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
+                        boxShadow: '0 6px 20px rgba(255, 107, 107, 0.25)'
+                      }}
+                    >
+                      <DollarSign size={32} color="#fff" strokeWidth={2.5} />
+                    </div>
+                    <h5 className="fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>Thống kê doanh thu</h5>
+                  </div>
+                  
+                  {/* Form chọn ngày */}
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold text-muted mb-1">Từ ngày</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={dateRange.from_date}
+                      onChange={(e) => setDateRange({ ...dateRange, from_date: e.target.value })}
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold text-muted mb-1">Đến ngày</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={dateRange.to_date}
+                      onChange={(e) => setDateRange({ ...dateRange, to_date: e.target.value })}
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                  </div>
+
+                  {/* Hiển thị kết quả */}
+                  {loadingRevenue ? (
+                    <div className="text-center">
+                      <div className="spinner-border spinner-border-sm text-primary"></div>
+                    </div>
+                  ) : revenueStats ? (
+                    <div className="text-center">
+                      <div className="mb-2">
+                        <small className="text-muted d-block">Số đơn hàng</small>
+                        <strong style={{ color: '#FF6B6B', fontSize: '1.3rem' }}>{revenueStats.so_don_hang}</strong>
+                      </div>
+                      <div>
+                        <small className="text-muted d-block">Doanh thu</small>
+                        <strong style={{ color: '#FF8E53', fontSize: '1.3rem' }}>
+                          {revenueStats.tong_doanh_thu.toLocaleString('vi-VN')}₫
+                        </strong>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-muted small">
+                      Chọn khoảng thời gian để xem thống kê
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -61,8 +61,10 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { tendm, mota, code, anhien } = req.body;
+    // Sử dụng URL động từ request thay vì hardcode localhost:5000
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const image = req.file
-      ? `http://localhost:5000/uploads/danhmuc/${req.file.filename}`
+      ? `${baseUrl}/uploads/danhmuc/${req.file.filename}`
       : null;
 
     const newItem = await LoaiModel.create({
@@ -87,7 +89,9 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
     let image = item.image;
     if (req.file) {
-      image = `http://localhost:5000/uploads/danhmuc/${req.file.filename}`;
+      // Sử dụng URL động từ request thay vì hardcode localhost:5000
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      image = `${baseUrl}/uploads/danhmuc/${req.file.filename}`;
       // xóa file cũ
       if (item.image) {
         const oldPath = path.join(

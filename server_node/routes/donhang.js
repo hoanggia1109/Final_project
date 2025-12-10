@@ -29,6 +29,46 @@ const { tinhPhiVanChuyen } = require("./utils/shipping");
 const { apDungMaGiamGia } = require("./utils/discount");
 
 // CHANGED: Không import email function, chỉ gửi email khi thanh toán thành công
+
+/**
+ * GET /api/donhang/stats
+ * Lấy thống kê đơn hàng cho tính toán sản phẩm bán chạy (Public, không cần auth)
+ * Route này PHẢI đặt TRƯỚC route /:id để tránh conflict
+ * Route này chỉ trả về dữ liệu tối thiểu: chitiet_donhang với bienthe.sanpham_id và soluong
+ */
+router.get("/stats", async (req, res) => {
+  try {
+    const orders = await DonHangModel.findAll({
+      attributes: ['id'], // Chỉ lấy id để optimize
+      include: [
+        {
+          model: DonHangChiTietModel,
+          as: "chitiet",
+          attributes: ['soluong'], // Chỉ lấy soluong
+          include: [
+            {
+              model: SanPhamBienTheModel,
+              as: "bienthe",
+              attributes: ['sanpham_id'], // Chỉ lấy sanpham_id
+            },
+          ],
+        },
+      ],
+      where: {
+        // Chỉ lấy đơn hàng đã hoàn thành hoặc đang xử lý (không lấy đơn đã hủy)
+        trangthai: {
+          [Op.notIn]: ['cancelled', 'returned']
+        }
+      }
+    });
+    
+    res.json(orders);
+  } catch (err) {
+    console.error("Lỗi lấy thống kê đơn hàng:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
+
 /**
  * POST /api/donhang/tinh-tong-tien
  * Tính tạm tổng tiền, giảm giá và phí vận chuyển (không tạo đơn hàng)

@@ -53,8 +53,10 @@ router.get("/:id", async (req, res) => {
 router.post("/", upload.single("logo"), async (req, res) => {
   try {
     const { tenbrand, code, thutu, anhien } = req.body;
+    // Sử dụng URL động từ request thay vì hardcode localhost:5000
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const logo = req.file
-      ? `http://localhost:5000/uploads/brand/${req.file.filename}`
+      ? `${baseUrl}/uploads/brand/${req.file.filename}`
       : null;
 
     const newBrand = await ThuongHieuModel.create({
@@ -80,7 +82,9 @@ router.put("/:id", upload.single("logo"), async (req, res) => {
 
     let logo = brand.logo;
     if (req.file) {
-      logo = `http://localhost:5000/uploads/brand/${req.file.filename}`;
+      // Sử dụng URL động từ request thay vì hardcode localhost:5000
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      logo = `${baseUrl}/uploads/brand/${req.file.filename}`;
       // xóa ảnh cũ nếu có
       if (brand.logo) {
         const oldPath = path.join(

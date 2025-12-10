@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -29,16 +29,8 @@ export default function ProductPage() {
   const itemsPerPage = 16;
   const router = useRouter();
 
-  // Lấy danh mục
-  useEffect(() => {
-    fetch('http://localhost:5000/api/danhmuc')
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((err) => console.error('Lỗi tải danh mục:', err));
-  }, []);
-
-  //  Lấy sản phẩm (theo danh mục hoặc tất cả)
-  useEffect(() => {
+  // Hàm fetch sản phẩm
+  const fetchProducts = useCallback(() => {
     setLoading(true);
     const url = selectedCat
       ? `http://localhost:5000/api/danhmuc/${selectedCat}`
@@ -54,6 +46,42 @@ export default function ProductPage() {
       .catch((err) => console.error('Lỗi tải sản phẩm:', err))
       .finally(() => setLoading(false));
   }, [selectedCat]);
+
+  // Lấy danh mục
+  useEffect(() => {
+    fetch('http://localhost:5000/api/danhmuc')
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((err) => console.error('Lỗi tải danh mục:', err));
+  }, []);
+
+  //  Lấy sản phẩm (theo danh mục hoặc tất cả)
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Tự động refresh khi quay lại tab/window (để cập nhật sau khi thêm/sửa sản phẩm)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Refresh dữ liệu khi quay lại tab
+      fetchProducts();
+    };
+
+    const handleVisibilityChange = () => {
+      // Refresh khi tab trở nên visible
+      if (!document.hidden) {
+        fetchProducts();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchProducts]);
 
   //  Lọc sản phẩm theo từ khóa
   const filteredProducts = products.filter((p) =>

@@ -16,6 +16,16 @@ interface Product {
   originalPrice: number;
 }
 
+interface ProductFromAPI {
+  id: number;
+  tensp: string;
+  thumbnail: string;
+  luotxem?: number;
+  giamgia?: number;
+  bienthe?: Array<{ gia: number }>;
+}
+
+
 interface Category {
   id: number;
   title: string;
@@ -515,7 +525,7 @@ function ProductCategories() {
   );
 }
 
-// HOT PRODUCTS SECTION
+// FEATURED PRODUCTS SECTION (Sản phẩm nổi bật - sorted by views)
 function HotProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -524,11 +534,34 @@ function HotProducts() {
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch('http://localhost:5000/api/sanpham')
       .then(res => res.json())
       .then(data => { 
         if (Array.isArray(data)) {
-          setProducts(data);
+          // Sort by luotxem (view count) descending, then take top products
+          const allProducts = (data as ProductFromAPI[]).filter(p => p.id && p.tensp);
+          
+          // Sort: products with views first, then by ID (newest first)
+          const sortedProducts = allProducts.sort((a, b) => {
+            const viewsA = a.luotxem || 0;
+            const viewsB = b.luotxem || 0;
+            if (viewsA > 0 || viewsB > 0) {
+              return viewsB - viewsA; // Sort by views descending
+            }
+            return b.id - a.id; // If no views, sort by ID descending (newest first)
+          });
+          
+          const transformedProducts = sortedProducts
+            .slice(0, 20) // Take top 20
+            .map((p) => ({
+              id: p.id,
+              name: p.tensp || 'Sản phẩm',
+              image: p.thumbnail || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg',
+              discount: p.giamgia || 0,
+              price: p.bienthe?.[0]?.gia || 0,
+              originalPrice: p.bienthe?.[0]?.gia ? Math.round(p.bienthe[0].gia * 1.25) : 0,
+            }));
+          setProducts(transformedProducts);
         } else {
           console.error('Products API did not return array:', data);
           setProducts([]);
@@ -571,7 +604,7 @@ function HotProducts() {
             position: 'relative',
             display: 'inline-block'
           }}>
-            🔥 SẢN PHẨM HOT
+            ⭐ SẢN PHẨM NỔI BẬT
             <div style={{
               position: 'absolute',
               bottom: '-10px',
@@ -583,7 +616,7 @@ function HotProducts() {
               borderRadius: '2px'
             }}></div>
           </h2>
-          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Sản phẩm được yêu thích nhất</p>
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Sản phẩm được xem nhiều nhất</p>
           <Link href="/products" className="btn btn-outline-dark mt-2 px-4 btn-responsive" style={{ 
             borderRadius: '25px',
             transition: 'all 0.3s ease'
@@ -625,9 +658,14 @@ function HotProducts() {
           </button>
 
           <div className="row g-4">
-            {visibleProducts.map((product) => (
-              <div key={product.id} className="col-6 col-md-4 col-lg-3">
-                <Link href={`/products/${product.id}`} className="text-decoration-none">
+            {visibleProducts.length === 0 ? (
+              <div className="col-12 text-center py-5">
+                <p className="text-muted">Chưa có sản phẩm nổi bật</p>
+              </div>
+            ) : (
+              visibleProducts.map((product) => (
+                <div key={product.id} className="col-6 col-md-4 col-lg-3">
+                  <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
                     className="card border-0 product-card"
                     style={{ 
@@ -693,15 +731,16 @@ function HotProducts() {
                           <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
                           <span className="text-muted text-decoration-line-through responsive-text" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
                         </div>
-                        <div className="badge bg-danger text-white px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
-                          <i className="bi bi-fire me-1"></i>HOT
+                        <div className="badge bg-warning text-dark px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
+                          <i className="bi bi-star-fill me-1"></i>NỔI BẬT
                         </div>
                       </div>
                     </div>
                   </div>
-                </Link>
-              </div>
-            ))}
+                  </Link>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -709,7 +748,7 @@ function HotProducts() {
   );
 }
 
-// DISCOUNT PRODUCTS SECTION
+// BEST-SELLING PRODUCTS SECTION (Sản phẩm bán chạy - sorted by purchase count)
 function DiscountProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -718,19 +757,20 @@ function DiscountProducts() {
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
-    fetch('/api/discount-products')
+    // Fetch best-selling products from API
+    fetch('/api/best-selling-products')
       .then(res => res.json())
       .then(data => { 
         if (Array.isArray(data)) {
           setProducts(data);
         } else {
-          console.error('Discount products API did not return array:', data);
+          console.error('Best-selling products API did not return array:', data);
           setProducts([]);
         }
         setLoading(false); 
       })
       .catch(err => { 
-        console.error('Error fetching discount products:', err); 
+        console.error('Error fetching best-selling products:', err); 
         setProducts([]);
         setLoading(false); 
       });
@@ -765,7 +805,7 @@ function DiscountProducts() {
             display: 'inline-block',
             textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
           }}>
-              SẢN PHẨM GIẢM GIÁ
+              🏆 SẢN PHẨM BÁN CHẠY
             <div style={{
               position: 'absolute',
               bottom: '-10px',
@@ -778,7 +818,7 @@ function DiscountProducts() {
               boxShadow: '0 2px 8px rgba(255,230,109,0.6)'
             }}></div>
           </h2>
-          <p className="text-white mt-3 responsive-text" style={{ fontSize: '1.05rem', opacity: 0.95 }}>Ưu đãi đặc biệt - Giá tốt nhất</p>
+          <p className="text-white mt-3 responsive-text" style={{ fontSize: '1.05rem', opacity: 0.95 }}>Sản phẩm được mua nhiều nhất</p>
           <Link href="/discount-products" className="btn btn-light mt-2 px-4 fw-semibold btn-responsive" style={{ 
             borderRadius: '25px',
             transition: 'all 0.3s ease',
@@ -826,8 +866,13 @@ function DiscountProducts() {
           )}
 
           <div className="row g-4">
-            {visibleProducts.map((product) => (
-              <div key={product.id} className={isMobile ? "col-6" : "col-6 col-md-4 col-lg-3"}>
+            {visibleProducts.length === 0 ? (
+              <div className="col-12 text-center py-5">
+                <p className="text-white">Chưa có sản phẩm bán chạy</p>
+              </div>
+            ) : (
+              visibleProducts.map((product) => (
+                <div key={product.id} className={isMobile ? "col-6" : "col-6 col-md-4 col-lg-3"}>
                 <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
                     className="card border-0 product-card"
@@ -899,15 +944,16 @@ function DiscountProducts() {
                           <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
                           <span className="text-muted text-decoration-line-through responsive-text" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
                         </div>
-                        <div className="badge bg-warning text-dark px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
-                          HOT
+                        <div className="badge bg-success text-white px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
+                          <i className="bi bi-trophy-fill me-1"></i>BÁN CHẠY
                         </div>
                       </div>
                     </div>
                   </div>
                 </Link>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
