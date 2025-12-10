@@ -10,7 +10,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const moment = require("moment-timezone");
 const app = express();
-const port = 5000; // ĐỔI PORT ĐỂ TRÁNH CONFLICT VỚI NEXT.JS (port 3000)
+const port = process.env.PORT || 5002; // ĐỔI PORT ĐỂ TRÁNH CONFLICT VỚI NEXT.JS (port 3000)
 app.use(cors());
 app.use(express.json());
 
