@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 import Toast from '@/app/component/Toast';
 
@@ -256,7 +257,7 @@ export default function OrdersPage() {
 
       for (const item of order.chitiet) {
 
-        await fetch('http://localhost:5000/api/giohang', {
+        await fetch(`${API_BASE_URL}/api/giohang`, {
 
           method: 'POST',
 

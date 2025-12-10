@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Gọi API từ Node.js backend
-    const response = await fetch('http://localhost:5000/api/danhmuc', {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/danhmuc`, {
       cache: 'no-store', 
     });
 

@@ -28,8 +28,8 @@ export async function GET() {
   try {
     // Lấy sản phẩm và thống kê đơn hàng từ backend
     const [productsRes, ordersRes] = await Promise.all([
-      fetch('http://localhost:5000/api/sanpham', { cache: 'no-store' }),
-      fetch('http://localhost:5000/api/donhang/stats', { cache: 'no-store' }).catch(() => null)
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham`, { cache: 'no-store' }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/donhang/stats`, { cache: 'no-store' }).catch(() => null)
     ]);
 
     if (!productsRes.ok) {

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, PlusCircle } from "lucide-react";
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface Brand {
   id: string;
@@ -20,7 +21,7 @@ export default function BrandPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/thuonghieu")
+    fetch("${API_BASE_URL}/api/thuonghieu")
       .then((res) => res.json())
       .then((data) => setBrands(data))
       .catch((err) => console.error("Lỗi khi tải thương hiệu:", err));
@@ -29,7 +30,7 @@ export default function BrandPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc muốn xóa thương hiệu này không?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

@@ -1,4 +1,6 @@
 // Cart utilities
+import { API_BASE_URL } from '@/lib/api-config';
+
 export interface CartItem {
   id: number;
   name: string;
@@ -17,7 +19,7 @@ export const getCartCount = async (): Promise<number> => {
     const token = localStorage.getItem('token');
     if (!token) return 0;
 
-    const response = await fetch('http://localhost:5000/api/giohang', {
+    const response = await fetch(`${API_BASE_URL}/api/giohang`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -49,7 +51,7 @@ export const addToCart = async (product: {
       return false;
     }
 
-    const response = await fetch('http://localhost:5000/api/giohang', {
+    const response = await fetch(`${API_BASE_URL}/api/giohang`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Call backend Node.js API (Port 5000)
-    const response = await fetch('http://localhost:5000/api/sanpham', {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham`, {
       cache: 'no-store'
     });
 

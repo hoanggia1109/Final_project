@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Trash2, Edit, Search, Tag, Calendar, DollarSign, Percent } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface MaGiamGia {
   id: string;
@@ -51,7 +52,7 @@ export default function MaGiamGiaPage() {
   const loadData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/admin/magiamgia', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/magiamgia`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -71,7 +72,7 @@ export default function MaGiamGiaPage() {
     setDeleteLoading(id);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/magiamgia/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/magiamgia/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -114,8 +115,8 @@ export default function MaGiamGiaPage() {
     try {
       const token = localStorage.getItem('token');
       const url = editingId
-        ? `http://localhost:5000/api/admin/magiamgia/${editingId}`
-        : 'http://localhost:5000/api/admin/magiamgia';
+        ? `${API_BASE_URL}/api/admin/magiamgia/${editingId}`
+        : `${API_BASE_URL}/api/admin/magiamgia`;
       
       const res = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',

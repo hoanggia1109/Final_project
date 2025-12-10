@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import LocationSelector from '../component/LocationSelector';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -110,7 +111,7 @@ export default function AuthPage() {
     }
     
     try {
-      const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/dangnhap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -164,7 +165,7 @@ export default function AuthPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/dangky', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/dangky`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

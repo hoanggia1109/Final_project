@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface OrderDetail {
   id: string;
@@ -69,7 +70,7 @@ export default function AdminOrderDetailPage() {
       }
 
       // Sử dụng API admin để lấy đầy đủ thông tin
-      const response = await fetch(`http://localhost:5000/api/admin/donhang/${params.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/donhang/${params.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ export default function AdminOrderDetailPage() {
 
       if (!response.ok) {
         // Fallback: thử API thường nếu API admin không có
-        const fallbackResponse = await fetch(`http://localhost:5000/api/donhang/${params.id}`, {
+        const fallbackResponse = await fetch(`${API_BASE_URL}/api/donhang/${params.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -118,7 +119,7 @@ export default function AdminOrderDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/donhang/${order.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/donhang/${order.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +148,7 @@ export default function AdminOrderDetailPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/donhang/${order.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/donhang/${order.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -284,7 +285,7 @@ export default function AdminOrderDetailPage() {
                                 <Image
                                   src={item.bienthe.sanpham.thumbnail.startsWith('http') 
                                     ? item.bienthe.sanpham.thumbnail 
-                                    : `http://localhost:5000${item.bienthe.sanpham.thumbnail}`}
+                                    : `${API_BASE_URL}${item.bienthe.sanpham.thumbnail}`}
                                   alt={item.bienthe.sanpham?.tensp || 'Product'}
                                   fill
                                   style={{ objectFit: 'cover' }}

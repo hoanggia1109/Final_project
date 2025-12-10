@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function EditBrandPage() {
   const { id } = useParams();
@@ -24,7 +25,7 @@ export default function EditBrandPage() {
     if (!id) return;
     const fetchBrand = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`);
+        const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${id}`);
         const data = await res.json();
         setForm({
           code: data.code || '',
@@ -51,7 +52,7 @@ export default function EditBrandPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

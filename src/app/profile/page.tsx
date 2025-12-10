@@ -269,7 +269,7 @@ export default function ProfilePage() {
                     >
                       {userData.avatar ? (
                       <Image
-                          src={`http://localhost:5000${userData.avatar}`}
+                          src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${userData.avatar}`}
                         alt="Avatar"
                         width={100}
                         height={100}

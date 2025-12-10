@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function CreateBannerPage() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function CreateBannerPage() {
       formData.append('linksp', form.linksp);
       if (file) formData.append('url', file);
 
-      const res = await fetch('http://localhost:5000/api/banner', {
+      const res = await fetch(`${API_BASE_URL}/api/banner`, {
         method: 'POST',
         body: formData,
       });

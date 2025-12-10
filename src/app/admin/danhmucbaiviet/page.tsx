@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface BlogCategory {
   id: string;
@@ -19,7 +20,7 @@ export default function AdminBlogCategoriesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/danhmucbaiviet')
+    fetch(`${API_BASE_URL}/api/danhmucbaiviet`)
       .then(res => res.json())
       .then(data => {
         console.log(' Data từ API:', data);
@@ -45,7 +46,7 @@ export default function AdminBlogCategoriesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc muốn xóa danh mục này không?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/danhmucbaiviet/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/danhmucbaiviet/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setList(list.filter(item => item.id !== id));
         alert(' Xóa thành công!');

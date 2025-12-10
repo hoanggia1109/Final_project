@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface BlogCategory {
   id: string;
@@ -25,7 +26,7 @@ export default function EditBlogCategoryPage() {
   useEffect(() => {
     if (!params.id) return;
     
-    fetch(`http://localhost:5000/api/danhmucbaiviet/${params.id}`)
+    fetch(`${API_BASE_URL}/api/danhmucbaiviet/${params.id}`)
       .then(res => res.json())
       .then((data: BlogCategory) => {
         setForm({
@@ -52,7 +53,7 @@ export default function EditBlogCategoryPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/danhmucbaiviet/${params.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/danhmucbaiviet/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

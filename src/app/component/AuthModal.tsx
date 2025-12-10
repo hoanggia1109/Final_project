@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -92,7 +93,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
     try {
       if (mode === 'login') {
         // ========== ĐĂNG NHẬP ==========
-        const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/dangnhap`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -176,7 +177,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/auth/dangky', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/dangky`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

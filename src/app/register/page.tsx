@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function RegisterPage() {
     
     try {
       // ✅ GỌI API THẬT
-      const response = await fetch('http://localhost:5000/api/auth/dangky', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/dangky`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

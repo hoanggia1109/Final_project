@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Package, ArrowUpCircle, ArrowDownCircle, History, AlertTriangle } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface BienThe {
   id: string;
@@ -68,7 +69,7 @@ export default function TonKhoPage() {
       console.log('📦 Đang tải dữ liệu tồn kho...');
       console.log('🔑 Token:', token ? 'Có' : 'KHÔNG CÓ');
       
-      const url = `http://localhost:5000/api/tonkho?page=${currentPage}&limit=${itemsPerPage}`;
+      const url = `${API_BASE_URL}/api/tonkho?page=${currentPage}&limit=${itemsPerPage}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -106,7 +107,7 @@ export default function TonKhoPage() {
   const loadThongKe = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/tonkho/thongke/summary', {
+      const res = await fetch(`${API_BASE_URL}/api/tonkho/thongke/summary`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -124,7 +125,7 @@ export default function TonKhoPage() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/tonkho/nhap', {
+      const res = await fetch(`${API_BASE_URL}/api/tonkho/nhap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +162,7 @@ export default function TonKhoPage() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/tonkho/xuat', {
+      const res = await fetch(`${API_BASE_URL}/api/tonkho/xuat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

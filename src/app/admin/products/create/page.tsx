@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, PlusCircle, Trash2 } from 'lucide-react';
 import { validateRequired, validateMinLength, validatePositiveNumber, validateNonNegativeNumber, ValidationMessages } from '../../../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface DanhMuc {
   id: string;
@@ -53,8 +54,8 @@ export default function CreateProductPage() {
 
   // 🔹 Load danh mục & thương hiệu
   useEffect(() => {
-    fetch('http://localhost:5000/api/danhmuc').then(res => res.json()).then(setDanhmucs);
-    fetch('http://localhost:5000/api/thuonghieu').then(res => res.json()).then(setThuonghieus);
+    fetch(`${API_BASE_URL}/api/danhmuc`).then(res => res.json()).then(setDanhmucs);
+    fetch(`${API_BASE_URL}/api/thuonghieu`).then(res => res.json()).then(setThuonghieus);
   }, []);
 
   const handleChange = (e: any) => {
@@ -198,7 +199,7 @@ export default function CreateProductPage() {
         sl_tonkho: bt.sl_tonkho
       }))));
 
-      const res = await fetch('http://localhost:5000/api/sanpham', {
+      const res = await fetch(`${API_BASE_URL}/api/sanpham`, {
         method: 'POST',
         body: formData,
       });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface Banner {
   id: number;
@@ -23,7 +24,7 @@ export default function AdminBannerPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/banner')
+    fetch(`${API_BASE_URL}/api/banner`)
       .then(res => res.json())
       .then(data => {
         console.log(' Banner data:', data);
@@ -46,7 +47,7 @@ export default function AdminBannerPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('Bạn có chắc muốn xóa banner này không?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/banner/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/banner/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setBanners(banners.filter(b => b.id !== id));
         alert(' Đã xóa thành công!');

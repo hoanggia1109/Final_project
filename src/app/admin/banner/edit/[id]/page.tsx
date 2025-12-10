@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function EditBannerPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function EditBannerPage() {
 
   useEffect(() => {
     if (!id) return;
-    fetch(`http://localhost:5000/api/banner/${id}`)
+    fetch(`${API_BASE_URL}/api/banner/${id}`)
       .then(res => res.json())
       .then(data => {
         setForm({
@@ -68,7 +69,7 @@ export default function EditBannerPage() {
       formData.append('linksp', form.linksp);
       if (file) formData.append('url', file);
 
-      const res = await fetch(`http://localhost:5000/api/banner/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/banner/${id}`, {
         method: 'PUT',
         body: formData
       });

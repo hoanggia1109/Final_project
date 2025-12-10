@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface DanhMuc {
   id: string;
@@ -20,7 +21,7 @@ export default function AdminDanhMucPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/danhmuc?admin=true')
+    fetch(`${API_BASE_URL}/api/danhmuc?admin=true`)
       .then(res => res.json())
       .then(data => {
         setList(data);
@@ -35,7 +36,7 @@ export default function AdminDanhMucPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc muốn xóa danh mục này không?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/danhmuc/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/danhmuc/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setList(list.filter(item => item.id !== id));
         alert(' Xóa thành công!');

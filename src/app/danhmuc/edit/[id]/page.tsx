@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface DanhMuc {
   id: string;
@@ -34,7 +35,7 @@ export default function EditDanhMucPage() {
   useEffect(() => {
     if (!params.id) return;
     
-    fetch(`http://localhost:5000/api/danhmuc/${params.id}`)
+    fetch(`${API_BASE_URL}/api/danhmuc/${params.id}`)
       .then(res => res.json())
       .then((data: DanhMuc) => {
         setForm({
@@ -79,7 +80,7 @@ export default function EditDanhMucPage() {
       formData.append('anhien', form.anhien.toString());
       if (form.image) formData.append('image', form.image);
 
-      const res = await fetch(`http://localhost:5000/api/danhmuc/${params.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/danhmuc/${params.id}`, {
         method: 'PUT',
         body: formData,
       });

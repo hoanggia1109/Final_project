@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Star, Trash2, Search, User, Package, Calendar, Image as ImageIcon, Eye } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface ReviewImage {
   id: string;
@@ -50,7 +51,7 @@ export default function ReviewsPage() {
   const loadData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/admin/review', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/review`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -70,7 +71,7 @@ export default function ReviewsPage() {
     setDeleteLoading(id);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/review/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/review/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

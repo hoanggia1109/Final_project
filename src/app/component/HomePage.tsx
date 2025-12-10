@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import PromoModal from './PromoModal';
 import ChatBox from './ChatBox';
 import { useIsMobile, useIsDesktop } from '../hooks/useMediaQuery';
+import { API_BASE_URL } from '@/lib/api-config';
 
 //INTERFACES
 interface Product {
@@ -55,8 +56,17 @@ function Banner() {
 
   // Fetch banners từ API
   useEffect(() => {
-    fetch('http://localhost:5000/api/banner')
-      .then(res => res.json())
+    fetch(`${API_BASE_URL}/api/banner`)
+      .then(async res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Response is not JSON");
+        }
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           // Chỉ lấy banner có anhien = 1, sắp xếp theo thutu và giới hạn 4 banner
@@ -71,7 +81,9 @@ function Banner() {
         }
       })
       .catch(err => {
-        console.error('Lỗi khi tải banner:', err);
+        console.error('❌ Lỗi khi tải banner:', err);
+        console.error('🔗 API URL:', `${API_BASE_URL}/api/banner`);
+        console.error('💡 Kiểm tra xem backend có đang chạy trên port 5002 không?');
         // Giữ nguyên banner mặc định nếu lỗi
       });
   }, []);
@@ -534,7 +546,7 @@ function HotProducts() {
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/sanpham')
+    fetch(`${API_BASE_URL}/api/sanpham`)
       .then(res => res.json())
       .then(data => { 
         if (Array.isArray(data)) {
@@ -1086,7 +1098,7 @@ function Partners() {
 
   // Fetch brands từ API
   useEffect(() => {
-    fetch('http://localhost:5000/api/thuonghieu')
+    fetch(`${API_BASE_URL}/api/thuonghieu`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

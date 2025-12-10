@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function CreateBrandPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function CreateBrandPage() {
         logo: form.logo?.trim() || null,            // logo có thể null
       };
   
-      const res = await fetch('http://localhost:5000/api/thuonghieu', {
+      const res = await fetch(`${API_BASE_URL}/api/thuonghieu`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

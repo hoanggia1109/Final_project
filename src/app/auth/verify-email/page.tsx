@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function VerifyEmailPage() {
     // Gọi API xác nhận
     const verifyEmail = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/auth/verify-email/${token}`);
+        const response = await fetch(`${API_BASE_URL}/api/auth/verify-email/${token}`);
         const data = await response.json();
 
         if (data.success) {

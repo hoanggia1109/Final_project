@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Trash2, Shield, User, Mail, Phone, Calendar, Search, Filter, Edit } from 'lucide-react';
 import { validatePhone, validateRequired, validateMinLength, ValidationMessages } from '../../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface UserData {
   id: string;
@@ -58,7 +59,7 @@ export default function UserManagement() {
 
       console.log('Đang tải người dùng với token:', token);
 
-      const response = await fetch('http://localhost:5000/admin/users', {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -130,7 +131,7 @@ export default function UserManagement() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/admin/users/${editingUser.id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -167,7 +168,7 @@ export default function UserManagement() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/admin/users/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

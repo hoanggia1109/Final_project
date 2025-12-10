@@ -24,7 +24,7 @@ interface ProductListProps {
 
 export default function ProductList({
   title = 'Tất cả sản phẩm',
-  apiUrl = 'http://localhost:5000/api/sanpham', // Backend Node.js port 5000
+  apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham`, // Backend Node.js port 5002
 }: ProductListProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

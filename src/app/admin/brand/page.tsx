@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface Brand {
   id: string;
@@ -21,7 +22,7 @@ export default function AdminBrandPage() {
 
   useEffect(() => {
     // Admin mode: lấy tất cả brands (kể cả ẩn)
-    fetch('http://localhost:5000/api/thuonghieu?admin=true')
+    fetch(`${API_BASE_URL}/api/thuonghieu?admin=true`)
       .then(res => res.json())
       .then(data => {
         setBrands(data);
@@ -36,7 +37,7 @@ export default function AdminBrandPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc muốn xóa thương hiệu này không?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/thuonghieu/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setBrands(brands.filter(b => b.id !== id));
         alert('✅ Xóa thành công!');

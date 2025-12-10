@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2, PlusCircle, Search } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface BaiViet {
   id: string;
@@ -24,7 +25,7 @@ export default function AdminBaiVietPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/baiviet?admin=true')
+    fetch(`${API_BASE_URL}/api/baiviet?admin=true`)
       .then(res => res.json())
       .then(data => {
         console.log('📦 Bài viết data:', data);
@@ -46,7 +47,7 @@ export default function AdminBaiVietPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc muốn xóa bài viết này không?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/baiviet/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/baiviet/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setList(list.filter(item => item.id !== id));
         alert('✅ Xóa thành công!');

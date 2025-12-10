@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image'; // CHANGED: Import Image để hiển thị QR code
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function CheckoutSuccessPage() {
             console.log(`Checking order status (attempt ${attempts}/${maxAttempts}):`, orderIdParam);
             
             try {
-              const response = await fetch(`http://localhost:5000/api/donhang/${orderIdParam}`, {
+              const response = await fetch(`${API_BASE_URL}/api/donhang/${orderIdParam}`, {
                 headers: {
                   'Authorization': `Bearer ${token}`,
                 },
@@ -100,7 +101,7 @@ export default function CheckoutSuccessPage() {
         } 
         // Nếu có paymentIntentId, xác minh thanh toán với Stripe
         else if (paymentIntentId) {
-          const response = await fetch(`http://localhost:5000/api/thanhtoan/stripe/verify/${paymentIntentId}`, {
+          const response = await fetch(`${API_BASE_URL}/api/thanhtoan/stripe/verify/${paymentIntentId}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },

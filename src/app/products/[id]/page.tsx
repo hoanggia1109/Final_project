@@ -7,6 +7,7 @@ import PromoModal from '@/app/component/PromoModal';
 import Toast from '@/app/component/Toast';
 import { addToCart } from '@/app/utils/cart';
 import { useIsMobile, useIsDesktop } from '@/app/hooks/useMediaQuery';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface ProductDetail {
   id: number;
@@ -112,7 +113,7 @@ export default function ProductDetailPage() {
 
   // Fetch related products
   useEffect(() => {
-    fetch('http://localhost:5000/api/sanpham')
+    fetch(`${API_BASE_URL}/api/sanpham`)
       .then(res => res.json())
       .then(data => {
         // Get random 4 products

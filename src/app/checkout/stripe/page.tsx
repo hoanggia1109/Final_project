@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import StripePaymentForm from '../../component/StripePaymentForm';
+import { API_BASE_URL } from '@/lib/api-config';
 
 // Khởi tạo Stripe từ publishable key
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -87,7 +88,7 @@ export default function StripeCheckoutPage() {
         // Tạo Payment Intent cho đơn hàng
         console.log('Creating Payment Intent for order:', orderIdParam);
         
-        const response = await fetch('http://localhost:5000/api/thanhtoan/stripe/create-payment-intent', {
+        const response = await fetch(`${API_BASE_URL}/api/thanhtoan/stripe/create-payment-intent`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -515,7 +516,7 @@ export default function StripeCheckoutPage() {
                           const token = localStorage.getItem('token');
                           if (token) {
                             console.log('Updating order status to paid...', orderId);
-                            const response = await fetch('http://localhost:5000/api/thanhtoan/stripe/confirm-payment', {
+                            const response = await fetch(`${API_BASE_URL}/api/thanhtoan/stripe/confirm-payment`, {
                               method: 'POST',
                               headers: {
                                 'Content-Type': 'application/json',

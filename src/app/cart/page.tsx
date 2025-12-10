@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import Image from 'next/image';
+import { API_BASE_URL } from '@/lib/api-config';
 
 
 
@@ -102,12 +103,12 @@ export default function CartPage() {
 
 
 
-      const response = await fetch('http://localhost:5000/api/giohang', {
+      const response = await fetch(`${API_BASE_URL}/api/giohang`, {
 
         headers: {
 
           'Authorization': `Bearer ${token}`,
-
+  
         },
 
       });
@@ -174,7 +175,7 @@ export default function CartPage() {
 
 
 
-      const response = await fetch(`http://localhost:5000/api/giohang/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/giohang/${id}`, {
 
         method: 'PUT',
 
@@ -246,7 +247,7 @@ export default function CartPage() {
 
 
 
-      const response = await fetch(`http://localhost:5000/api/giohang/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/giohang/${id}`, {
 
         method: 'DELETE',
 

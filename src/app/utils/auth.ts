@@ -1,7 +1,8 @@
 // Helper functions cho authentication
+import { API_BASE_URL } from '@/lib/api-config';
 
 export const login = async (email: string, password: string) => {
-  const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
+  const response = await fetch(`${API_BASE_URL}/api/auth/dangnhap`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -19,7 +20,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const register = async (email: string, password: string) => {
-  const response = await fetch('http://localhost:5000/api/auth/dangky', {
+  const response = await fetch(`${API_BASE_URL}/api/auth/dangky`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -37,7 +38,7 @@ export const register = async (email: string, password: string) => {
 };
 
 export const forgotPassword = async (email: string) => {
-  const response = await fetch('http://localhost:5000/api/auth/quenpass', {
+  const response = await fetch(`${API_BASE_URL}/api/auth/quenpass`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +62,7 @@ export const changePassword = async (oldPassword: string, newPassword: string) =
     throw new Error('Vui lòng đăng nhập');
   }
 
-  const response = await fetch('http://localhost:5000/api/auth/doipass', {
+  const response = await fetch(`${API_BASE_URL}/api/auth/doipass`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

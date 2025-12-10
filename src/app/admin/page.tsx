@@ -1,4 +1,5 @@
 'use client';
+import { API_BASE_URL } from '@/lib/api-config';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -106,24 +107,64 @@ export default function AdminDashboard() {
         outOfStockRes,
         newProductsRes
       ] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/dashboard', { headers }),
-        fetch('http://localhost:5000/api/admin/revenue/daily', { headers }),
-        fetch('http://localhost:5000/api/admin/users/online', { headers }),
-        fetch('http://localhost:5000/api/admin/orders/today', { headers }),
-        fetch('http://localhost:5000/api/admin/orders/pending', { headers }),
-        fetch('http://localhost:5000/api/admin/products/low-stock', { headers }),
-        fetch('http://localhost:5000/api/admin/products/out-of-stock', { headers }),
-        fetch('http://localhost:5000/api/admin/products/new?days=7', { headers })
+        fetch(`${API_BASE_URL}/api/admin/dashboard`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch dashboard:', err);
+          return { ok: false, json: async () => ({}) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/revenue/daily`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch revenue:', err);
+          return { ok: false, json: async () => ({ tong_doanh_thu: 0 }) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/users/online`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch users:', err);
+          return { ok: false, json: async () => ({ total: 0 }) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/orders/today`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch orders today:', err);
+          return { ok: false, json: async () => ({ count: 0, orders: [] }) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/orders/pending`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch orders pending:', err);
+          return { ok: false, json: async () => ({ count: 0 }) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/products/low-stock`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch low stock:', err);
+          return { ok: false, json: async () => ({ count: 0 }) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/products/out-of-stock`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch out of stock:', err);
+          return { ok: false, json: async () => ({ count: 0 }) } as Response;
+        }),
+        fetch(`${API_BASE_URL}/api/admin/products/new?days=7`, { headers }).catch(err => {
+          console.error('❌ Lỗi fetch new products:', err);
+          return { ok: false, json: async () => ({ count: 0 }) } as Response;
+        })
       ]);
 
-      const dashboardData = dashboardRes.ok ? await dashboardRes.json() : {};
-      const revenueData = revenueRes.ok ? await revenueRes.json() : { tong_doanh_thu: 0 };
-      const onlineUsersData = onlineUsersRes.ok ? await onlineUsersRes.json() : { total: 0 };
-      const ordersTodayData = ordersTodayRes.ok ? await ordersTodayRes.json() : { count: 0, orders: [] };
-      const ordersPendingData = ordersPendingRes.ok ? await ordersPendingRes.json() : { count: 0 };
-      const lowStockData = lowStockRes.ok ? await lowStockRes.json() : { count: 0 };
-      const outOfStockData = outOfStockRes.ok ? await outOfStockRes.json() : { count: 0 };
-      const newProductsData = newProductsRes.ok ? await newProductsRes.json() : { count: 0 };
+      // Kiểm tra response trước khi parse JSON
+      const parseJsonSafely = async (res: Response) => {
+        if (!res.ok) {
+          const text = await res.text();
+          console.error('❌ Response không OK:', res.status, text.substring(0, 100));
+          return {};
+        }
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await res.text();
+          console.error('❌ Response không phải JSON:', text.substring(0, 100));
+          return {};
+        }
+        return res.json();
+      };
+
+      const dashboardData = await parseJsonSafely(dashboardRes);
+      const revenueData = await parseJsonSafely(revenueRes);
+      const onlineUsersData = await parseJsonSafely(onlineUsersRes);
+      const ordersTodayData = await parseJsonSafely(ordersTodayRes);
+      const ordersPendingData = await parseJsonSafely(ordersPendingRes);
+      const lowStockData = await parseJsonSafely(lowStockRes);
+      const outOfStockData = await parseJsonSafely(outOfStockRes);
+      const newProductsData = await parseJsonSafely(newProductsRes);
 
       setStats({
         totalProducts: dashboardData.sanpham || 0,
@@ -162,7 +203,7 @@ export default function AdminDashboard() {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/revenue/range?from_date=${dateRange.from_date}&to_date=${dateRange.to_date}`,
+        `${API_BASE_URL}/api/admin/revenue/range?from_date=${dateRange.from_date}&to_date=${dateRange.to_date}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

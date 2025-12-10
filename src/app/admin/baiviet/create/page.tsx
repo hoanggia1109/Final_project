@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { validateRequired, validateMinLength, validateMaxLength, ValidationMessages } from '../../../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface DanhMuc {
   id: string;
@@ -32,7 +33,7 @@ export default function CreateBaiVietPage() {
 
   // Fetch danh mục
   useEffect(() => {
-    fetch('http://localhost:5000/api/baiviet/danhmuc/all')
+    fetch(`${API_BASE_URL}/api/baiviet/danhmuc/all`)
       .then(res => res.json())
       .then(data => setDanhmucs(data))
       .catch(err => console.error('Lỗi lấy danh mục:', err));
@@ -40,7 +41,7 @@ export default function CreateBaiVietPage() {
 
   // Fetch user
   useEffect(() => {
-    fetch('http://localhost:5000/api/baiviet/users/all')
+    fetch(`${API_BASE_URL}/api/baiviet/users/all`)
       .then(res => res.json())
       .then(data => setUsers(data))
       .catch(err => console.error('Lỗi lấy users:', err));
@@ -97,7 +98,7 @@ export default function CreateBaiVietPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/baiviet', {
+      const res = await fetch(`${API_BASE_URL}/api/baiviet`, {
         method: 'POST',
         body: formData,
       });

@@ -34,7 +34,7 @@ export async function GET(
     console.log('🔍 Fetching product ID:', id);
     
     // Call backend Node.js API (Port 5000)
-    const backendUrl = `http://localhost:5000/api/sanpham/${id}`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham/${id}`;
     console.log('📡 Calling backend:', backendUrl);
     
     const response = await fetch(backendUrl, {

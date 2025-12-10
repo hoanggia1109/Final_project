@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, ArrowUpCircle, ArrowDownCircle, Calendar, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface PhieuNhapXuat {
   id: string;
@@ -46,7 +47,7 @@ export default function LichSuNhapXuatKhoPage() {
   const loadData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/tonkho/lichsu/all', {
+      const res = await fetch(`${API_BASE_URL}/api/tonkho/lichsu/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {

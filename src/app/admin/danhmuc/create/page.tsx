@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Upload } from 'lucide-react';
 import { validateRequired, validateMinLength, ValidationMessages } from '../../../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function CreateDanhMucPage() {
   const router = useRouter();
@@ -74,7 +75,7 @@ export default function CreateDanhMucPage() {
       formData.append('anhien', form.anhien.toString());
       if (form.image) formData.append('image', form.image);
 
-      const res = await fetch('http://localhost:5000/api/danhmuc', {
+      const res = await fetch(`${API_BASE_URL}/api/danhmuc`, {
         method: 'POST',
         body: formData,
       });

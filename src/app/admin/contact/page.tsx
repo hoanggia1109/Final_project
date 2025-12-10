@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, Search, Mail, Phone, User, Calendar, Eye, Trash2 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface LienHe {
   lienhe_id: string;
@@ -35,7 +36,7 @@ export default function AdminContactPage() {
   const loadContacts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/admin/lienhe', {
+      const res = await fetch(`${API_BASE_URL}/api/admin/lienhe`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -55,7 +56,7 @@ export default function AdminContactPage() {
     if (!confirm('Bạn có chắc muốn xóa liên hệ này không?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/admin/lienhe/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/lienhe/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

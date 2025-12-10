@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from '@/lib/api-config';
 import { 
   Pencil, 
   Trash2, 
@@ -56,9 +57,9 @@ export default function ProductAdminPage() {
   const loadData = async () => {
     try {
       const [productsRes, danhmucsRes, thuonghieusRes] = await Promise.all([
-        fetch("http://localhost:5000/api/sanpham"),
-        fetch("http://localhost:5000/api/danhmuc"),
-        fetch("http://localhost:5000/api/thuonghieu"),
+        fetch(`${API_BASE_URL}/api/sanpham`),
+        fetch(`${API_BASE_URL}/api/danhmuc`),
+        fetch(`${API_BASE_URL}/api/thuonghieu`),
       ]);
 
       const productsData = await productsRes.json();
@@ -107,7 +108,7 @@ export default function ProductAdminPage() {
   const handleToggleStatus = async (id: string) => {
     setToggleLoading(id);
     try {
-      const res = await fetch(`http://localhost:5000/api/sanpham/${id}/toggle`, {
+      const res = await fetch(`${API_BASE_URL}/api/sanpham/${id}/toggle`, {
         method: "PATCH",
       });
       
@@ -135,7 +136,7 @@ export default function ProductAdminPage() {
 
     setDeleteLoading(id);
     try {
-      const res = await fetch(`http://localhost:5000/api/sanpham/${id}`, { 
+      const res = await fetch(`${API_BASE_URL}/api/sanpham/${id}`, { 
         method: "DELETE" 
       });
       
@@ -727,7 +728,7 @@ export default function ProductAdminPage() {
                               p.thumbnail
                                 ? p.thumbnail.startsWith("http")
                                   ? p.thumbnail
-                                  : `http://localhost:5000${p.thumbnail}`
+                                  : `${API_BASE_URL}${p.thumbnail}`
                                 : "/no-image.png"
                             }
                             alt={p.tensp}

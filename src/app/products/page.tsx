@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface Category {
   id: string;
@@ -33,8 +34,8 @@ export default function ProductPage() {
   const fetchProducts = useCallback(() => {
     setLoading(true);
     const url = selectedCat
-      ? `http://localhost:5000/api/danhmuc/${selectedCat}`
-      : `http://localhost:5000/api/sanpham`;
+      ? `${API_BASE_URL}/api/danhmuc/${selectedCat}`
+      : `${API_BASE_URL}/api/sanpham`;
 
     fetch(url)
       .then((res) => res.json())
@@ -49,7 +50,7 @@ export default function ProductPage() {
 
   // Lấy danh mục
   useEffect(() => {
-    fetch('http://localhost:5000/api/danhmuc')
+    fetch(`${API_BASE_URL}/api/danhmuc`)
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error('Lỗi tải danh mục:', err));

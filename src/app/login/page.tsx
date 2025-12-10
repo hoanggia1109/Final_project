@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export default function LoginPage() {
     
     try {
       //  GỌI API THẬT
-      const response = await fetch('http://localhost:5000/api/auth/dangnhap', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/dangnhap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 import { validateRequired, validateMinLength, validateMaxLength, ValidationMessages } from '../../../../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function EditBaiViet() {
   const router = useRouter();
@@ -23,12 +24,12 @@ export default function EditBaiViet() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/baiviet/users/all')
+    fetch(`${API_BASE_URL}/api/baiviet/users/all`)
       .then(res => res.json())
       .then(data => setUsers(data));
 
     if (!id) return;
-    fetch(`http://localhost:5000/api/baiviet/${id}`)
+    fetch(`${API_BASE_URL}/api/baiviet/${id}`)
       .then(res => res.json())
       .then(data => {
         setForm({
@@ -102,7 +103,7 @@ export default function EditBaiViet() {
       Object.entries(form).forEach(([k, v]) => formData.append(k, v as any));
       if (file) formData.append('hinh_anh', file);
 
-      const res = await fetch(`http://localhost:5000/api/baiviet/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/baiviet/${id}`, {
         method: 'PUT',
         body: formData,
       });

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface Brand {
   id: string;
@@ -31,7 +32,7 @@ export default function EditBrandPage() {
   useEffect(() => {
     if (!params.id) return;
     
-    fetch(`http://localhost:5000/api/thuonghieu/${params.id}`)
+    fetch(`${API_BASE_URL}/api/thuonghieu/${params.id}`)
       .then(res => res.json())
       .then((data: Brand) => {
         console.log('📦 Data từ API:', data);
@@ -77,7 +78,7 @@ export default function EditBrandPage() {
       formData.append('anhien', form.anhien.toString());
       if (form.logo) formData.append('logo', form.logo);
 
-      const res = await fetch(`http://localhost:5000/api/thuonghieu/${params.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${params.id}`, {
         method: 'PUT',
         body: formData,
       });

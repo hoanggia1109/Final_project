@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -76,7 +77,7 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/doipass', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/doipass`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

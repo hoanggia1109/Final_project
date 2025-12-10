@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { validateEmail, validatePhone, validateRequired, ValidationMessages } from '../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 // CHANGED: Đã xóa import Stripe components vì chuyển sang trang riêng /checkout/stripe
 
 interface CartItem {
@@ -83,7 +84,7 @@ export default function CheckoutPage() {
         }
 
         // Load cart
-        const cartResponse = await fetch('http://localhost:5000/api/giohang', {
+        const cartResponse = await fetch(`${API_BASE_URL}/api/giohang`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -116,7 +117,7 @@ export default function CheckoutPage() {
         // Load thông tin user và địa chỉ
         try {
           // Load profile
-          const profileResponse = await fetch('http://localhost:5000/api/profile', {
+          const profileResponse = await fetch(`${API_BASE_URL}/api/profile`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -139,7 +140,7 @@ export default function CheckoutPage() {
           }
 
           // Load địa chỉ mặc định
-          const addressesResponse = await fetch('http://localhost:5000/api/diachi', {
+          const addressesResponse = await fetch(`${API_BASE_URL}/api/diachi`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -270,7 +271,7 @@ export default function CheckoutPage() {
       // CHANGED: Đã xóa emoji/sticker khỏi console logs
       console.log('Sending order data:', orderData);
       
-      const response = await fetch('http://localhost:5000/api/donhang', {
+      const response = await fetch(`${API_BASE_URL}/api/donhang`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -297,7 +298,7 @@ export default function CheckoutPage() {
         // Tạo payment intent với Stripe
         console.log('Creating Stripe payment intent for order:', orderId);
         
-        const paymentResponse = await fetch('http://localhost:5000/api/thanhtoan/stripe/create-payment-intent', {
+        const paymentResponse = await fetch(`${API_BASE_URL}/api/thanhtoan/stripe/create-payment-intent`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -353,7 +354,7 @@ export default function CheckoutPage() {
         router.push(`/checkout/stripe?orderId=${orderId}`);
       } else if (formData.paymentMethod === 'cod') {
         // Thanh toán COD
-        await fetch('http://localhost:5000/api/thanhtoan/cod', {
+        await fetch(`${API_BASE_URL}/api/thanhtoan/cod`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -456,7 +457,7 @@ export default function CheckoutPage() {
     setDiscountError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/magiamgia/apply', {
+      const response = await fetch(`${API_BASE_URL}/api/magiamgia/apply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

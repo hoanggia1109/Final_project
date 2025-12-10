@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, PlusCircle, Trash2 } from 'lucide-react';
 import { validateRequired, validateMinLength, validatePositiveNumber, validateNonNegativeNumber, ValidationMessages } from '../../../../utils/validation';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface DanhMuc {
   id: string;
@@ -51,15 +52,15 @@ export default function EditProductPage() {
 
   // 🔹 Load danh mục, thương hiệu và sản phẩm
   useEffect(() => {
-    fetch('http://localhost:5000/api/danhmuc')
+    fetch(`${API_BASE_URL}/api/danhmuc`)
       .then(res => res.json())
       .then(setDanhmucs);
-    fetch('http://localhost:5000/api/thuonghieu')
+    fetch(`${API_BASE_URL}/api/thuonghieu`)
       .then(res => res.json())
       .then(setThuonghieus);
 
     if (!productId) return;
-    fetch(`http://localhost:5000/api/sanpham/${productId}`)
+    fetch(`${API_BASE_URL}/api/sanpham/${productId}`)
       .then(res => res.json())
       .then((data) => {
         console.log('[Edit Product] Full product data:', data);
@@ -73,9 +74,9 @@ export default function EditProductPage() {
           if (data.thumbnail.startsWith('http')) {
             thumbnailValue = { url: data.thumbnail };
           } else if (data.thumbnail.startsWith('/')) {
-            thumbnailValue = { url: `http://localhost:5000${data.thumbnail}` };
+            thumbnailValue = { url: `${API_BASE_URL}${data.thumbnail}` };
           } else {
-            thumbnailValue = { url: `http://localhost:5000/${data.thumbnail}` };
+            thumbnailValue = { url: `${API_BASE_URL}/${data.thumbnail}` };
           }
           console.log('[Edit Product] Processed thumbnail URL:', thumbnailValue.url);
         } else {
@@ -145,7 +146,7 @@ export default function EditProductPage() {
           
           const images = (bt.images || []).map((img: any) => {
             const imageUrl = img.url 
-              ? (img.url.startsWith('http') ? img.url : `http://localhost:5000${img.url}`)
+              ? (img.url.startsWith('http') ? img.url : `${API_BASE_URL}${img.url}`)
               : null;
             console.log(`[Edit Product] Image:`, { id: img.id, url: img.url, finalUrl: imageUrl });
             return {
@@ -309,7 +310,7 @@ export default function EditProductPage() {
         });
       });
 
-      const res = await fetch(`http://localhost:5000/api/sanpham/${productId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/sanpham/${productId}`, {
         method: 'PUT',
         body: formData,
       });

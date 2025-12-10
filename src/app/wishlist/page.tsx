@@ -275,7 +275,7 @@ export default function WishlistPage() {
                           return url;
                         }
                         // If relative path, add backend URL
-                        return `http://localhost:5000${url.startsWith('/') ? url : '/' + url}`;
+                        return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${url.startsWith('/') ? url : '/' + url}`;
                       };
                       
                       const imageUrl = getImageUrl(rawImageUrl);

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface OrderItem {
   id: string;
@@ -70,7 +71,7 @@ export default function BankingCheckoutPage() {
 
         // Load thông tin đơn hàng
         console.log('Loading order details:', orderIdParam);
-        const orderResponse = await fetch(`http://localhost:5000/api/donhang/${orderIdParam}`, {
+        const orderResponse = await fetch(`${API_BASE_URL}/api/donhang/${orderIdParam}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -119,7 +120,7 @@ export default function BankingCheckoutPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/thanhtoan/banking/confirm-transfer', {
+      const response = await fetch(`${API_BASE_URL}/api/thanhtoan/banking/confirm-transfer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

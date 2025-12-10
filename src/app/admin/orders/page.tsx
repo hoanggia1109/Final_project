@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/api-config';
 
 interface OrderItem {
   id: string;
@@ -53,7 +54,7 @@ export default function AdminOrdersPage() {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/donhang/admin/all', {
+      const response = await fetch(`${API_BASE_URL}/api/donhang/admin/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -79,7 +80,7 @@ export default function AdminOrdersPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/donhang/${orderId}/trangthai`, {
+      const response = await fetch(`${API_BASE_URL}/api/donhang/${orderId}/trangthai`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Call backend Node.js API (Port 5000) - Lấy sản phẩm giảm giá
-    const response = await fetch('http://localhost:5000/api/sanpham/giamgia', {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham/giamgia`, {
       cache: 'no-store'
     });
 
