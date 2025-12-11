@@ -69,7 +69,7 @@ const sendRegistrationEmail = async (userEmail, userName, verificationToken) => 
                       </p>
                       
                       <div style="text-align: center; margin: 30px 0;">
-                        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/verify-email?token=${verificationToken}" 
+                        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/verify-email?token=${encodeURIComponent(verificationToken)}" 
                            style="display: inline-block; background: linear-gradient(135deg, #00c853 0%, #4caf50 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 25px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);">
                            Xác nhận Email
                         </a>

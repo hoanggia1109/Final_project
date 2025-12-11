@@ -353,18 +353,10 @@ export default function CheckoutPage() {
         setProcessing(false);
         router.push(`/checkout/stripe?orderId=${orderId}`);
       } else if (formData.paymentMethod === 'cod') {
-        // Thanh toán COD
-        await fetch(`${API_BASE_URL}/api/thanhtoan/cod`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ donhang_id: orderId }),
-        });
-
-      alert('Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
-      window.dispatchEvent(new Event('cartUpdated'));
+        // Thanh toán COD - Trạng thái thanh toán sẽ là "pending" cho đến khi đơn hàng được giao
+        // Giỏ hàng sẽ được xóa tự động khi admin cập nhật đơn hàng sang "delivered" (trạng thái thanh toán tự động chuyển thành "paid")
+        alert('Đặt hàng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.');
+        window.dispatchEvent(new Event('cartUpdated'));
         router.push('/orders');
       } else if (formData.paymentMethod === 'banking') {
         // CHANGED: Redirect sang trang banking payment thay vì alert
@@ -499,7 +491,9 @@ export default function CheckoutPage() {
   };
 
   const subtotal = totalAmount;
-  const shippingFee = subtotal > 5000000 ? 0 : 100000;
+  // Đồng bộ với backend: 30,000 VND mặc định, miễn phí nếu đơn hàng >= 5 triệu hoặc TPHCM
+  // Lưu ý: Backend sẽ tính lại phí vận chuyển dựa trên tỉnh thành, nhưng hiển thị tạm thời 30,000 VND
+  const shippingFee = subtotal > 5000000 ? 0 : 30000;
   const discount = appliedDiscount?.giam || 0;
   const total = subtotal + shippingFee - discount;
 

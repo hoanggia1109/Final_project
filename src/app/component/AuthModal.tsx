@@ -125,12 +125,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onLo
           localStorage.setItem('userEmail', data.user.email);
           localStorage.setItem('userName', userName);
           localStorage.setItem('userRole', data.user.role || 'customer');
+          // Lưu userId để dùng cho Socket.IO tracking
+          if (data.user.id) {
+            localStorage.setItem('userId', data.user.id);
+          }
           
           console.log('💾 AuthModal - Đã lưu localStorage:', {
             token: data.token.substring(0, 20) + '...',
             email: data.user.email,
             name: userName,
-            role: data.user.role || 'customer'
+            role: data.user.role || 'customer',
+            userId: data.user.id
           });
         } else {
           // Fallback nếu backend không trả về user object

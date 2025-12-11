@@ -64,8 +64,19 @@ export const addToCart = async (product: {
     });
 
     if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.message || 'Failed to add to cart');
+      let errorMessage = 'Không thể thêm vào giỏ hàng';
+      try {
+        const data = await response.json();
+        errorMessage = data.message || data.error || errorMessage;
+      } catch (e) {
+        // Nếu không parse được JSON, dùng status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      console.error('❌ Lỗi thêm vào giỏ hàng:', {
+        status: response.status,
+        message: errorMessage
+      });
+      throw new Error(errorMessage);
     }
 
     // Dispatch custom event để Header update

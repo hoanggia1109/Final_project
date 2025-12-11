@@ -28,15 +28,41 @@ router.get("/", async (req, res) => {
     // Nếu admin=true thì lấy tất cả, không thì chỉ lấy sản phẩm đang hiển thị (anhien=1)
     const whereClause = req.query.admin === 'true' ? {} : { anhien: 1 };
     
+    // Lấy query params cho filter giá
+    const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
+    
+    // Xây dựng điều kiện filter cho biến thể
+    const bientheWhere = {};
+    if (minPrice !== null && !isNaN(minPrice)) {
+      bientheWhere.gia = { ...bientheWhere.gia, [Op.gte]: minPrice };
+    }
+    if (maxPrice !== null && !isNaN(maxPrice)) {
+      bientheWhere.gia = { ...bientheWhere.gia, [Op.lte]: maxPrice };
+    }
+    
+    // Nếu có filter giá, chỉ lấy sản phẩm có ít nhất 1 biến thể trong khoảng giá
+    const includeBienthe = {
+      model: SanPhamBienTheModel,
+      as: "bienthe",
+      attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"],
+      ...(Object.keys(bientheWhere).length > 0 && { 
+        where: bientheWhere,
+        required: true // INNER JOIN - chỉ lấy sản phẩm có biến thể thỏa điều kiện
+      })
+    };
+    
     const sanphams = await SanPhamModel.findAll({
       where: whereClause,
       attributes: ["id", "code", "tensp", "thumbnail", "anhien", "slug", "ngay", "created_at"],
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
         { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
-        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"] },
+        includeBienthe,
       ],
+      distinct: true, // Tránh duplicate khi có nhiều biến thể
     });
+    
     res.status(200).json(sanphams);
   } catch (err) {
     console.error("Lỗi /api/sanpham:", err);
@@ -48,15 +74,41 @@ router.get("/giamgia", async (req, res) => {
   try {
     console.log(" API /api/sanpham/giamgia được gọi!");
     // Chỉ lấy sản phẩm đang hiển thị (anhien=1)
+    
+    // Lấy query params cho filter giá
+    const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
+    const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
+    
+    // Xây dựng điều kiện filter cho biến thể
+    const bientheWhere = {};
+    if (minPrice !== null && !isNaN(minPrice)) {
+      bientheWhere.gia = { ...bientheWhere.gia, [Op.gte]: minPrice };
+    }
+    if (maxPrice !== null && !isNaN(maxPrice)) {
+      bientheWhere.gia = { ...bientheWhere.gia, [Op.lte]: maxPrice };
+    }
+    
+    // Nếu có filter giá, chỉ lấy sản phẩm có ít nhất 1 biến thể trong khoảng giá
+    const includeBienthe = {
+      model: SanPhamBienTheModel,
+      as: "bienthe",
+      attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"],
+      ...(Object.keys(bientheWhere).length > 0 && { 
+        where: bientheWhere,
+        required: true // INNER JOIN - chỉ lấy sản phẩm có biến thể thỏa điều kiện
+      })
+    };
+    
     const sanphams = await SanPhamModel.findAll({
       where: { anhien: 1 },
       attributes: ["id", "code", "tensp", "thumbnail", "slug"],
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
         { model: ThuongHieuModel, as: "thuonghieu", attributes: ["id", "tenbrand"] },
-        { model: SanPhamBienTheModel, as: "bienthe", attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"] },
+        includeBienthe,
       ],
       limit: 8,
+      distinct: true, // Tránh duplicate khi có nhiều biến thể
     });
     console.log(` Tìm thấy ${sanphams.length} sản phẩm giảm giá`);
     res.status(200).json(sanphams);

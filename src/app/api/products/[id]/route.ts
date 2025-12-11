@@ -135,14 +135,15 @@ export async function GET(
         ? [formatImageUrl(product.thumbnail)]
         : [],
         // : ['https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'],
-      colors: product.bienthe
-        ?.filter((bt: BienThe) => bt.mausac)
-        .map((bt: BienThe) => ({
-          id: bt.id, // ID của biến thể (bienthe_id)
-          name: bt.mausac || 'Màu mặc định',
-          code: '#808080', // Default color
-          stock: bt.sl_tonkho || 0 // Số lượng tồn kho của biến thể này
-        })) || [],
+      colors: product.bienthe?.map((bt: BienThe) => ({
+        id: bt.id, // ID của biến thể (bienthe_id)
+        name: bt.mausac || 'Màu mặc định',
+        code: '#808080', // Default color
+        stock: bt.sl_tonkho || 0, // Số lượng tồn kho của biến thể này
+        gia: bt.gia || 0, // Giá của biến thể
+        kichthuoc: bt.kichthuoc || '', // Kích thước
+        mausac: bt.mausac || '' // Màu sắc
+      })) || [],
       relatedProducts: []
     };
     

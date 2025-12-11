@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { YeuThichModel, SanPhamModel, SanPhamBienTheModel, ImageModel, LoaiModel, ThuongHieuModel } = require("../database");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const constants = require("../config/constants");
 
 const router = express.Router();
 
@@ -22,7 +24,7 @@ const auth = (req, res, next) => {
       return res.status(401).json({ message: "Token không hợp lệ" });
     }
 
-    const decoded = jwt.verify(token, "SECRET_KEY");
+    const decoded = jwt.verify(token, constants.JWT.SECRET);
     req.userId = decoded.id;
     next();
   } catch (err) {

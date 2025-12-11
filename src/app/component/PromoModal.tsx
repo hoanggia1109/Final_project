@@ -7,16 +7,17 @@ export default function PromoModal() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Chỉ hiển thị popup ở trang chủ (pathname === '/')
-    const shouldShowPromo = pathname === '/';
-
-    if (shouldShowPromo) {
-      // Auto show popup sau 1.5s mỗi khi load trang
+    // Chỉ hiển thị popup ở trang chủ
+    if (pathname === '/') {
+      // Auto show popup sau 1.5s mỗi khi load trang chủ
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 1500);
 
       return () => clearTimeout(timer);
+    } else {
+      // Đóng popup nếu không phải trang chủ
+      setIsOpen(false);
     }
   }, [pathname]);
 

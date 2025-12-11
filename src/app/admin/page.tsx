@@ -69,8 +69,16 @@ export default function AdminDashboard() {
   const [loadingRevenue, setLoadingRevenue] = useState(false);
 
   useEffect(() => {
-    // Kiểm tra quyền admin
+    // Kiểm tra token và quyền admin
+    const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
+    
+    if (!token) {
+      alert('Vui lòng đăng nhập!');
+      router.push('/auth');
+      return;
+    }
+    
     if (userRole !== 'admin') {
       alert('Bạn không có quyền truy cập trang này!');
       router.push('/');
@@ -146,6 +154,19 @@ export default function AdminDashboard() {
         if (!res.ok) {
           const text = await res.text();
           console.error('❌ Response không OK:', res.status, text.substring(0, 100));
+          
+          // Nếu là lỗi 401 (Unauthorized), token không hợp lệ hoặc đã hết hạn
+          if (res.status === 401) {
+            console.warn('⚠️ Token không hợp lệ hoặc đã hết hạn. Đang đăng xuất...');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            router.push('/auth');
+            return {};
+          }
+          
           return {};
         }
         const contentType = res.headers.get("content-type");
@@ -234,15 +255,18 @@ export default function AdminDashboard() {
     title, 
     value, 
     icon: Icon, 
-    gradient
+    gradient,
+    onClick
   }: { 
     title: string; 
     value: number | string; 
     icon: LucideIcon; 
     gradient: string;
+    onClick?: () => void;
   }) => (
     <div 
       className="stat-card h-100"
+      onClick={onClick}
       style={{
         background: '#fff',
         borderRadius: '16px',
@@ -250,15 +274,19 @@ export default function AdminDashboard() {
         boxShadow: '0 4px 20px rgba(255, 107, 107, 0.08)',
         border: '1px solid #FFE5D9',
         transition: 'all 0.3s ease',
-        cursor: 'pointer'
+        cursor: onClick ? 'pointer' : 'default'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-5px)';
-        e.currentTarget.style.boxShadow = '0 8px 30px rgba(255, 107, 107, 0.15)';
+        if (onClick) {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 30px rgba(255, 107, 107, 0.15)';
+          e.currentTarget.style.borderColor = '#FF8E53';
+        }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 107, 107, 0.08)';
+        e.currentTarget.style.borderColor = '#FFE5D9';
       }}
     >
       <div className="d-flex justify-content-between align-items-start mb-3">
@@ -518,109 +546,7 @@ export default function AdminDashboard() {
             <p className="admin-subtitle">Chào mừng bạn đến với trang quản trị</p>
           </div>
 
-          {/* Stats Cards */}
-          <div className="stats-grid">
-            <h3 className="section-title">
-              <BarChart3 size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-              Thống kê tổng quan
-            </h3>
-            <div className="row g-4">
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Tổng sản phẩm"
-                  value={stats.totalProducts}
-                  icon={Package}
-                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Đơn hàng"
-                  value={stats.totalOrders}
-                  icon={ShoppingCart}
-                  gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Khách hàng"
-                  value={stats.totalUsers}
-                  icon={Users}
-                  gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Tổng bài viết"
-                  value={stats.totalPosts}
-                  icon={FileText}
-                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Stats */}
-          <div className="stats-grid">
-            <h3 className="section-title">
-              <Activity size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
-              Thống kê chi tiết
-            </h3>
-            <div className="row g-4">
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Người dùng online"
-                  value={stats.onlineUsers}
-                  icon={UserCheck}
-                  gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Đơn hàng hôm nay"
-                  value={stats.ordersToday}
-                  icon={Clock}
-                  gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Đơn hàng chờ xử lý"
-                  value={stats.ordersPending}
-                  icon={AlertTriangle}
-                  gradient="linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Sản phẩm tồn kho thấp"
-                  value={stats.lowStockCount}
-                  icon={AlertTriangle}
-                  gradient="linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
-                />
-              </div>
-            </div>
-            <div className="row g-4 mt-2">
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Doanh thu hôm nay"
-                  value={`${stats.revenueToday.toLocaleString('vi-VN')}₫`}
-                  icon={DollarSign}
-                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
-                />
-              </div>
-              <div className="col-12 col-sm-6 col-lg-3">
-                <StatCard
-                  title="Sản phẩm hết hàng"
-                  value={stats.outOfStockCount}
-                  icon={Package}
-                  gradient="linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Dashboard Boxes */}
+          {/* Dashboard Boxes - Thông tin quan trọng */}
           <div className="actions-grid">
             <h3 className="section-title">
               <Activity size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
@@ -840,6 +766,118 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Stats Cards - Thống kê tổng quan */}
+          <div className="stats-grid">
+            <h3 className="section-title">
+              <BarChart3 size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+              Thống kê tổng quan
+            </h3>
+            <div className="row g-4">
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Tổng sản phẩm"
+                  value={stats.totalProducts}
+                  icon={Package}
+                  gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                  onClick={() => router.push('/admin/products')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Đơn hàng"
+                  value={stats.totalOrders}
+                  icon={ShoppingCart}
+                  gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+                  onClick={() => router.push('/admin/orders')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Khách hàng"
+                  value={stats.totalUsers}
+                  icon={Users}
+                  gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+                  onClick={() => router.push('/admin/users')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Tổng bài viết"
+                  value={stats.totalPosts}
+                  icon={FileText}
+                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
+                  onClick={() => router.push('/admin/baiviet')}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Stats - Thống kê chi tiết */}
+          <div className="stats-grid">
+            <h3 className="section-title">
+              <Activity size={24} className="me-2" style={{ display: 'inline-block', verticalAlign: 'middle' }} />
+              Thống kê chi tiết
+            </h3>
+            <div className="row g-4">
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Người dùng online"
+                  value={stats.onlineUsers}
+                  icon={UserCheck}
+                  gradient="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+                  onClick={() => router.push('/admin/users')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Đơn hàng hôm nay"
+                  value={stats.ordersToday}
+                  icon={Clock}
+                  gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+                  onClick={() => router.push('/admin/orders')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Đơn hàng chờ xử lý"
+                  value={stats.ordersPending}
+                  icon={AlertTriangle}
+                  gradient="linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
+                  onClick={() => router.push('/admin/orders')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Sản phẩm tồn kho thấp"
+                  value={stats.lowStockCount}
+                  icon={AlertTriangle}
+                  gradient="linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
+                  onClick={() => router.push('/admin/products')}
+                />
+              </div>
+            </div>
+            <div className="row g-4 mt-2">
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Doanh thu hôm nay"
+                  value={`${stats.revenueToday.toLocaleString('vi-VN')}₫`}
+                  icon={DollarSign}
+                  gradient="linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)"
+                  onClick={() => router.push('/admin/orders')}
+                />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <StatCard
+                  title="Sản phẩm hết hàng"
+                  value={stats.outOfStockCount}
+                  icon={Package}
+                  gradient="linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)"
+                  onClick={() => router.push('/admin/products')}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Recent Activity */}
           <div className="activity-card">
             <div className="activity-header d-flex justify-content-between align-items-center">
@@ -937,3 +975,4 @@ export default function AdminDashboard() {
     </>
   );
 }
+

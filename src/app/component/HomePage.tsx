@@ -434,8 +434,7 @@ function ProductCategories() {
                       <>
                         <div className="position-relative overflow-hidden category-image" style={{ 
                           height: '180px',
-                          background: '#f8f9fa',
-                          width: '100%'
+                          background: '#f8f9fa'
                         }}>
                           <Image 
                             src={cat.image} 
@@ -444,16 +443,9 @@ function ProductCategories() {
                             sizes="100vw"
                             style={{ 
                               objectFit: 'cover',
-                              objectPosition: 'center',
-                              width: '100%',
-                              height: '100%'
+                              objectPosition: 'center'
                             }}
                             className="category-img"
-                            unoptimized
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800';
-                            }}
                           />
                         </div>
                         <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
@@ -470,8 +462,7 @@ function ProductCategories() {
                         {/* Desktop: Có hover effects và animations */}
                         <div className="position-relative overflow-hidden category-image" style={{ 
                           height: '250px',
-                          background: '#f8f9fa',
-                          width: '100%'
+                          background: '#f8f9fa'
                         }}>
                           <Image 
                             src={cat.image} 
@@ -480,16 +471,9 @@ function ProductCategories() {
                             sizes="(max-width: 1200px) 50vw, 33vw"
                             style={{ 
                               objectFit: 'cover',
-                              objectPosition: 'center',
-                              width: '100%',
-                              height: '100%'
+                              objectPosition: 'center'
                             }}
                             className="category-img"
-                            unoptimized
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800';
-                            }}
                           />
                           <div 
                             className="position-absolute top-0 start-0 w-100 h-100"
@@ -990,120 +974,120 @@ function DiscountProducts() {
 }
 
 // FEATURES 
-// function Features() {
-//   const features = [
-//     { 
-//       id: 1, 
-//       iconType: 'chat-heart-fill', 
-//       title: 'Thông điệp nhà sáng lập', 
-//       description: 'DANNYdecor là "đứa con tinh thần" mà chúng tôi đã tạo ra từ niềm đam mê thiết kế nội thất',
-//       color: '#FF6B6B'
-//     },
-//     { 
-//       id: 2, 
-//       iconType: 'eye-fill', 
-//       title: 'Tầm nhìn', 
-//       description: 'Tạo ra một thế giới khỏe mạnh, thoải mái thông qua những giải pháp trong nội thất',
-//       color: '#FF8E53'
-//     },
-//     { 
-//       id: 3, 
-//       iconType: 'bullseye', 
-//       title: 'Sứ mệnh', 
-//       description: 'Vận Tây nỗ lực tạo ra những không gian nội thất mang năng lượng chữa lành',
-//       color: '#FFA726'
-//     },
-//     { 
-//       id: 4, 
-//       iconType: 'gem', 
-//       title: 'Giá trị cốt lõi', 
-//       description: 'DANNYdecor xây dựng cho mình 05 giá trị cốt lõi: Sáng tạo, hành công, lành đạo, đổi ngũ và khách hàng',
-//       color: '#FFC107'
-//     },
-//   ];
+function Features() {
+  const features = [
+    { 
+      id: 1, 
+      iconType: 'chat-heart-fill', 
+      title: 'Thông điệp nhà sáng lập', 
+      description: 'DANNYdecor là "đứa con tinh thần" mà chúng tôi đã tạo ra từ niềm đam mê thiết kế nội thất',
+      color: '#FF6B6B'
+    },
+    { 
+      id: 2, 
+      iconType: 'eye-fill', 
+      title: 'Tầm nhìn', 
+      description: 'Tạo ra một thế giới khỏe mạnh, thoải mái thông qua những giải pháp trong nội thất',
+      color: '#FF8E53'
+    },
+    { 
+      id: 3, 
+      iconType: 'bullseye', 
+      title: 'Sứ mệnh', 
+      description: 'Vận Tây nỗ lực tạo ra những không gian nội thất mang năng lượng chữa lành',
+      color: '#FFA726'
+    },
+    { 
+      id: 4, 
+      iconType: 'gem', 
+      title: 'Giá trị cốt lõi', 
+      description: 'DANNYdecor xây dựng cho mình 05 giá trị cốt lõi: Sáng tạo, hành công, lành đạo, đổi ngũ và khách hàng',
+      color: '#FFC107'
+    },
+  ];
 
-//   return (
-//     <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #FFF8E8 0%, #ffffff 100%)' }}>
-//       <div className="container">
-//         <div className="text-center mb-5">
-//           <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
-//             fontSize: '2rem', 
-//             letterSpacing: '2px',
-//             color: '#2c3e50',
-//             position: 'relative',
-//             display: 'inline-block'
-//           }}>
-//             VỀ CHÚNG TÔI
-//             <div style={{
-//               position: 'absolute',
-//               bottom: '-10px',
-//               left: '50%',
-//               transform: 'translateX(-50%)',
-//               width: '80px',
-//               height: '4px',
-//               background: 'linear-gradient(90deg, #FF6B6B, #FFC107)',
-//               borderRadius: '2px'
-//             }}></div>
-//           </h2>
-//           <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Giá trị và tầm nhìn của DANNYdecor</p>
-//         </div>
+  return (
+    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #FFF8E8 0%, #ffffff 100%)' }}>
+      <div className="container">
+        <div className="text-center mb-5">
+          <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
+            fontSize: '2rem', 
+            letterSpacing: '2px',
+            color: '#2c3e50',
+            position: 'relative',
+            display: 'inline-block'
+          }}>
+            VỀ CHÚNG TÔI
+            <div style={{
+              position: 'absolute',
+              bottom: '-10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, #FF6B6B, #FFC107)',
+              borderRadius: '2px'
+            }}></div>
+          </h2>
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Giá trị và tầm nhìn của DANNYdecor</p>
+        </div>
 
-//         <div className="row g-4">
-//           {features.map((f) => (
-//             <div key={f.id} className="col-12 col-md-6 col-lg-3">
-//               <div 
-//                 className="card border-0 h-100 p-4 text-center d-flex flex-column feature-card"
-//                 style={{
-//                   borderRadius: '20px',
-//                   background: '#ffffff',
-//                   boxShadow: '0 5px 20px rgba(0,0,0,0.06)',
-//                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-//                   cursor: 'pointer'
-//                 }}
-//                 onMouseEnter={(e) => {
-//                   e.currentTarget.style.transform = 'translateY(-10px)';
-//                   e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,107,107,0.15)';
-//                 }}
-//                 onMouseLeave={(e) => {
-//                   e.currentTarget.style.transform = 'translateY(0)';
-//                   e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.06)';
-//                 }}
-//               >
-//                 <div 
-//                   className="d-inline-flex align-items-center justify-content-center mb-3 mx-auto feature-icon"
-//                   style={{
-//                     width: '70px',
-//                     height: '70px',
-//                     borderRadius: '50%',
-//                     background: `linear-gradient(135deg, ${f.color}, ${f.color}dd)`,
-//                     boxShadow: `0 8px 20px ${f.color}40`
-//                   }}
-//                 >
-//                   <i className={`bi bi-${f.iconType}`} style={{ fontSize: '32px', color: '#fff' }}></i>
-//                 </div>
-//                 <h5 className="fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>{f.title}</h5>
-//                 <p className="text-muted mb-3 flex-grow-1" style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>{f.description}</p>
-//                 <Link 
-//                   href="/introduction" 
-//                   className="text-decoration-none fw-semibold d-inline-flex align-items-center gap-1 mt-auto" 
-//                   style={{ color: f.color, fontSize: '0.9rem', transition: 'all 0.3s ease' }}
-//                   onMouseEnter={(e) => {
-//                     e.currentTarget.style.gap = '8px';
-//                   }}
-//                   onMouseLeave={(e) => {
-//                     e.currentTarget.style.gap = '4px';
-//                   }}
-//                 >
-//                   Xem Thêm <i className="bi bi-arrow-right"></i>
-//                 </Link>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     </section>
-//   );
-//  }
+        <div className="row g-4">
+          {features.map((f) => (
+            <div key={f.id} className="col-12 col-md-6 col-lg-3">
+              <div 
+                className="card border-0 h-100 p-4 text-center d-flex flex-column feature-card"
+                style={{
+                  borderRadius: '20px',
+                  background: '#ffffff',
+                  boxShadow: '0 5px 20px rgba(0,0,0,0.06)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-10px)';
+                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,107,107,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.06)';
+                }}
+              >
+                <div 
+                  className="d-inline-flex align-items-center justify-content-center mb-3 mx-auto feature-icon"
+                  style={{
+                    width: '70px',
+                    height: '70px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${f.color}, ${f.color}dd)`,
+                    boxShadow: `0 8px 20px ${f.color}40`
+                  }}
+                >
+                  <i className={`bi bi-${f.iconType}`} style={{ fontSize: '32px', color: '#fff' }}></i>
+                </div>
+                <h5 className="fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>{f.title}</h5>
+                <p className="text-muted mb-3 flex-grow-1" style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>{f.description}</p>
+                <Link 
+                  href="/introduction" 
+                  className="text-decoration-none fw-semibold d-inline-flex align-items-center gap-1 mt-auto" 
+                  style={{ color: f.color, fontSize: '0.9rem', transition: 'all 0.3s ease' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.gap = '8px';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.gap = '4px';
+                  }}
+                >
+                  Xem Thêm <i className="bi bi-arrow-right"></i>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 // PARTNERS 
 function Partners() {
@@ -2023,14 +2007,12 @@ export default function HomePage() {
         .category-image {
           position: relative;
           overflow: hidden;
-          width: 100%;
         }
         
         .category-image .category-img,
         .category-image img,
         .category-image [data-next-image],
-        .category-image span[style*="object-fit"],
-        .category-image span[style*="position: absolute"] {
+        .category-image span[style*="object-fit"] {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
@@ -2039,15 +2021,6 @@ export default function HomePage() {
           top: 0 !important;
           left: 0 !important;
           transition: transform 0.4s ease !important;
-        }
-        
-        /* Ensure Next.js Image wrapper fills container */
-        .category-image > span {
-          width: 100% !important;
-          height: 100% !important;
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
         }
 
         /* Features Section Responsive */
@@ -2179,7 +2152,7 @@ export default function HomePage() {
       <ProductCategories />
       <HotProducts />
       <DiscountProducts />
-      {/* <Features /> */}
+      <Features />
       <Partners />
       {/* <PortfolioQuote /> */}
       <ContactInfo />

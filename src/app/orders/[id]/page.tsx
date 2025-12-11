@@ -914,9 +914,9 @@ export default function OrderDetailPage() {
 
                     <span className="badge" style={{ 
 
-                      backgroundColor: (order.phuongthucthanhtoan === 'stripe' || order.trangthaithanhtoan === 'paid') ? '#28a74520' : order.trangthaithanhtoan === 'pending' ? '#ffc10720' : order.trangthaithanhtoan === 'refunded' ? '#dc354520' : '#6c757d20',
+                      backgroundColor: order.trangthaithanhtoan === 'paid' ? '#28a74520' : order.trangthaithanhtoan === 'pending' ? '#dc354520' : order.trangthaithanhtoan === 'refunded' ? '#dc354520' : '#6c757d20',
 
-                      color: (order.phuongthucthanhtoan === 'stripe' || order.trangthaithanhtoan === 'paid') ? '#28a745' : order.trangthaithanhtoan === 'pending' ? '#ffc107' : order.trangthaithanhtoan === 'refunded' ? '#dc3545' : '#6c757d',
+                      color: order.trangthaithanhtoan === 'paid' ? '#28a745' : order.trangthaithanhtoan === 'pending' ? '#dc3545' : order.trangthaithanhtoan === 'refunded' ? '#dc3545' : '#6c757d',
 
                       padding: '6px 12px',
 
@@ -926,14 +926,15 @@ export default function OrderDetailPage() {
 
                     }}>
 
-                      {order.phuongthucthanhtoan === 'stripe' ? 'Đã thanh toán' :
-
+                      {/* Đối với COD: chỉ hiển thị "Đã thanh toán" khi trạng thái thanh toán là "paid" VÀ đơn hàng đã được giao */}
+                      {order.phuongthucthanhtoan === 'cod' && order.trangthaithanhtoan === 'paid' && order.trangthai === 'delivered' ? 'Đã thanh toán' :
+                       order.phuongthucthanhtoan === 'cod' && order.trangthaithanhtoan === 'pending' ? 'Chưa thanh toán' :
+                       order.phuongthucthanhtoan === 'cod' && order.trangthaithanhtoan === 'paid' && order.trangthai !== 'delivered' ? 'Chưa thanh toán' :
                        order.trangthaithanhtoan === 'paid' ? 'Đã thanh toán' : 
-
                        order.trangthaithanhtoan === 'pending' ? 'Chưa thanh toán' : 
-
                        order.trangthaithanhtoan === 'refunded' ? 'Đã hoàn tiền' : 
-
+                       order.trangthaithanhtoan === 'failed' ? 'Thanh toán thất bại' :
+                       order.trangthaithanhtoan === 'cancelled' ? 'Đã hủy thanh toán' :
                        order.trangthaithanhtoan || 'Chưa xác định'}
 
                     </span>

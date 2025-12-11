@@ -1,20 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { API_BASE_URL } from '@/lib/api-config';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams?.get('token');
-
+  
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'already'>('loading');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
 
   useEffect(() => {
+    // Lấy token từ URL bằng nhiều cách để đảm bảo hoạt động
+    let token: string | null = null;
+    
+    // Ưu tiên lấy từ searchParams
+    if (searchParams) {
+      token = searchParams.get('token');
+    }
+    
+    // Fallback: lấy từ window.location nếu searchParams không hoạt động
+    if (!token && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      token = urlParams.get('token');
+    }
+
     if (!token) {
       setStatus('error');
       setMessage('Không tìm thấy token xác nhận');
@@ -24,8 +37,22 @@ export default function VerifyEmailPage() {
     // Gọi API xác nhận
     const verifyEmail = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/verify-email/${token}`);
+        // Token đã được browser tự động decode từ URL, chỉ cần encode lại khi gửi lên API
+        const apiUrl = `${API_BASE_URL}/api/auth/verify-email/${encodeURIComponent(token)}`;
+        console.log('🔍 Đang gọi API xác nhận email:', apiUrl);
+        
+        const response = await fetch(apiUrl);
+        
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Lỗi xác nhận email' }));
+          console.error('❌ Lỗi từ API:', errorData);
+          throw new Error(errorData.message || 'Lỗi xác nhận email');
+        }
+        
         const data = await response.json();
+        console.log('✅ Dữ liệu từ API:', data);
 
         if (data.success) {
           if (data.alreadyVerified) {
@@ -47,7 +74,7 @@ export default function VerifyEmailPage() {
     };
 
     verifyEmail();
-  }, [token]);
+  }, [searchParams]);
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -150,6 +177,32 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-md-6">
+              <div className="card shadow-lg border-0">
+                <div className="card-body p-5 text-center">
+                  <div className="spinner-border text-primary mb-4" style={{ width: '4rem', height: '4rem' }} role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <h2 className="mb-3">Đang tải...</h2>
+                  <p className="text-muted">Vui lòng chờ trong giây lát</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
 

@@ -155,4 +155,14 @@ const { errorHandler } = require('./utils/errors');
 app.use(errorHandler);
 
 /* ---------------- START SERVER ---------------- */
-app.listen(port, () => console.log(` Server chạy http://localhost:${port}`));
+const http = require('http');
+const server = http.createServer(app);
+
+// Khởi tạo Socket.IO
+const { initializeSocket } = require('./services/socketService');
+initializeSocket(server);
+
+server.listen(port, () => {
+  console.log(` Server chạy http://localhost:${port}`);
+  console.log(` Socket.IO server đã được khởi tạo`);
+});

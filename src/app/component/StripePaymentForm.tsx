@@ -90,6 +90,10 @@ export default function StripePaymentForm({ onSuccess, onError }: StripePaymentF
           <PaymentElement
             options={{
               layout: 'tabs',
+              terms: {
+                card: 'never',
+              },
+              paymentMethodTypes: ['card'],
             }}
             onReady={() => {
               // CHANGED: Đã xóa emoji/sticker khỏi console logs

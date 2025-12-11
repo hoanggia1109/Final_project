@@ -1151,22 +1151,29 @@ router.post("/stripe/confirm-payment", auth, async (req, res) => {
 
 // COD
 
+// DEPRECATED: Endpoint này không còn được sử dụng
+// Logic COD mới: Trạng thái thanh toán sẽ là "pending" cho đến khi đơn hàng được giao
+// Khi admin cập nhật trạng thái đơn hàng thành "delivered", hệ thống sẽ tự động chuyển trạng thái thanh toán thành "paid"
+// Logic này được xử lý trong server_node/routes/admin.js khi cập nhật đơn hàng
 router.post("/cod", auth, async (req, res) => {
+  // Endpoint này đã bị vô hiệu hóa - không còn sử dụng
+  return res.status(410).json({ 
+    message: "Endpoint này đã không còn được sử dụng. Trạng thái thanh toán COD sẽ tự động được cập nhật khi đơn hàng được giao."
+  });
 
   try {
 
     const { donhang_id } = req.body;
 
     
-    // Cập nhật trạng thái thanh toán
+    // DEPRECATED: Không còn cập nhật trạng thái thanh toán ở đây
+    // await DonHangModel.update(
 
-    await DonHangModel.update(
+    //   { trangthaithanhtoan: "paid", phuongthucthanhtoan: "cod", ngaythanhtoan: new Date() },
 
-      { trangthaithanhtoan: "paid", phuongthucthanhtoan: "cod", ngaythanhtoan: new Date() },
+    //   { where: { id: donhang_id } }
 
-      { where: { id: donhang_id } }
-
-    );
+    // );
 
     // Xóa giỏ hàng sau khi xác nhận COD thành công
     try {

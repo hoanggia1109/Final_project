@@ -12,6 +12,8 @@ const nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { sendRegistrationEmail } = require("../services/emailService");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const constants = require("../config/constants");
 
 const router = express.Router();
 
@@ -131,7 +133,8 @@ router.post("/dangnhap", async (req, res) => {
       });
     }
     
-    const token = jwt.sign({ id: user.id, email, role: user.role }, "SECRET_KEY", { expiresIn: "7d" });
+    const constants = require('../config/constants');
+    const token = jwt.sign({ id: user.id, email, role: user.role }, constants.JWT.SECRET, { expiresIn: "7d" });
     
     // Trả về thông tin user đầy đủ
     res.json({ 
@@ -245,7 +248,12 @@ router.post("/doipass", async (req, res) => {
     if (!token)
       return res.status(401).json({ message: "Token không hợp lệ" });
 
-    const decoded = jwt.verify(token, "SECRET_KEY");
+    let decoded;
+    try {
+      decoded = jwt.verify(token, constants.JWT.SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Token không hợp lệ" });
+    }
 
     const { pass_old, pass_new1, pass_new2 } = req.body;
     if (pass_new1 !== pass_new2)

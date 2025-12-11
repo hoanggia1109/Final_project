@@ -26,7 +26,7 @@ interface ProductDetail {
   features: string[];
   specifications: Record<string, string>;
   images: string[];
-  colors: { id?: string; name: string; code: string; stock?: number }[];
+  colors: { id?: string; name: string; code: string; stock?: number; gia?: number; kichthuoc?: string; mausac?: string }[];
   relatedProducts: number[];
 }
 
@@ -351,7 +351,7 @@ export default function ProductDetailPage() {
       const selectedColorData = product.colors?.[selectedColor];
       
       if (!selectedColorData?.id) {
-        setToastMessage('Vui lòng chọn màu sắc!');
+        setToastMessage('Vui lòng chọn biến thể!');
         setToastType('error');
         setShowToast(true);
         return;
@@ -370,8 +370,9 @@ export default function ProductDetailPage() {
       // Reset quantity
       setQuantity(1);
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      setToastMessage('Có lỗi xảy ra khi thêm vào giỏ hàng!');
+      console.error('❌ Error adding to cart:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi thêm vào giỏ hàng!';
+      setToastMessage(errorMessage);
       setToastType('error');
       setShowToast(true);
     } finally {
@@ -386,7 +387,7 @@ export default function ProductDetailPage() {
       const selectedColorData = product.colors?.[selectedColor];
       
       if (!selectedColorData?.id) {
-        setToastMessage('Vui lòng chọn màu sắc!');
+        setToastMessage('Vui lòng chọn biến thể!');
         setToastType('error');
         setShowToast(true);
         return;
@@ -401,8 +402,9 @@ export default function ProductDetailPage() {
       // Redirect to checkout
       router.push('/checkout');
     } catch (error) {
-      console.error('Error buying now:', error);
-      setToastMessage('Có lỗi xảy ra!');
+      console.error('❌ Error buying now:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra!';
+      setToastMessage(errorMessage);
       setToastType('error');
       setShowToast(true);
     }
@@ -754,6 +756,19 @@ export default function ProductDetailPage() {
           padding: 0;
           margin-bottom: 2.5rem;
           font-size: 0.9rem;
+          padding-left: 15px;
+        }
+        
+        @media (min-width: 992px) {
+          .breadcrumb-modern {
+            padding-left: 15px;
+          }
+        }
+        
+        @media (max-width: 991px) {
+          .breadcrumb-modern {
+            padding-left: 0;
+          }
         }
 
         .breadcrumb-modern .breadcrumb-item + .breadcrumb-item::before {
@@ -921,6 +936,58 @@ export default function ProductDetailPage() {
           transform: scale(1.1);
         }
 
+        .variant-radio-option {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .variant-radio-option:hover:not(.out-of-stock) {
+          box-shadow: 0 4px 12px rgba(255, 142, 83, 0.2);
+        }
+
+        .variant-radio-option.active {
+          box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2), 0 4px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .variant-radio-option.out-of-stock {
+          background: #f5f5f5 !important;
+        }
+
+        .variant-card-option {
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .variant-card-option:hover:not(.out-of-stock):not(.active) {
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          transform: translateY(-2px);
+        }
+
+        .variant-card-option.active {
+          box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.3), 0 2px 8px rgba(255, 107, 107, 0.2);
+        }
+
+        .variant-card-option.out-of-stock {
+          background: #f5f5f5 !important;
+        }
+
+        /* Custom scrollbar for variant selection */
+        .d-flex[style*="overflowX"]::-webkit-scrollbar {
+          height: 6px;
+        }
+
+        .d-flex[style*="overflowX"]::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+
+        .d-flex[style*="overflowX"]::-webkit-scrollbar-thumb {
+          background: #ccc;
+          border-radius: 10px;
+        }
+
+        .d-flex[style*="overflowX"]::-webkit-scrollbar-thumb:hover {
+          background: #999;
+        }
+
         .quantity-control {
           display: flex;
           align-items: center;
@@ -931,11 +998,11 @@ export default function ProductDetailPage() {
         }
 
         .quantity-btn {
-          width: 50px;
-          height: 50px;
+          width: 40px;
+          height: 40px;
           border: none;
           background: #FFFFFF;
-          font-size: 1.2rem;
+          font-size: 1rem;
           cursor: pointer;
           transition: all 0.3s ease;
           color: #FF6B6B;
@@ -944,9 +1011,9 @@ export default function ProductDetailPage() {
         
         @media (max-width: 768px) {
           .quantity-btn {
-            width: 44px;
-            height: 44px;
-            font-size: 1.1rem;
+            width: 36px;
+            height: 36px;
+            font-size: 0.9rem;
           }
         }
 
@@ -962,11 +1029,11 @@ export default function ProductDetailPage() {
         }
 
         .quantity-input {
-          padding: 0 20px;
+          padding: 0 12px;
           font-weight: 600;
-          font-size: 1.1rem;
-          min-width: 100px;
-          max-width: 100px;
+          font-size: 1rem;
+          min-width: 60px;
+          max-width: 60px;
           text-align: center;
           border: none;
           border-left: 1px solid #FFE5D9;
@@ -1346,24 +1413,6 @@ export default function ProductDetailPage() {
                   </div>
                 )}
 
-                {/* Stock Badge */}
-                <div style={{
-                  position: 'absolute',
-                  top: '16px',
-                  left: product.discount > 0 ? '100px' : '16px',
-                  background: currentStock > 10 ? 'linear-gradient(135deg, #4CAF50, #45a049)' : 'linear-gradient(135deg, #FFA726, #FF9800)',
-                  color: '#fff',
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  fontWeight: '600',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.3px',
-                  boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
-                  zIndex: 2
-                }}>
-                  {currentStock > 10 ? `Còn ${currentStock}` : 'Sắp hết'}
-                </div>
-
                 <Image 
                   src={formatImageUrl(product.images?.[selectedImage] || product.images?.[0])} 
                   alt={product.name}
@@ -1537,18 +1586,22 @@ export default function ProductDetailPage() {
 
                 {/* Price Section */}
                 <div className="price-section">
-                  <div className="d-flex align-items-center gap-3 mb-2">
-                    <span className="discount-badge">-{product.discount}%</span>
-                    <span className="original-price">{formatPrice(product.originalPrice)}</span>
-                  </div>
-                  <h2 className="current-price">{formatPrice(product.price)}</h2>
-                </div>
-
-                {/* Stock Status */}
-                <div className="mb-4">
-                  <span className={`stock-status ${currentStock > 10 ? 'in-stock' : 'low-stock'}`}>
-                    {currentStock > 10 ? `Còn hàng (${currentStock} sản phẩm)` : `Sắp hết (${currentStock} sản phẩm)`}
-                  </span>
+                  {(() => {
+                    const selectedVariant = product.colors?.[selectedColor];
+                    const displayPrice = selectedVariant?.gia && selectedVariant.gia > 0 
+                      ? selectedVariant.gia 
+                      : product.price;
+                    const displayOriginalPrice = displayPrice ? Math.round(displayPrice * 1.2) : product.originalPrice;
+                    return (
+                      <>
+                        <div className="d-flex align-items-center gap-3 mb-2">
+                          <span className="discount-badge">-{product.discount}%</span>
+                          <span className="original-price">{formatPrice(displayOriginalPrice)}</span>
+                        </div>
+                        <h2 className="current-price">{formatPrice(displayPrice)}</h2>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* SKU */}
@@ -1556,85 +1609,159 @@ export default function ProductDetailPage() {
                   <span className="text-muted">Mã sản phẩm: <strong>{product.sku}</strong></span>
                 </div>
 
-                {/* Color Selection */}
+                {/* Stock Status */}
+                <div className="mb-3">
+                  <span className={`stock-status ${currentStock > 10 ? 'in-stock' : 'low-stock'}`}>
+                    {currentStock > 10 ? `Còn hàng` : `Sắp hết (${currentStock} sản phẩm)`}
+                  </span>
+                </div>
+
+                {/* Variant Selection */}
                 {product.colors && product.colors.length > 0 && (
                   <div className="mb-4">
-                    <h6 className="mb-3 fw-semibold" style={{ color: '#2c3e50', letterSpacing: '0.5px', fontSize: '1.05rem' }}>Màu sắc</h6>
-                    <div className="d-flex gap-3 flex-wrap align-items-start">
-                      {product.colors.map((color, index) => (
-                        <div key={index} className="d-flex flex-column align-items-center">
-                          <label
-                            className={`color-radio-option ${selectedColor === index ? 'active' : ''}`}
-                            style={{ 
-                              backgroundColor: color.code,
-                            }}
-                            title={color.name}
-                          >
-                            <input
-                              type="radio"
-                              name="color"
-                              value={index}
-                              checked={selectedColor === index}
-                              onChange={() => setSelectedColor(index)}
-                              style={{ display: 'none' }}
-                            />
-                            {selectedColor === index && (
-                              <span style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                color: '#fff',
-                                fontSize: '20px',
-                                fontWeight: 'bold',
-                                textShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                                pointerEvents: 'none'
-                              }}>✓</span>
-                            )}
-                          </label>
-                          {selectedColor === index && (
-                            <span className="mt-2" style={{ fontSize: '0.85rem', color: '#2c3e50', fontWeight: '600' }}>
-                              {color.name}
-                            </span>
-                          )}
-                        </div>
-                      ))}
+
+                    <div className="d-flex" style={{ gap: '10px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'thin' }}>
+                        {product.colors.map((variant, index) => {
+                          const isSelected = selectedColor === index;
+                          const isOutOfStock = (variant.stock || 0) === 0;
+                          return (
+                            <label
+                              key={index}
+                              className={`variant-card-option ${isSelected ? 'active' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`}
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                padding: '12px 16px',
+                                minWidth: '140px',
+                                border: `2px solid ${isSelected ? '#FF6B6B' : '#E0E0E0'}`,
+                                borderRadius: '8px',
+                                cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                                background: isSelected ? '#FFFFFF' : '#F5F5F5',
+                                transition: 'all 0.3s ease',
+                                opacity: isOutOfStock ? 0.5 : 1,
+                                flexShrink: 0,
+                                position: 'relative'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isOutOfStock && !isSelected) {
+                                  e.currentTarget.style.background = '#FAFAFA';
+                                  e.currentTarget.style.borderColor = '#CCCCCC';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) {
+                                  e.currentTarget.style.background = '#F5F5F5';
+                                  e.currentTarget.style.borderColor = '#E0E0E0';
+                                }
+                              }}
+                              onClick={() => !isOutOfStock && setSelectedColor(index)}
+                            >
+                              <input
+                                type="radio"
+                                name="variant"
+                                value={index}
+                                checked={isSelected}
+                                onChange={() => !isOutOfStock && setSelectedColor(index)}
+                                disabled={isOutOfStock}
+                                style={{ 
+                                  position: 'absolute',
+                                  opacity: 0,
+                                  pointerEvents: 'none'
+                                }}
+                              />
+                              {variant.mausac && (
+                                <span className="fw-bold mb-2" style={{ color: '#2c3e50', fontSize: '0.95rem', textAlign: 'center' }}>
+                                  {variant.mausac}
+                                </span>
+                              )}
+                              {variant.kichthuoc && (
+                                <span style={{ color: '#666', fontSize: '0.8rem', textAlign: 'center', marginBottom: '6px' }}>
+                                  {variant.kichthuoc}
+                                </span>
+                              )}
+                              {variant.gia && variant.gia > 0 && (
+                                <span style={{ color: '#FF6B6B', fontSize: '0.9rem', fontWeight: '600', textAlign: 'center' }}>
+                                  {formatPrice(variant.gia)}
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })}
                     </div>
                   </div>
                 )}
 
-                {/* Quantity */}
-                <div className="mb-4">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <h6 className="mb-0 fw-semibold" style={{ color: '#2c3e50', letterSpacing: '0.5px', fontSize: '1.05rem' }}>Số lượng</h6>
-                    <span className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      Còn lại: <strong style={{ color: '#FF6B6B' }}>{currentStock}</strong> sản phẩm
-                    </span>
+                {/* Quantity & Wishlist */}
+                <div className="mb-4 d-flex justify-content-between align-items-start gap-3">
+                  <div style={{ flex: 1 }}>
+                    <div className="mb-3">
+                      <h6 className="mb-0 fw-semibold" style={{ color: '#2c3e50', letterSpacing: '0.5px', fontSize: '1.05rem' }}>Số lượng</h6>
+                    </div>
+                    <div className="quantity-control" style={{ width: 'fit-content', maxWidth: '150px' }}>
+                      <button 
+                        className="quantity-btn" 
+                        onClick={() => handleQuantityChange('decrease')}
+                        disabled={quantity <= 1}
+                        title="Giảm số lượng"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        className="quantity-input"
+                        value={quantity}
+                        onChange={(e) => handleQuantityInput(e.target.value)}
+                        min="1"
+                        max={currentStock}
+                      />
+                      <button 
+                        className="quantity-btn" 
+                        onClick={() => handleQuantityChange('increase')}
+                        disabled={quantity >= currentStock}
+                        title={quantity >= currentStock ? `Tối đa ${currentStock} sản phẩm` : 'Tăng số lượng'}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <div className="quantity-control">
+                  <div style={{ alignSelf: 'flex-end' }}>
                     <button 
-                      className="quantity-btn" 
-                      onClick={() => handleQuantityChange('decrease')}
-                      disabled={quantity <= 1}
-                      title="Giảm số lượng"
+                      className="btn btn-sm"
+                      onClick={handleToggleWishlist}
+                      disabled={wishlistLoading}
+                      style={{
+                        borderRadius: '10px',
+                        padding: '8px 18px',
+                        fontWeight: '600',
+                        borderWidth: '2px',
+                        borderStyle: 'solid',
+                        borderColor: isWishlisted ? '#dc3545' : '#FFC107',
+                        color: isWishlisted ? '#fff' : '#FFC107',
+                        background: isWishlisted ? '#dc3545' : 'transparent',
+                        transition: 'all 0.3s ease',
+                        fontSize: '0.85rem',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isWishlisted) {
+                          e.currentTarget.style.background = '#FFC107';
+                          e.currentTarget.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isWishlisted) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = '#FFC107';
+                        }
+                      }}
                     >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      className="quantity-input"
-                      value={quantity}
-                      onChange={(e) => handleQuantityInput(e.target.value)}
-                      min="1"
-                      max={currentStock}
-                    />
-                    <button 
-                      className="quantity-btn" 
-                      onClick={() => handleQuantityChange('increase')}
-                      disabled={quantity >= currentStock}
-                      title={quantity >= currentStock ? `Tối đa ${currentStock} sản phẩm` : 'Tăng số lượng'}
-                    >
-                      +
+                      {wishlistLoading ? (
+                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                      ) : (
+                        <i className={`bi bi-heart${isWishlisted ? '-fill' : ''} me-1`}></i>
+                      )}
+                      {isWishlisted ? 'Đã yêu thích' : 'Yêu thích'}
                     </button>
                   </div>
                 </div>
@@ -1668,56 +1795,18 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
 
-                {/* Social Share & Wishlist */}
+                {/* Social Share */}
                 <div className="mt-3 pt-3 pb-3" style={{ borderTop: '1px solid rgba(255, 193, 7, 0.2)', borderBottom: '1px solid rgba(255, 193, 7, 0.2)' }}>
-                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                    <div className="d-flex flex-wrap align-items-center gap-2">
-                      <span style={{ fontSize: '0.85rem', color: '#5A5A5A', fontWeight: '600', letterSpacing: '0.3px' }}>Chia sẻ:</span>
-                      <button className="btn btn-sm" style={{ background: '#3b5998', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
-                        <i className="bi bi-facebook me-1"></i> Facebook
-                      </button>
-                      <button className="btn btn-sm" style={{ background: '#1DA1F2', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
-                        <i className="bi bi-twitter me-1"></i> Twitter
-                      </button>
-                      <button className="btn btn-sm" style={{ background: '#25D366', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
-                        <i className="bi bi-whatsapp me-1"></i> WhatsApp
-                      </button>
-                    </div>
-                    <button 
-                      className="btn btn-sm"
-                      onClick={handleToggleWishlist}
-                      disabled={wishlistLoading}
-                      style={{
-                        borderRadius: '10px',
-                        padding: '8px 18px',
-                        fontWeight: '600',
-                        borderWidth: '2px',
-                        borderStyle: 'solid',
-                        borderColor: isWishlisted ? '#dc3545' : '#FFC107',
-                        color: isWishlisted ? '#fff' : '#FFC107',
-                        background: isWishlisted ? '#dc3545' : 'transparent',
-                        transition: 'all 0.3s ease',
-                        fontSize: '0.85rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isWishlisted) {
-                          e.currentTarget.style.background = '#FFC107';
-                          e.currentTarget.style.color = '#fff';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isWishlisted) {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = '#FFC107';
-                        }
-                      }}
-                    >
-                      {wishlistLoading ? (
-                        <span className="spinner-border spinner-border-sm me-1" role="status"></span>
-                      ) : (
-                        <i className={`bi bi-heart${isWishlisted ? '-fill' : ''} me-1`}></i>
-                      )}
-                      {isWishlisted ? 'Đã yêu thích' : 'Yêu thích'}
+                  <div className="d-flex flex-wrap align-items-center gap-2">
+                    <span style={{ fontSize: '0.85rem', color: '#5A5A5A', fontWeight: '600', letterSpacing: '0.3px' }}>Chia sẻ:</span>
+                    <button className="btn btn-sm" style={{ background: '#3b5998', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <i className="bi bi-facebook me-1"></i> Facebook
+                    </button>
+                    <button className="btn btn-sm" style={{ background: '#1DA1F2', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <i className="bi bi-twitter me-1"></i> Twitter
+                    </button>
+                    <button className="btn btn-sm" style={{ background: '#25D366', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
+                      <i className="bi bi-whatsapp me-1"></i> WhatsApp
                     </button>
                   </div>
                 </div>
@@ -2331,6 +2420,22 @@ export default function ProductDetailPage() {
           .quantity-control {
             width: 100% !important;
             max-width: 100% !important;
+          }
+
+          /* Quantity & Wishlist row */
+          .d-flex.align-items-center.gap-3 {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+
+          .d-flex.align-items-center.gap-3 .quantity-control {
+            width: 100% !important;
+          }
+
+          .d-flex.align-items-center.gap-3 button.btn-sm {
+            width: 100% !important;
+            justify-content: center !important;
           }
 
           /* Info tabs */

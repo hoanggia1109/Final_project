@@ -7,6 +7,7 @@ import BootstrapClient from './BootstrapClient';
 import Header from './component/Header';
 import HomeButton from './component/HomeButton';
 import Footer from './component/Footer';
+import SocketClient from './component/SocketClient';
 // import DebugAuth from './component/DebugAuth';
 
 const didotFont = Libre_Bodoni({
@@ -40,6 +41,7 @@ export default function RootLayout({
       </head>
       <body className={didotFont.variable} style={{ fontFamily: 'var(--font-didot), Didot, "Bodoni MT", "Libre Bodoni", serif' }}>
         <BootstrapClient />
+        <SocketClient />
         {!isNoLayoutPage && !isAdminPage && <Header />}
         {children}
         {!isNoLayoutPage && !isAdminPage && <Footer />}

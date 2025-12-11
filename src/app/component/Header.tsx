@@ -2,10 +2,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import AuthModal from './AuthModal';
 import { getCartCount } from '../utils/cart';
 
 export default function Header() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode] = useState<'login' | 'register'>('login');
@@ -15,6 +17,14 @@ export default function Header() {
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState('customer');
   const [cartCount, setCartCount] = useState(0);
+
+  // Helper function to check if a path is active
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    return pathname?.startsWith(path);
+  };
 
   // Debug: Log state changes
   useEffect(() => {
@@ -233,26 +243,35 @@ export default function Header() {
                   href="/" 
                   className="nav-link position-relative" 
                   style={{ 
-                    color: '#FFC107',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: isActive('/') ? '#FFC107' : '#333',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
                     alignItems: 'center',
                     height: '40px',
                     padding: '0 20px',
                     borderRadius: '24px',
                     fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: 'rgba(255, 193, 7, 0.08)'
+                    fontWeight: isActive('/') ? '600' : '500',
+                    backgroundColor: isActive('/') ? 'rgba(255, 193, 7, 0.15)' : 'transparent',
+                    transform: isActive('/') ? 'translateY(-1px)' : 'translateY(0)',
+                    boxShadow: isActive('/') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.15)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.2)';
+                    if (!isActive('/')) {
+                      e.currentTarget.style.color = '#FFC107';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    } else {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.3)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.color = isActive('/') ? '#FFC107' : '#333';
+                    e.currentTarget.style.backgroundColor = isActive('/') ? 'rgba(255, 193, 7, 0.15)' : 'transparent';
+                    e.currentTarget.style.transform = isActive('/') ? 'translateY(-1px)' : 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isActive('/') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none';
                   }}
                 >
                   Trang chủ
@@ -263,26 +282,35 @@ export default function Header() {
                   href="/introduction" 
                   className="nav-link position-relative"
                   style={{ 
-                    color: '#333',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: isActive('/introduction') ? '#FFC107' : '#333',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
                     alignItems: 'center',
                     height: '40px',
                     padding: '0 20px',
                     borderRadius: '24px',
                     fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: 'transparent'
+                    fontWeight: isActive('/introduction') ? '600' : '500',
+                    backgroundColor: isActive('/introduction') ? 'rgba(255, 193, 7, 0.15)' : 'transparent',
+                    transform: isActive('/introduction') ? 'translateY(-1px)' : 'translateY(0)',
+                    boxShadow: isActive('/introduction') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#FFC107';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    if (!isActive('/introduction')) {
+                      e.currentTarget.style.color = '#FFC107';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    } else {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.3)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#333';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.color = isActive('/introduction') ? '#FFC107' : '#333';
+                    e.currentTarget.style.backgroundColor = isActive('/introduction') ? 'rgba(255, 193, 7, 0.15)' : 'transparent';
+                    e.currentTarget.style.transform = isActive('/introduction') ? 'translateY(-1px)' : 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isActive('/introduction') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none';
                   }}
                 >
                   Giới thiệu
@@ -293,26 +321,35 @@ export default function Header() {
                   href="/products" 
                   className="nav-link"
                   style={{ 
-                    color: '#333',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: isActive('/products') ? '#FFC107' : '#333',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
                     alignItems: 'center',
                     height: '40px',
                     padding: '0 20px',
                     borderRadius: '24px',
                     fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: 'transparent'
+                    fontWeight: isActive('/products') ? '600' : '500',
+                    backgroundColor: isActive('/products') ? 'rgba(255, 193, 7, 0.15)' : 'transparent',
+                    transform: isActive('/products') ? 'translateY(-1px)' : 'translateY(0)',
+                    boxShadow: isActive('/products') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#FFC107';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    if (!isActive('/products')) {
+                      e.currentTarget.style.color = '#FFC107';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    } else {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.3)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#333';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.color = isActive('/products') ? '#FFC107' : '#333';
+                    e.currentTarget.style.backgroundColor = isActive('/products') ? 'rgba(255, 193, 7, 0.15)' : 'transparent';
+                    e.currentTarget.style.transform = isActive('/products') ? 'translateY(-1px)' : 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isActive('/products') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none';
                   }}
                 >
                   Sản Phẩm
@@ -371,26 +408,35 @@ export default function Header() {
                   href="/news" 
                   className="nav-link"
                   style={{ 
-                    color: '#333',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: isActive('/news') ? '#FFC107' : '#333',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
                     alignItems: 'center',
                     height: '40px',
                     padding: '0 20px',
                     borderRadius: '24px',
                     fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: 'transparent'
+                    fontWeight: isActive('/news') ? '600' : '500',
+                    backgroundColor: isActive('/news') ? 'rgba(255, 193, 7, 0.15)' : 'transparent',
+                    transform: isActive('/news') ? 'translateY(-1px)' : 'translateY(0)',
+                    boxShadow: isActive('/news') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#FFC107';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    if (!isActive('/news')) {
+                      e.currentTarget.style.color = '#FFC107';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    } else {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.3)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#333';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.color = isActive('/news') ? '#FFC107' : '#333';
+                    e.currentTarget.style.backgroundColor = isActive('/news') ? 'rgba(255, 193, 7, 0.15)' : 'transparent';
+                    e.currentTarget.style.transform = isActive('/news') ? 'translateY(-1px)' : 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isActive('/news') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none';
                   }}
                 >
                   Tin tức
@@ -398,59 +444,38 @@ export default function Header() {
               </li>
               <li className="nav-item d-flex align-items-center">
                 <Link 
-                  href="/recruitment" 
-                  className="nav-link"
-                  style={{ 
-                    color: '#333',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '40px',
-                    padding: '0 20px',
-                    borderRadius: '24px',
-                    fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#FFC107';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#333';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  Tuyển dụng
-                </Link>
-              </li>
-              <li className="nav-item d-flex align-items-center">
-                <Link 
                   href="/contact" 
                   className="nav-link"
                   style={{ 
-                    color: '#333',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: isActive('/contact') ? '#FFC107' : '#333',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
                     alignItems: 'center',
                     height: '40px',
                     padding: '0 20px',
                     borderRadius: '24px',
                     fontSize: '15px',
-                    fontWeight: '500',
-                    backgroundColor: 'transparent'
+                    fontWeight: isActive('/contact') ? '600' : '500',
+                    backgroundColor: isActive('/contact') ? 'rgba(255, 193, 7, 0.15)' : 'transparent',
+                    transform: isActive('/contact') ? 'translateY(-1px)' : 'translateY(0)',
+                    boxShadow: isActive('/contact') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#FFC107';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    if (!isActive('/contact')) {
+                      e.currentTarget.style.color = '#FFC107';
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.08)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    } else {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.3)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#333';
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.color = isActive('/contact') ? '#FFC107' : '#333';
+                    e.currentTarget.style.backgroundColor = isActive('/contact') ? 'rgba(255, 193, 7, 0.15)' : 'transparent';
+                    e.currentTarget.style.transform = isActive('/contact') ? 'translateY(-1px)' : 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isActive('/contact') ? '0 4px 12px rgba(255, 193, 7, 0.2)' : 'none';
                   }}
                 >
                   Liên hệ
