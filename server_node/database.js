@@ -2,12 +2,18 @@ const { Sequelize, DataTypes } = require("sequelize");
 const constants = require("./config/constants");
 const port = constants.SERVER.PORT;
 
-// Kết nối database MySQL
-const sequelize = new Sequelize("shopnoithat", "root", "", {
-  host: "localhost",
-  dialect: "mysql",
-  logging: false,
-});
+// Kết nối database MySQL - Sử dụng biến môi trường
+const sequelize = new Sequelize(
+  process.env.DB_NAME || "shopnoithat",
+  process.env.DB_USER || "root",
+  process.env.DB_PASSWORD || "",
+  {
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || 3306,
+    dialect: "mysql",
+    logging: false,
+  }
+);
 
 /* ------------------ MODELS ------------------ */
 

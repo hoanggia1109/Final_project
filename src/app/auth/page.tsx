@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import LocationSelector from '../component/LocationSelector';
+import TermsModal from '../component/TermsModal';
 import { API_BASE_URL } from '@/lib/api-config';
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const [loginData, setLoginData] = useState({
     email: '',
@@ -678,15 +680,28 @@ export default function AuthPage() {
                         }}
                       />
                       <label className="form-check-label small" htmlFor="agreeTerms">
-                        Tôi đồng ý với <Link 
-                          href="/terms" 
-                          className="text-decoration-none" 
-                          style={{ color: '#FF6B6B', transition: 'all 0.3s ease' }}
+                        Tôi đồng ý với{' '}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowTermsModal(true);
+                          }}
+                          className="btn btn-link p-0 text-decoration-none border-0"
+                          style={{ 
+                            color: '#FF6B6B', 
+                            transition: 'all 0.3s ease',
+                            fontSize: 'inherit',
+                            fontWeight: 'inherit',
+                            lineHeight: 'inherit',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
                           onMouseEnter={(e) => e.currentTarget.style.color = '#FF8E53'}
                           onMouseLeave={(e) => e.currentTarget.style.color = '#FF6B6B'}
                         >
                           Điều khoản sử dụng
-                        </Link>
+                        </button>
                       </label>
                       {registerErrors.agreeTerms && (
                         <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
@@ -794,6 +809,12 @@ export default function AuthPage() {
           box-shadow: 0 0 0 0.2rem rgba(255, 142, 83, 0.15);
         }
       `}</style>
+
+      {/* Terms Modal */}
+      <TermsModal 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+      />
     </div>
   );
 }

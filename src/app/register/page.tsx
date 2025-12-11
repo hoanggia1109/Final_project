@@ -2,10 +2,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import TermsModal from '../component/TermsModal';
 import { API_BASE_URL } from '@/lib/api-config';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -335,10 +337,28 @@ export default function RegisterPage() {
                       />
                       <label className="form-check-label small text-muted" htmlFor="agreeTerms">
                         Tôi đồng ý với{' '}
-                        <Link href="/terms" className="text-decoration-none" style={{ color: '#FFC107' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowTermsModal(true);
+                          }}
+                          className="btn btn-link p-0 text-decoration-none border-0"
+                          style={{ 
+                            color: '#FFC107', 
+                            transition: 'all 0.3s ease',
+                            fontSize: 'inherit',
+                            fontWeight: 'inherit',
+                            lineHeight: 'inherit',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#FF8E53'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#FFC107'}
+                        >
                           Điều khoản sử dụng
-                        </Link>{' '}
-                        và{' '}
+                        </button>
+                        {' '}và{' '}
                         <Link href="/privacy" className="text-decoration-none" style={{ color: '#FFC107' }}>
                           Chính sách bảo mật
                         </Link>
@@ -394,6 +414,12 @@ export default function RegisterPage() {
           }
         }
       `}</style>
+
+      {/* Terms Modal */}
+      <TermsModal 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+      />
     </div>
   );
 }
