@@ -7,9 +7,8 @@ export default function PromoModal() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Không hiển thị popup ở trang chi tiết sản phẩm, checkout, cart
-    const excludedPaths = ['/products/', '/checkout', '/cart', '/orders', '/admin'];
-    const shouldShowPromo = !excludedPaths.some(path => pathname?.includes(path));
+    // Chỉ hiển thị popup ở trang chủ (pathname === '/')
+    const shouldShowPromo = pathname === '/';
 
     if (shouldShowPromo) {
       // Auto show popup sau 1.5s mỗi khi load trang

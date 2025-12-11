@@ -434,7 +434,8 @@ function ProductCategories() {
                       <>
                         <div className="position-relative overflow-hidden category-image" style={{ 
                           height: '180px',
-                          background: '#f8f9fa'
+                          background: '#f8f9fa',
+                          width: '100%'
                         }}>
                           <Image 
                             src={cat.image} 
@@ -443,9 +444,16 @@ function ProductCategories() {
                             sizes="100vw"
                             style={{ 
                               objectFit: 'cover',
-                              objectPosition: 'center'
+                              objectPosition: 'center',
+                              width: '100%',
+                              height: '100%'
                             }}
                             className="category-img"
+                            unoptimized
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800';
+                            }}
                           />
                         </div>
                         <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
@@ -462,7 +470,8 @@ function ProductCategories() {
                         {/* Desktop: Có hover effects và animations */}
                         <div className="position-relative overflow-hidden category-image" style={{ 
                           height: '250px',
-                          background: '#f8f9fa'
+                          background: '#f8f9fa',
+                          width: '100%'
                         }}>
                           <Image 
                             src={cat.image} 
@@ -471,9 +480,16 @@ function ProductCategories() {
                             sizes="(max-width: 1200px) 50vw, 33vw"
                             style={{ 
                               objectFit: 'cover',
-                              objectPosition: 'center'
+                              objectPosition: 'center',
+                              width: '100%',
+                              height: '100%'
                             }}
                             className="category-img"
+                            unoptimized
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800';
+                            }}
                           />
                           <div 
                             className="position-absolute top-0 start-0 w-100 h-100"
@@ -2007,12 +2023,14 @@ export default function HomePage() {
         .category-image {
           position: relative;
           overflow: hidden;
+          width: 100%;
         }
         
         .category-image .category-img,
         .category-image img,
         .category-image [data-next-image],
-        .category-image span[style*="object-fit"] {
+        .category-image span[style*="object-fit"],
+        .category-image span[style*="position: absolute"] {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
@@ -2021,6 +2039,15 @@ export default function HomePage() {
           top: 0 !important;
           left: 0 !important;
           transition: transform 0.4s ease !important;
+        }
+        
+        /* Ensure Next.js Image wrapper fills container */
+        .category-image > span {
+          width: 100% !important;
+          height: 100% !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
         }
 
         /* Features Section Responsive */
