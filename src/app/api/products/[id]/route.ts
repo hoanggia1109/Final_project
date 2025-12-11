@@ -57,6 +57,18 @@ export async function GET(
     // Tính tổng tồn kho từ tất cả các biến thể
     const totalStock = product.bienthe?.reduce((sum, bt) => sum + (bt.sl_tonkho || 0), 0) || 0;
     
+    // Helper function để format image URL
+    const formatImageUrl = (url: string | undefined): string => {
+      if (!url) return '';
+      // Nếu đã là URL đầy đủ (bắt đầu bằng http/https), trả về nguyên
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      // Nếu là đường dẫn tương đối, thêm API_BASE_URL
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
+      return `${apiBaseUrl}${url.startsWith('/') ? url : '/' + url}`;
+    };
+    
     // Transform data để phù hợp với frontend
     const transformedProduct = {
       id: product.id,
@@ -116,11 +128,11 @@ export async function GET(
         if (sizes && sizes.length > 0) fallback['Kích thước'] = sizes.join(', ');
         return fallback;
       })(),
-      // Lấy images từ biến thể hoặc dùng thumbnail
+      // Lấy images từ biến thể hoặc dùng thumbnail, và format URL
       images: product.bienthe?.[0]?.images && product.bienthe[0].images.length > 0
-        ? product.bienthe[0].images.map((img: { url: string }) => img.url)
+        ? product.bienthe[0].images.map((img: { url: string }) => formatImageUrl(img.url))
         : product.thumbnail
-        ? [product.thumbnail]
+        ? [formatImageUrl(product.thumbnail)]
         : [],
         // : ['https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'],
       colors: product.bienthe

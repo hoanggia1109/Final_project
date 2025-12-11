@@ -581,8 +581,11 @@ export default function ProductPage() {
                         <div className="product-img-wrapper">
                           <Image
                             src={
-                              p.thumbnail ||
-                              'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'
+                              p.thumbnail
+                                ? p.thumbnail.startsWith("http")
+                                  ? p.thumbnail
+                                  : `${API_BASE_URL}${p.thumbnail}`
+                                : 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'
                             }
                             alt={p.tensp}
                             fill

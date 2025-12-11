@@ -23,9 +23,13 @@ const slugify = (str) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
+    // Nếu admin=true thì lấy tất cả, không thì chỉ lấy sản phẩm đang hiển thị (anhien=1)
+    const whereClause = req.query.admin === 'true' ? {} : { anhien: 1 };
+    
     const sanphams = await SanPhamModel.findAll({
+      where: whereClause,
       attributes: ["id", "code", "tensp", "thumbnail", "anhien", "slug", "ngay", "created_at"],
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
@@ -40,10 +44,12 @@ router.get("/", async (_req, res) => {
   }
 });
 
-router.get("/giamgia", async (_req, res) => {
+router.get("/giamgia", async (req, res) => {
   try {
     console.log(" API /api/sanpham/giamgia được gọi!");
+    // Chỉ lấy sản phẩm đang hiển thị (anhien=1)
     const sanphams = await SanPhamModel.findAll({
+      where: { anhien: 1 },
       attributes: ["id", "code", "tensp", "thumbnail", "slug"],
       include: [
         { model: LoaiModel, as: "danhmuc", attributes: ["id", "tendm"] },
@@ -98,6 +104,12 @@ router.get("/:id", async (req, res) => {
 
     if (!sp) {
       console.log(`[GET /api/sanpham/:id] Product ${req.params.id} not found`);
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+    
+    // Nếu không phải admin và sản phẩm đã bị ẩn, trả về 404
+    if (req.query.admin !== 'true' && sp.anhien !== 1) {
+      console.log(`[GET /api/sanpham/:id] Product ${req.params.id} is hidden`);
       return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     }
     

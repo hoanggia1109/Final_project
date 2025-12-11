@@ -54,11 +54,14 @@ export default function ProductAdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const loadData = async () => {
+  const loadData = async (skipLoading = false) => {
     try {
+      if (!skipLoading) {
+        setLoading(true);
+      }
       const [productsRes, danhmucsRes, thuonghieusRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/sanpham`),
-        fetch(`${API_BASE_URL}/api/danhmuc`),
+        fetch(`${API_BASE_URL}/api/sanpham?admin=true`), // Admin cần thấy tất cả sản phẩm (kể cả đã ẩn)
+        fetch(`${API_BASE_URL}/api/danhmuc?admin=true`), // Admin cần thấy tất cả danh mục
         fetch(`${API_BASE_URL}/api/thuonghieu`),
       ]);
 
@@ -72,7 +75,9 @@ export default function ProductAdminPage() {
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err);
     } finally {
-      setLoading(false);
+      if (!skipLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -108,23 +113,47 @@ export default function ProductAdminPage() {
   const handleToggleStatus = async (id: string) => {
     setToggleLoading(id);
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Thêm token nếu có (cho admin routes)
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const res = await fetch(`${API_BASE_URL}/api/sanpham/${id}/toggle`, {
         method: "PATCH",
+        headers,
       });
       
       if (res.ok) {
         const data = await res.json();
+        console.log('Toggle response:', data);
         const newStatus = data.anhien;
+        
+        // Cập nhật state ngay lập tức để UI phản hồi nhanh
         setProducts(products.map((p) => 
-          p.id === id ? { ...p, anhien: newStatus } : p
+          String(p.id) === String(id) ? { ...p, anhien: newStatus } : p
         ));
+        
+        // Reload data để đảm bảo đồng bộ với server (không hiển thị loading)
+        await loadData(true);
       } else {
-        const errorData = await res.json();
+        const errorText = await res.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText || "Không thể cập nhật trạng thái!" };
+        }
+        console.error('Toggle error:', errorData);
         alert(errorData.message || "Không thể cập nhật trạng thái!");
       }
     } catch (error) {
       console.error("Lỗi cập nhật trạng thái:", error);
-      alert("Có lỗi xảy ra!");
+      alert("Có lỗi xảy ra khi cập nhật trạng thái!");
     } finally {
       setToggleLoading(null);
     }

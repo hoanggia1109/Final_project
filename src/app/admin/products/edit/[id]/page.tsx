@@ -60,7 +60,7 @@ export default function EditProductPage() {
       .then(setThuonghieus);
 
     if (!productId) return;
-    fetch(`${API_BASE_URL}/api/sanpham/${productId}`)
+    fetch(`${API_BASE_URL}/api/sanpham/${productId}?admin=true`) // Admin cần thấy sản phẩm kể cả đã ẩn
       .then(res => res.json())
       .then((data) => {
         console.log('[Edit Product] Full product data:', data);

@@ -71,6 +71,18 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const isDesktop = useIsDesktop();
+  
+  // Helper function để format image URL
+  const formatImageUrl = (url: string | undefined): string => {
+    if (!url) return 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg';
+    // Nếu đã là URL đầy đủ (bắt đầu bằng http/https), trả về nguyên
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // Nếu là đường dẫn tương đối, thêm API_BASE_URL
+    return `${API_BASE_URL}${url.startsWith('/') ? url : '/' + url}`;
+  };
+  
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -629,7 +641,7 @@ export default function ProductDetailPage() {
               }}
             >
               <Image
-                src={product.images?.[lightboxIndex] || product.images?.[0] || ''}
+                src={formatImageUrl(product.images?.[lightboxIndex] || product.images?.[0])}
                 alt={`${product.name} ${lightboxIndex + 1}`}
                 fill
                 style={{ objectFit: 'contain' }}
@@ -707,7 +719,7 @@ export default function ProductDetailPage() {
                     }}
                   >
                     <Image
-                      src={img}
+                      src={formatImageUrl(img)}
                       alt={`Thumbnail ${index + 1}`}
                       fill
                       style={{ objectFit: 'cover' }}
@@ -1353,7 +1365,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <Image 
-                  src={product.images?.[selectedImage] || product.images?.[0] || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'} 
+                  src={formatImageUrl(product.images?.[selectedImage] || product.images?.[0])} 
                   alt={product.name}
                   fill
                   style={{ objectFit: 'cover' }}
@@ -1401,7 +1413,7 @@ export default function ProductDetailPage() {
                     onClick={() => setSelectedImage(index)}
                   >
                     <Image 
-                      src={img} 
+                      src={formatImageUrl(img)} 
                       alt={`${product.name} ${index + 1}`}
                       fill
                       style={{ objectFit: 'cover' }}
@@ -2066,7 +2078,13 @@ export default function ProductDetailPage() {
                     >
                       <div className="related-product-image">
                         <Image
-                          src={item.thumbnail || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'}
+                          src={
+                            item.thumbnail
+                              ? item.thumbnail.startsWith("http")
+                                ? item.thumbnail
+                                : `${API_BASE_URL}${item.thumbnail}`
+                              : 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'
+                          }
                           alt={item.tensp}
                           fill
                           style={{ objectFit: 'cover' }}

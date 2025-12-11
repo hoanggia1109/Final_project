@@ -88,7 +88,13 @@ export default function ProductList({
                       }}
                     >
                       <Image
-                        src={p.thumbnail}
+                        src={
+                          p.thumbnail
+                            ? p.thumbnail.startsWith("http")
+                              ? p.thumbnail
+                              : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${p.thumbnail}`
+                            : 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'
+                        }
                         alt={p.tensp}
                         fill
                         style={{ 
