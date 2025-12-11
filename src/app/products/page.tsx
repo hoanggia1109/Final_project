@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { API_BASE_URL } from '@/lib/api-config';
 
@@ -20,6 +20,7 @@ interface Product {
 }
 
 export default function ProductPage() {
+  const searchParams = useSearchParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
@@ -29,6 +30,14 @@ export default function ProductPage() {
 
   const itemsPerPage = 16;
   const router = useRouter();
+
+  // Đọc query parameter từ URL khi component mount
+  useEffect(() => {
+    const catParam = searchParams.get('cat');
+    if (catParam) {
+      setSelectedCat(catParam);
+    }
+  }, [searchParams]);
 
   // Hàm fetch sản phẩm
   const fetchProducts = useCallback(() => {
@@ -527,7 +536,10 @@ export default function ProductPage() {
             </h5>
             <div
               className={`sidebar-item ${!selectedCat ? 'active' : ''}`}
-              onClick={() => setSelectedCat(null)}
+              onClick={() => {
+                setSelectedCat(null);
+                router.push('/products');
+              }}
             >
               <i className="bi bi-collection me-2"></i>
               Tất cả sản phẩm
@@ -536,7 +548,10 @@ export default function ProductPage() {
               <div
                 key={cat.id}
                 className={`sidebar-item ${selectedCat === cat.id ? 'active' : ''}`}
-                onClick={() => setSelectedCat(cat.id)}
+                onClick={() => {
+                  setSelectedCat(cat.id);
+                  router.push(`/products?cat=${cat.id}`);
+                }}
               >
                 <i className="bi bi-folder me-2"></i>
                 {cat.tendm}

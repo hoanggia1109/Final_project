@@ -17,7 +17,7 @@ export async function GET() {
       id: item.id,
       title: item.tendm,
       image: item.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800',
-      link: `/category/${item.id}`,
+      link: `/products?cat=${item.id}`,
     }));
 
     return NextResponse.json(categories);
