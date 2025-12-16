@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image'; // CHANGED: Import Image để hiển thị QR code
 import { API_BASE_URL } from '@/lib/api-config';
 
 export default function CheckoutSuccessPage() {
@@ -231,19 +230,6 @@ export default function CheckoutSuccessPage() {
                               Đã copy mã đơn hàng!
                             </small>
                           )}
-                          {/* CHANGED: Thêm QR code cho mã đơn hàng */}
-                          <div className="text-center mt-3 pt-3 border-top">
-                            <small className="text-muted d-block mb-2">Quét QR code để lưu mã đơn hàng</small>
-                            <div className="d-inline-block p-2 bg-white rounded-3" style={{ border: '2px solid #e9ecef' }}>
-                              <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(orderId)}`}
-                                alt="QR Code mã đơn hàng"
-                                width={150}
-                                height={150}
-                                style={{ borderRadius: '8px', display: 'block' }}
-                              />
-                            </div>
-                          </div>
                         </div>
                       )}
                     </div>

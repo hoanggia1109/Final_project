@@ -295,7 +295,8 @@ export default function CartPage() {
 
   const subtotal = totalAmount;
 
-  const shippingFee = subtotal > 5000000 ? 0 : 100000;
+  // Đồng bộ với backend: 30,000 VND mặc định, miễn phí nếu đơn hàng >= 5 triệu hoặc TPHCM
+  const shippingFee = subtotal > 5000000 ? 0 : 30000;
 
   const total = subtotal + shippingFee;
 

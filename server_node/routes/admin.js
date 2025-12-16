@@ -888,17 +888,32 @@ router.put("/donhang/:id", auth, isAdmin, async (req, res) => {
 
     const trangthaiThayDoi = trangthaiMoi && trangthaiMoi !== trangthaiCu;
 
-    const trangthaiThanhToanThayDoi = trangthaiThanhToanMoi && trangthaiThanhToanMoi !== trangthaiThanhToanCu;
+    let trangthaiThanhToanThayDoi = trangthaiThanhToanMoi && trangthaiThanhToanMoi !== trangthaiThanhToanCu;
 
 
 
     // Logic tự động cập nhật trạng thái thanh toán khi trạng thái đơn hàng thay đổi
 
+    // Khi đơn COD chuyển sang "delivered" (đã giao hàng), tự động chuyển trạng thái thanh toán thành "paid"
+    if (trangthaiMoi === 'delivered' && donhangCu.phuongthucthanhtoan === 'cod' && donhangCu.trangthaithanhtoan === 'pending') {
+      updateData.trangthaithanhtoan = 'paid';
+      updateData.ngaythanhtoan = new Date();
+      // Đánh dấu rằng trạng thái thanh toán đã thay đổi để logic xóa giỏ hàng chạy
+      trangthaiThanhToanThayDoi = true;
+      trangthaiThanhToanMoi = 'paid';
+      trangthaiThanhToanCu = donhangCu.trangthaithanhtoan;
+      console.log(`✅ Đơn COD đã giao hàng: Tự động chuyển trạng thái thanh toán từ "pending" → "paid"`);
+    }
+
     // Khi đơn hàng chuyển sang "returned" (trả hàng) và đã thanh toán, tự động chuyển thành "refunded" (hoàn tiền)
 
-    if (trangthaiMoi === 'returned' && donhangCu.trangthaithanhtoan === 'paid') {
+    else if (trangthaiMoi === 'returned' && donhangCu.trangthaithanhtoan === 'paid') {
 
       updateData.trangthaithanhtoan = 'refunded';
+
+      trangthaiThanhToanThayDoi = true;
+      trangthaiThanhToanMoi = 'refunded';
+      trangthaiThanhToanCu = donhangCu.trangthaithanhtoan;
 
       console.log(`📦 Đơn hàng trả hàng: Tự động chuyển trạng thái thanh toán từ "paid" → "refunded"`);
 
@@ -909,6 +924,10 @@ router.put("/donhang/:id", auth, isAdmin, async (req, res) => {
     else if (trangthaiMoi === 'cancelled' && donhangCu.trangthaithanhtoan === 'paid') {
 
       updateData.trangthaithanhtoan = 'refunded';
+
+      trangthaiThanhToanThayDoi = true;
+      trangthaiThanhToanMoi = 'refunded';
+      trangthaiThanhToanCu = donhangCu.trangthaithanhtoan;
 
       console.log(`❌ Đơn hàng bị hủy: Tự động chuyển trạng thái thanh toán từ "paid" → "refunded"`);
 
@@ -940,20 +959,37 @@ router.put("/donhang/:id", auth, isAdmin, async (req, res) => {
 
       try {
 
-        const { deleteCartForOrder } = require("./utils/cart");
+        console.log(`🛒 [Admin] Attempting to delete cart for user ${donhangCu.user_id} (order: ${req.params.id})`);
+        console.log(`🛒 [Admin] Payment status changed: ${trangthaiThanhToanCu} → ${trangthaiThanhToanMoi}`);
 
-        await deleteCartForOrder(donhangCu.user_id, req.params.id);
+        if (!donhangCu.user_id) {
+          console.error('❌ [Admin] Cannot delete cart: user_id is missing');
+        } else {
+          const { deleteCartForOrder } = require("./utils/cart");
 
-        console.log(`Cart deleted for order ${req.params.id} after admin confirmed payment status as "paid"`);
+          const deletedCount = await deleteCartForOrder(donhangCu.user_id, req.params.id);
+
+          console.log(`✅ [Admin] Cart deleted for order ${req.params.id}: ${deletedCount} item(s) removed`);
+
+        }
 
       } catch (cartError) {
 
-        console.error('Error deleting cart after admin payment confirmation:', cartError);
+        console.error('❌ [Admin] Error deleting cart after admin payment confirmation:', cartError);
+        console.error('❌ [Admin] Error stack:', cartError.stack);
 
         // Không throw error vì đơn hàng đã được cập nhật thành công
 
       }
 
+    } else {
+      // Log để debug tại sao logic xóa giỏ hàng không chạy
+      console.log(`ℹ️ [Admin] Cart deletion skipped:`, {
+        trangthaiThanhToanThayDoi,
+        trangthaiThanhToanMoi,
+        trangthaiThanhToanCu,
+        shouldDelete: trangthaiThanhToanThayDoi && trangthaiThanhToanMoi === 'paid' && trangthaiThanhToanCu !== 'paid'
+      });
     }
 
 

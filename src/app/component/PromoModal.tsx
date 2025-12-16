@@ -7,17 +7,17 @@ export default function PromoModal() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Không hiển thị popup ở trang chi tiết sản phẩm, checkout, cart
-    const excludedPaths = ['/products/', '/checkout', '/cart', '/orders', '/admin'];
-    const shouldShowPromo = !excludedPaths.some(path => pathname?.includes(path));
-
-    if (shouldShowPromo) {
-      // Auto show popup sau 1.5s mỗi khi load trang
+    // Chỉ hiển thị popup ở trang chủ
+    if (pathname === '/') {
+      // Auto show popup sau 1.5s mỗi khi load trang chủ
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 1500);
 
       return () => clearTimeout(timer);
+    } else {
+      // Đóng popup nếu không phải trang chủ
+      setIsOpen(false);
     }
   }, [pathname]);
 

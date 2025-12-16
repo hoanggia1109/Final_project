@@ -176,7 +176,7 @@ export default function AdminOrderDetailPage() {
   };
 
   const paymentStatusConfig: Record<string, { label: string; color: string }> = {
-    pending: { label: 'Chưa thanh toán', color: '#ffc107' },
+    pending: { label: 'Chưa thanh toán', color: '#dc3545' },
     paid: { label: 'Đã thanh toán', color: '#28a745' },
     COD: { label: 'COD', color: '#17a2b8' },
     failed: { label: 'Thất bại', color: '#dc3545' },
@@ -437,10 +437,38 @@ export default function AdminOrderDetailPage() {
                   <strong>-{Number(order.giamgia || 0).toLocaleString('vi-VN')}₫</strong>
                 </div>
               )}
-              <div className="d-flex justify-content-between mb-3">
+              <div className="d-flex justify-content-between mb-2">
                 <span className="text-muted">Phí vận chuyển:</span>
                 <strong>{Number(order.phi_van_chuyen || 0).toLocaleString('vi-VN')}₫</strong>
               </div>
+              {/* Thông tin phương thức thanh toán */}
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-muted">Hình thức thanh toán:</span>
+                <strong className="fs-6">
+                  {order.phuongthucthanhtoan === 'cod' ? 'Thanh toán khi nhận hàng (COD)' :
+                   order.phuongthucthanhtoan === 'stripe' ? 'Thanh toán bằng thẻ (Stripe)' :
+                   order.phuongthucthanhtoan === 'banking' ? 'Chuyển khoản ngân hàng' :
+                   order.phuongthucthanhtoan === 'vnpay' ? 'VNPay' :
+                   order.phuongthucthanhtoan === 'momo' ? 'MoMo' :
+                   order.phuongthucthanhtoan || 'Chưa xác định'}
+                </strong>
+              </div>
+              {/* Trạng thái thanh toán */}
+              {order.trangthaithanhtoan && (
+                <div className="d-flex justify-content-between mb-3">
+                  <span className="text-muted">Trạng thái thanh toán:</span>
+                  <span
+                    className="badge"
+                    style={{
+                      backgroundColor: paymentStatusConfig[order.trangthaithanhtoan]?.color || '#6c757d',
+                      fontSize: '0.85rem',
+                      padding: '0.35rem 0.75rem',
+                    }}
+                  >
+                    {paymentStatusConfig[order.trangthaithanhtoan]?.label || order.trangthaithanhtoan}
+                  </span>
+                </div>
+              )}
               <div className="border-top pt-3">
                 <div className="d-flex justify-content-between align-items-center">
                   <strong className="fs-5">Tổng cộng:</strong>

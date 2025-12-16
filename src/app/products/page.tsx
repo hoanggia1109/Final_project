@@ -27,6 +27,9 @@ export default function ProductPage() {
   const [search, setSearch] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 10000000 });
 
   const itemsPerPage = 16;
   const router = useRouter();
@@ -42,20 +45,50 @@ export default function ProductPage() {
   // Hàm fetch sản phẩm
   const fetchProducts = useCallback(() => {
     setLoading(true);
-    const url = selectedCat
+    
+    // Xây dựng URL với query params
+    let url = selectedCat
       ? `${API_BASE_URL}/api/danhmuc/${selectedCat}`
       : `${API_BASE_URL}/api/sanpham`;
+    
+    // Thêm query params cho filter giá (chỉ khi không filter theo danh mục)
+    if (!selectedCat) {
+      const params = new URLSearchParams();
+      if (minPrice !== null && minPrice > 0) {
+        params.append('minPrice', minPrice.toString());
+      }
+      if (maxPrice !== null && maxPrice > 0) {
+        params.append('maxPrice', maxPrice.toString());
+      }
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
 
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
         const list = selectedCat ? data.sanphams || [] : data;
         setProducts(list);
+        
+        // Tính toán giá min/max từ danh sách sản phẩm để cập nhật range
+        if (list.length > 0) {
+          const prices = list
+            .flatMap((p: Product) => p.bienthe?.map((bt) => Number(bt.gia)) || [])
+            .filter((p) => p > 0);
+          if (prices.length > 0) {
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            setPriceRange({ min: Math.floor(min), max: Math.ceil(max) });
+          }
+        }
+        
         setCurrentPage(1); // reset về trang 1 khi đổi danh mục
       })
       .catch((err) => console.error('Lỗi tải sản phẩm:', err))
       .finally(() => setLoading(false));
-  }, [selectedCat]);
+  }, [selectedCat, minPrice, maxPrice]);
 
   // Lấy danh mục
   useEffect(() => {
@@ -93,10 +126,26 @@ export default function ProductPage() {
     };
   }, [fetchProducts]);
 
-  //  Lọc sản phẩm theo từ khóa
-  const filteredProducts = products.filter((p) =>
-    p.tensp?.toLowerCase().includes(search.trim().toLowerCase())
-  );
+  //  Lọc sản phẩm theo từ khóa và giá
+  const filteredProducts = products.filter((p) => {
+    // Filter theo tên
+    const matchSearch = p.tensp?.toLowerCase().includes(search.trim().toLowerCase());
+    if (!matchSearch) return false;
+    
+    // Filter theo giá (client-side khi đã chọn danh mục, hoặc khi có giá filter)
+    if (selectedCat && (minPrice || maxPrice)) {
+      const prices = p.bienthe?.map((bt) => Number(bt.gia)).filter((p) => p > 0) || [];
+      if (prices.length === 0) return false;
+      
+      const minProductPrice = Math.min(...prices);
+      const maxProductPrice = Math.max(...prices);
+      
+      if (minPrice !== null && maxProductPrice < minPrice) return false;
+      if (maxPrice !== null && minProductPrice > maxPrice) return false;
+    }
+    
+    return true;
+  });
 
   //  Phân trang
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -235,6 +284,120 @@ export default function ProductPage() {
         .sidebar-item.active::before {
           transform: scaleY(1);
           background: #FFFFFF;
+        }
+
+        .price-filter-section {
+          margin-top: 0;
+          padding-top: 0;
+          border-top: none;
+          margin-bottom: 32px;
+          padding-bottom: 24px;
+          border-bottom: 2px solid rgba(139, 115, 85, 0.1);
+        }
+
+        .price-filter-title {
+          color: #3D3D3D;
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin-bottom: 20px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        .price-inputs {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .price-input {
+          flex: 1;
+          min-width: 0;
+          width: 0;
+          border: 2px solid rgba(139, 115, 85, 0.15);
+          border-radius: 12px;
+          padding: 10px 14px;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+          background: #FFFFFF;
+          box-sizing: border-box;
+        }
+
+        .price-input:focus {
+          border-color: #FFC107;
+          box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+          outline: none;
+        }
+
+        .price-range-display {
+          font-size: 0.85rem;
+          color: #666;
+          text-align: center;
+          margin-bottom: 12px;
+        }
+
+        .btn-apply-filter {
+          width: 100%;
+          background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+          border: none;
+          color: #FFFFFF;
+          font-weight: 600;
+          padding: 12px;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
+        }
+
+        .btn-apply-filter:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(255, 193, 7, 0.4);
+          background: linear-gradient(135deg, #FFD54F 0%, #FFC107 100%);
+        }
+
+        .btn-reset-filter {
+          width: 100%;
+          background: transparent;
+          border: 2px solid rgba(139, 115, 85, 0.2);
+          color: #666;
+          font-weight: 500;
+          padding: 10px;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+          font-size: 0.85rem;
+          margin-top: 8px;
+        }
+
+        .btn-reset-filter:hover {
+          border-color: #FFC107;
+          color: #FFC107;
+          background: rgba(255, 193, 7, 0.05);
+        }
+
+        @media (max-width: 768px) {
+          .price-filter-section {
+            margin-top: 24px;
+            padding-top: 20px;
+          }
+
+          .price-filter-title {
+            font-size: 1rem;
+            margin-bottom: 16px;
+          }
+
+          .price-inputs {
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .price-input {
+            width: 100%;
+            min-width: 100%;
+          }
         }
 
         .product-card {
@@ -530,6 +693,80 @@ export default function ProductPage() {
         <div className="layout">
           {/* Sidebar danh mục */}
           <div className="sidebar">
+            {/* Filter giá */}
+            <div className="price-filter-section" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none', marginBottom: '32px', paddingBottom: '24px', borderBottom: '2px solid rgba(139, 115, 85, 0.1)' }}>
+                <h6 className="price-filter-title">
+                  <i className="bi bi-funnel me-2"></i>
+                  LỌC THEO GIÁ
+                </h6>
+                <div className="price-range-display">
+                  {minPrice || maxPrice ? (
+                    <>
+                      {minPrice ? `${minPrice.toLocaleString('vi-VN')}₫` : '0₫'} - {' '}
+                      {maxPrice ? `${maxPrice.toLocaleString('vi-VN')}₫` : '∞'}
+                    </>
+                  ) : (
+                    `0₫ - ${priceRange.max.toLocaleString('vi-VN')}₫`
+                  )}
+                </div>
+                <div className="price-inputs">
+                  <input
+                    type="number"
+                    className="price-input"
+                    placeholder="Từ (₫)"
+                    value={minPrice || ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : null;
+                      setMinPrice(value);
+                    }}
+                    min="0"
+                    step="100000"
+                  />
+                  <input
+                    type="number"
+                    className="price-input"
+                    placeholder="Đến (₫)"
+                    value={maxPrice || ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : null;
+                      setMaxPrice(value);
+                    }}
+                    min="0"
+                    step="100000"
+                  />
+                </div>
+                <button
+                  className="btn-apply-filter"
+                  onClick={() => {
+                    if (selectedCat) {
+                      // Khi đã chọn danh mục, filter client-side (không cần gọi API)
+                      setCurrentPage(1);
+                    } else {
+                      // Khi không chọn danh mục, gọi API với filter giá
+                      fetchProducts();
+                    }
+                  }}
+                >
+                  <i className="bi bi-check-lg me-2"></i>
+                  Áp dụng
+                </button>
+                {(minPrice || maxPrice) && (
+                  <button
+                    className="btn-reset-filter"
+                    onClick={() => {
+                      setMinPrice(null);
+                      setMaxPrice(null);
+                      if (!selectedCat) {
+                        setTimeout(() => fetchProducts(), 100);
+                      }
+                    }}
+                  >
+                    <i className="bi bi-x-lg me-2"></i>
+                    Xóa bộ lọc
+                  </button>
+                )}
+              </div>
+
             <h5 className="sidebar-title">
               <i className="bi bi-grid-3x3-gap-fill me-2"></i>
               DANH MỤC

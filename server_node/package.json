@@ -30,6 +30,7 @@
     "nodemailer": "^7.0.10",
     "nodemon": "^3.1.10",
     "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1",
     "stripe": "^19.3.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"

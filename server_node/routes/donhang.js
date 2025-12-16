@@ -269,12 +269,17 @@ router.post("/", auth, async (req, res) => {
       });
     }
 
-    // CHANGED: KHÔNG xóa giỏ hàng ở đây - giữ giỏ hàng cho đến khi thanh toán thành công
-    // Giỏ hàng sẽ được xóa trong các trường hợp sau:
-    // - Khi thanh toán thành công (Stripe webhook, confirm-payment, banking confirm)
-    // - Khi admin xác nhận đơn COD đã được giao
-
-
+    // CHANGED: Xóa giỏ hàng ngay sau khi tạo đơn hàng thành công
+    // Giỏ hàng sẽ được xóa ngay khi đơn hàng được tạo, không cần chờ thanh toán
+    try {
+      const deletedCount = await GioHangModel.destroy({ 
+        where: { user_id: req.user.id } 
+      });
+      console.log(`✅ [DonHang] Cart cleared after order creation: ${deletedCount} item(s) deleted for user ${req.user.id}`);
+    } catch (cartError) {
+      console.error('❌ [DonHang] Error clearing cart after order creation:', cartError);
+      // Không throw error vì đơn hàng đã được tạo thành công
+    }
 
     // CHANGED: Không gửi email khi tạo đơn hàng, chỉ gửi khi thanh toán thành công
     // Email sẽ được gửi ở thanhtoan.js khi thanh toán thành công
@@ -284,7 +289,7 @@ router.post("/", auth, async (req, res) => {
     // ====== Trả về kết quả ======
     res.json({
 
-      message: "Đặt hàng thành công. Vui lòng hoàn tất thanh toán. Giỏ hàng sẽ được xóa sau khi thanh toán thành công.",
+      message: "Đặt hàng thành công. Vui lòng hoàn tất thanh toán.",
 
       donhang: {
 

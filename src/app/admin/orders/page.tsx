@@ -108,7 +108,7 @@ export default function AdminOrdersPage() {
   };
 
   const paymentStatusConfig: Record<string, { label: string; color: string }> = {
-    pending: { label: 'Chưa thanh toán', color: '#ffc107' },
+    pending: { label: 'Chưa thanh toán', color: '#dc3545' },
     paid: { label: 'Đã thanh toán', color: '#28a745' },
     COD: { label: 'COD', color: '#17a2b8' },
     failed: { label: 'Thất bại', color: '#dc3545' },

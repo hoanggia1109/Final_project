@@ -220,6 +220,7 @@ const GioHangModel = sequelize.define(
      created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
     updated_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW},
     soluong: { type: DataTypes.INTEGER, defaultValue: 1 },
+    tongtien: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 }, // Tổng tiền = giá * số lượng
   },
   { tableName: "gio_hang", timestamps: false }
 );
