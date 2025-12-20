@@ -1,0 +1,47 @@
+═══════════════════════════════════════════════════════════════
+                    THIẾT KẾ HỆ THỐNG
+═══════════════════════════════════════════════════════════════
+
+┌──────────────────┬────────────────────────────────────────────┐
+│  Thành Phần      │  Công Nghệ                                 │
+├──────────────────┼────────────────────────────────────────────┤
+│  Frontend        │  Next.js 15.5.4, React 19.1.0,             │
+│                  │  TypeScript 5.9.3, Tailwind CSS 4,         │
+│                  │  Bootstrap 5.3.8, Bootstrap Icons,         │
+│                  │  Socket.io Client, Stripe.js                │
+├──────────────────┼────────────────────────────────────────────┤
+│  Backend         │  Node.js, Express 5.1.0,                     │
+│                  │  Sequelize 6.37.7, Swagger                 │
+│                  │  (swagger-jsdoc, swagger-ui-express),        │
+│                  │  JWT, Multer, Nodemailer,                  │
+│                  │  Socket.io, Stripe, bcryptjs, CORS         │
+├──────────────────┼────────────────────────────────────────────┤
+│  CSDL            │  MySQL (mysql2)                             │
+├──────────────────┼────────────────────────────────────────────┤
+│  Khác            │  GitHub (Quản lý code),                    │
+│                  │  Figma (Thiết kế),                         │
+│                  │  VPS (Hosting)                              │
+└──────────────────┴────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+BẢNG ĐƠN GIẢN (Để copy vào Figma/PowerPoint):
+
+Thành Phần: Frontend
+Công Nghệ: Next.js 15.5.4, React 19.1.0, TypeScript 5.9.3, Tailwind CSS 4, Bootstrap 5.3.8, Bootstrap Icons, Socket.io Client, Stripe.js
+
+Thành Phần: Backend
+Công Nghệ: Node.js, Express 5.1.0, Sequelize 6.37.7, Swagger (swagger-jsdoc, swagger-ui-express), JWT, Multer, Nodemailer, Socket.io, Stripe, bcryptjs, CORS
+
+Thành Phần: CSDL
+Công Nghệ: MySQL (mysql2)
+
+Thành Phần: Khác
+Công Nghệ: GitHub (Quản lý code), Figma (Thiết kế), VPS (Hosting)
+
+═══════════════════════════════════════════════════════════════
+
+
+
+
+

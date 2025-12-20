@@ -1177,7 +1177,7 @@ function Partners() {
                       sizes="(max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
                       style={{ 
                         objectFit: 'contain',
-                        filter: isDesktop ? 'grayscale(100%) contrast(1.2) brightness(0.9)' : 'grayscale(0%)',
+                        filter: 'grayscale(0%)',
                         transition: 'all 0.3s ease',
                         padding: isMobile ? '20px' : '30px'
                       }}
@@ -1186,7 +1186,7 @@ function Partners() {
                         e.currentTarget.style.transform = 'scale(1.05)';
                       } : undefined}
                       onMouseLeave={isDesktop ? (e) => { 
-                        e.currentTarget.style.filter = 'grayscale(100%) contrast(1.2) brightness(0.9)';
+                        e.currentTarget.style.filter = 'grayscale(0%)';
                         e.currentTarget.style.transform = 'scale(1)';
                       } : undefined}
                     />

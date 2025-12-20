@@ -886,27 +886,25 @@ export default function CartPage() {
 
 
 
-                <div className="border-top pt-3 mb-3">
+                <div className="mb-3">
 
                   <div 
 
-                    className="p-3 rounded-3"
+                    className="p-3 rounded-3 d-flex align-items-center"
 
                     style={{
 
-                      background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF5E8 100%)',
+                      background: 'linear-gradient(135deg, #FFF5E8 0%, #FFE8D6 100%)',
+
+                      border: '1px solid rgba(255, 142, 83, 0.2)',
 
                     }}
 
                   >
 
-                    <div className="d-flex align-items-center justify-content-between mb-2">
+                    <i className="bi bi-tag-fill me-2" style={{ color: '#FF8E53', fontSize: '18px' }}></i>
 
-                      <i className="bi bi-tag-fill me-2" style={{ color: '#FF8E53', fontSize: '20px' }}></i>
-
-                      <small className="text-muted">Mã giảm giá có thể áp dụng tại trang thanh toán</small>
-
-                    </div>
+                    <small className="text-muted mb-0" style={{ fontSize: '13px' }}>Mã giảm giá có thể áp dụng tại trang thanh toán</small>
 
                   </div>
 

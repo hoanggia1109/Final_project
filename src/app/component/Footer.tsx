@@ -170,10 +170,49 @@ export default function Footer() {
           </div>
 
           {/* Copyright */}
-          <div className="border-top border-secondary mt-5 pt-3 text-center">
-            <p className="small text-secondary mb-0">
-              © 2024 <b>Nội thất Danny</b>. All Rights Reserved.
-            </p>
+          <div className="border-top border-secondary mt-5 pt-3">
+            <div className="text-center mb-2">
+              <p className="small text-secondary mb-0">
+                © 2024 <b>Nội thất Danny</b>. All Rights Reserved.
+              </p>
+            </div>
+            <div className="text-center">
+              <Link 
+                href="/terms" 
+                className="text-decoration-none me-3"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '13px',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#ffc107';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                }}
+              >
+                Điều khoản sử dụng
+              </Link>
+              <span className="text-secondary" style={{ fontSize: '13px' }}>|</span>
+              <Link 
+                href="/privacy" 
+                className="text-decoration-none ms-3"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '13px',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#ffc107';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                }}
+              >
+                Chính sách bảo mật
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

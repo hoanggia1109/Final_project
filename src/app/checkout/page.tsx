@@ -1149,9 +1149,24 @@ export default function CheckoutPage() {
                   <div className="text-center mt-3">
                     <small className="text-muted">
                       Bằng việc đặt hàng, bạn đồng ý với{' '}
-                      <a href="#" style={{ color: '#FF8E53', textDecoration: 'none' }}>
+                      <Link 
+                        href="/terms" 
+                        style={{ 
+                          color: '#FF8E53', 
+                          textDecoration: 'none',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = '#FF6B6B';
+                          e.currentTarget.style.textDecoration = 'underline';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = '#FF8E53';
+                          e.currentTarget.style.textDecoration = 'none';
+                        }}
+                      >
                         Điều khoản sử dụng
-                      </a>
+                      </Link>
                     </small>
                   </div>
                 </div>

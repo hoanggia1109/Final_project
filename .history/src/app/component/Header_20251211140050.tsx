@@ -794,7 +794,7 @@ export default function Header() {
                                 </small>
                               </div>
                               <Link
-                                href="/admin"
+                                href="/admin/dashboard"
                                 className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark"
                                 style={{ transition: 'all 0.2s ease' }}
                                 onMouseEnter={(e) => {
