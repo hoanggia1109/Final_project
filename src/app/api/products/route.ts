@@ -14,14 +14,23 @@ export async function GET() {
     const products = await response.json();
     
     // Transform data cho homepage
-    const transformedProducts = products.map((p: { id: number; tensp: string; thumbnail: string; bienthe: { gia: number }[]; }) => ({
-      id: p.id,
-      name: p.tensp || 'Sản phẩm',
-      image: p.thumbnail || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg',
-      discount: 20,
-      price: p.bienthe?.[0]?.gia || 0,
-      originalPrice: p.bienthe?.[0]?.gia ? Math.round(p.bienthe[0].gia * 1.25) : 0,
-    }));
+    const transformedProducts = products.map((p: { id: number; tensp: string; thumbnail: string; bienthe: { gia: number }[]; }) => {
+      const price = p.bienthe?.[0]?.gia || 0;
+      const originalPrice = price ? Math.round(price * 1.25) : 0;
+      // Tính phần trăm giảm giá dựa trên originalPrice và price
+      const discount = originalPrice > price && originalPrice > 0 
+        ? Math.round(((originalPrice - price) / originalPrice) * 100)
+        : 0;
+      
+      return {
+        id: p.id,
+        name: p.tensp || 'Sản phẩm',
+        image: p.thumbnail || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg',
+        discount: discount,
+        price: price,
+        originalPrice: originalPrice,
+      };
+    });
 
     return NextResponse.json(transformedProducts);
   } catch (error) {

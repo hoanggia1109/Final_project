@@ -70,6 +70,7 @@ export default function CheckoutPage() {
   }>>([]);
   const [showAddressSelector, setShowAddressSelector] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Check authentication and load cart
   useEffect(() => {
@@ -1149,12 +1150,20 @@ export default function CheckoutPage() {
                   <div className="text-center mt-3">
                     <small className="text-muted">
                       Bằng việc đặt hàng, bạn đồng ý với{' '}
-                      <Link 
-                        href="/terms" 
+                      <button
+                        type="button"
+                        className="btn btn-link p-0 text-decoration-none border-0"
                         style={{ 
                           color: '#FF8E53', 
                           textDecoration: 'none',
-                          transition: 'all 0.3s ease'
+                          transition: 'all 0.3s ease',
+                          fontSize: 'inherit',
+                          fontWeight: 'inherit',
+                          cursor: 'pointer'
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowTermsModal(true);
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = '#FF6B6B';
@@ -1166,7 +1175,7 @@ export default function CheckoutPage() {
                         }}
                       >
                         Điều khoản sử dụng
-                      </Link>
+                      </button>
                     </small>
                   </div>
                 </div>
@@ -1175,6 +1184,107 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
+
+      {/* Terms Modal */}
+      {showTermsModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{
+            zIndex: 9999,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            animation: 'fadeIn 0.3s ease'
+          }}
+          onClick={() => setShowTermsModal(false)}
+        >
+          <div
+            className="bg-white rounded-3 shadow-lg"
+            style={{
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              animation: 'fadeIn 0.3s ease'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
+              <h4 className="fw-bold mb-0" style={{ color: '#FF6B6B' }}>Điều khoản sử dụng</h4>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowTermsModal(false)}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="p-4" style={{ fontSize: '0.9rem', lineHeight: '1.8' }}>
+              <h5 className="fw-semibold mb-3">1. Chấp nhận điều khoản</h5>
+              <p className="text-muted mb-4">
+                Bằng việc truy cập và sử dụng website này, bạn đồng ý tuân thủ và bị ràng buộc bởi các điều khoản và điều kiện sử dụng được nêu ra dưới đây.
+              </p>
+
+              <h5 className="fw-semibold mb-3">2. Quyền sở hữu trí tuệ</h5>
+              <p className="text-muted mb-4">
+                Tất cả nội dung trên website này, bao gồm nhưng không giới hạn ở văn bản, đồ họa, logo, hình ảnh, phần mềm, đều thuộc quyền sở hữu của chúng tôi hoặc các bên cấp phép và được bảo vệ bởi luật bản quyền.
+              </p>
+
+              <h5 className="fw-semibold mb-3">3. Sử dụng dịch vụ</h5>
+              <p className="text-muted mb-4">
+                Bạn được phép sử dụng website này cho mục đích cá nhân và thương mại hợp pháp. Bạn không được phép sao chép, phân phối, sửa đổi, tạo ra các tác phẩm phái sinh từ nội dung của website mà không có sự cho phép bằng văn bản của chúng tôi.
+              </p>
+
+              <h5 className="fw-semibold mb-3">4. Đặt hàng và thanh toán</h5>
+              <p className="text-muted mb-4">
+                Khi đặt hàng, bạn cam kết cung cấp thông tin chính xác và đầy đủ. Chúng tôi có quyền từ chối hoặc hủy đơn hàng nếu phát hiện thông tin không hợp lệ hoặc có dấu hiệu gian lận.
+              </p>
+
+              <h5 className="fw-semibold mb-3">5. Vận chuyển và giao hàng</h5>
+              <p className="text-muted mb-4">
+                Thời gian giao hàng có thể thay đổi tùy theo địa điểm và điều kiện thời tiết. Chúng tôi sẽ thông báo cho bạn về tình trạng đơn hàng qua email hoặc điện thoại.
+              </p>
+
+              <h5 className="fw-semibold mb-3">6. Đổi trả và hoàn tiền</h5>
+              <p className="text-muted mb-4">
+                Sản phẩm có thể được đổi trả trong vòng 7 ngày kể từ ngày nhận hàng nếu còn nguyên vẹn, chưa sử dụng và có hóa đơn mua hàng. Chi phí vận chuyển đổi trả do khách hàng chịu.
+              </p>
+
+              <h5 className="fw-semibold mb-3">7. Bảo mật thông tin</h5>
+              <p className="text-muted mb-4">
+                Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn theo chính sách bảo mật. Tuy nhiên, không có phương thức truyền tải qua internet nào là hoàn toàn an toàn.
+              </p>
+
+              <h5 className="fw-semibold mb-3">8. Giới hạn trách nhiệm</h5>
+              <p className="text-muted mb-4">
+                Chúng tôi không chịu trách nhiệm về bất kỳ thiệt hại trực tiếp, gián tiếp, ngẫu nhiên, đặc biệt hoặc hậu quả nào phát sinh từ việc sử dụng hoặc không thể sử dụng website này.
+              </p>
+
+              <h5 className="fw-semibold mb-3">9. Thay đổi điều khoản</h5>
+              <p className="text-muted mb-4">
+                Chúng tôi có quyền thay đổi các điều khoản này bất cứ lúc nào. Việc tiếp tục sử dụng website sau khi có thay đổi được coi là bạn đã chấp nhận các điều khoản mới.
+              </p>
+
+              <h5 className="fw-semibold mb-3">10. Liên hệ</h5>
+              <p className="text-muted mb-0">
+                Nếu bạn có bất kỳ câu hỏi nào về các điều khoản này, vui lòng liên hệ với chúng tôi qua email hoặc số điện thoại được cung cấp trên website.
+              </p>
+            </div>
+            <div className="p-4 border-top text-end">
+              <button
+                type="button"
+                className="btn text-white fw-semibold"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)',
+                  padding: '10px 30px',
+                  borderRadius: '8px',
+                  border: 'none'
+                }}
+                onClick={() => setShowTermsModal(false)}
+              >
+                Đã hiểu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <style jsx global>{`
         @media (max-width: 992px) {
@@ -1287,6 +1397,17 @@ export default function CheckoutPage() {
           .table img {
             width: 50px !important;
             height: 50px !important;
+          }
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
       `}</style>

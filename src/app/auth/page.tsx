@@ -8,6 +8,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const [loginData, setLoginData] = useState({
     email: '',
@@ -272,87 +273,22 @@ export default function AuthPage() {
           overflowX: 'hidden',
         }}
       >
-        <div className="container" style={{ maxWidth: '900px' }}>
+        <div className="container" style={{ maxWidth: '600px' }}>
           <div className="card border-0 shadow-lg" style={{ borderRadius: '20px', overflow: 'hidden' }}>
             <div className="row g-0">
-              {/* Left Side - Branding */}
-              <div
-                className="col-md-5 d-none d-md-flex flex-column align-items-center justify-content-center text-white p-5 position-relative"
-                style={{
-                  background: mode === 'login'
-                    ? 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)'
-                    : 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)',
-                  transition: 'background 0.6s ease',
-                }}
-              >
-                <div className="position-relative z-index-2 text-center">
-                  <div className="mb-4">
-                    <div
-                      className="bg-white rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-lg"
-                      style={{ 
-                        width: '120px', 
-                        height: '120px',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
-                      }}
-                    >
-                      <i className="bi bi-house-heart-fill" style={{ 
-                        fontSize: '56px', 
-                        background: mode === 'login' ? 'linear-gradient(135deg, #FF8E53, #FF6B6B)' : 'linear-gradient(135deg, #FF6B6B, #FFA726)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                      }}></i>
-                    </div>
-                  </div>
-
-                  <h2 className="fw-bold mb-3" style={{ fontSize: '2rem', textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>
-                    {mode === 'login' ? 'Chào mừng trở lại!' : 'Tham gia cùng chúng tôi!'}
-                  </h2>
-                  <p className="mb-4" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
-                    {mode === 'login' 
-                      ? 'Đăng nhập để trải nghiệm dịch vụ thiết kế và thi công nội thất đẳng cấp'
-                      : 'Đăng ký ngay để khám phá thế giới nội thất hiện đại và tinh tế'}
-                  </p>
-
-                  <div className="text-start mx-auto" style={{ maxWidth: '300px' }}>
-                    <div className="d-flex align-items-center mb-3 p-2 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                      <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
-                        <i className="bi bi-palette-fill" style={{ fontSize: '18px', color: '#FF6B6B' }}></i>
-                      </div>
-                      <span className="fw-semibold">Thiết kế độc đáo</span>
-                    </div>
-                    <div className="d-flex align-items-center mb-3 p-2 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                      <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
-                        <i className="bi bi-hammer" style={{ fontSize: '18px', color: '#FF8E53' }}></i>
-                      </div>
-                      <span className="fw-semibold">Thi công chất lượng</span>
-                    </div>
-                    <div className="d-flex align-items-center p-2 rounded" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                      <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
-                        <i className="bi bi-headset" style={{ fontSize: '18px', color: '#FFA726' }}></i>
-                      </div>
-                      <span className="fw-semibold">Hỗ trợ tận tâm 24/7</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Side - Forms with Slide Animation */}
-              <div className="col-md-7 position-relative" style={{ overflow: 'hidden' }}>
+              {/* Forms - Full Width */}
+              <div className="col-12 position-relative" style={{ overflow: 'hidden' }}>
                 <div 
-                  className="p-4 p-md-5" 
-                  style={{ 
-                    maxHeight: '80vh', 
-                    overflowY: 'auto',
-                    overflowX: 'hidden'
-                  }}
+                  className="p-4" 
                 >
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <Link 
                       href="/" 
                       className="btn btn-link text-decoration-none p-0 d-inline-flex align-items-center"
                       style={{ 
                         color: '#FF6B6B',
                         fontWeight: '500',
+                        fontSize: '0.9rem',
                         transition: 'all 0.3s ease'
                       }}
                       onMouseEnter={(e) => {
@@ -376,12 +312,12 @@ export default function AuthPage() {
                       animation: mode === 'login' ? 'fadeIn 0.5s ease' : 'none',
                     }}
                   >
-                  <h2 className="fw-bold mb-2">Đăng Nhập</h2>
-                  <p className="text-muted mb-4">Nhập thông tin để tiếp tục</p>
+                  <h2 className="fw-bold mb-2" style={{ fontSize: '1.75rem' }}>Đăng Nhập</h2>
+                  <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>Nhập thông tin để tiếp tục</p>
 
                   <form onSubmit={handleLoginSubmit} noValidate>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Email <span className="text-danger">*</span></label>
+                    <div className="mb-2">
+                      <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Email <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <span className="input-group-text bg-light"><i className="bi bi-envelope"></i></span>
                         <input
@@ -403,8 +339,8 @@ export default function AuthPage() {
                       )}
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Mật khẩu <span className="text-danger">*</span></label>
+                    <div className="mb-2">
+                      <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Mật khẩu <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <span className="input-group-text bg-light"><i className="bi bi-lock"></i></span>
                         <input
@@ -458,12 +394,12 @@ export default function AuthPage() {
 
                     <button 
                       type="submit" 
-                      className="btn text-white w-100 fw-bold mb-3"
+                      className="btn text-white w-100 fw-bold mb-2"
                       style={{ 
                         background: 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)',
-                        padding: '16px',
-                        fontSize: '17px',
-                        borderRadius: '12px',
+                        padding: '12px',
+                        fontSize: '15px',
+                        borderRadius: '10px',
                         transition: 'all 0.3s ease',
                         border: 'none',
                         boxShadow: '0 4px 15px rgba(255, 142, 83, 0.3)',
@@ -509,53 +445,55 @@ export default function AuthPage() {
                       animation: mode === 'register' ? 'fadeIn 0.5s ease' : 'none',
                     }}
                   >
-                  <h2 className="fw-bold mb-2">Đăng Ký</h2>
-                  <p className="text-muted mb-4">Tạo tài khoản mới</p>
+                  <h2 className="fw-bold mb-2" style={{ fontSize: '1.75rem' }}>Đăng Ký</h2>
+                  <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>Tạo tài khoản mới</p>
 
                   <form onSubmit={handleRegisterSubmit} noValidate>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Họ tên <span className="text-danger">*</span></label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        className="form-control bg-light"
-                        placeholder="Nguyễn Văn A"
-                        value={registerData.fullName}
-                        onChange={handleRegisterChange}
-                        style={{
-                          borderColor: registerErrors.fullName ? '#dc3545' : undefined
-                        }}
-                      />
-                      {registerErrors.fullName && (
-                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
-                          {registerErrors.fullName}
-                        </small>
-                      )}
-                    </div>
+                    <div className="row">
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Họ tên <span className="text-danger">*</span></label>
+                        <input
+                          type="text"
+                          name="fullName"
+                          className="form-control bg-light"
+                          placeholder="Nguyễn Văn A"
+                          value={registerData.fullName}
+                          onChange={handleRegisterChange}
+                          style={{
+                            borderColor: registerErrors.fullName ? '#dc3545' : undefined
+                          }}
+                        />
+                        {registerErrors.fullName && (
+                          <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                            {registerErrors.fullName}
+                          </small>
+                        )}
+                      </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Email <span className="text-danger">*</span></label>
-                      <input
-                        type="email"
-                        name="email"
-                        className="form-control bg-light"
-                        placeholder="your@email.com"
-                        value={registerData.email}
-                        onChange={handleRegisterChange}
-                        style={{
-                          borderColor: registerErrors.email ? '#dc3545' : undefined
-                        }}
-                      />
-                      {registerErrors.email && (
-                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
-                          {registerErrors.email}
-                        </small>
-                      )}
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Email <span className="text-danger">*</span></label>
+                        <input
+                          type="email"
+                          name="email"
+                          className="form-control bg-light"
+                          placeholder="your@email.com"
+                          value={registerData.email}
+                          onChange={handleRegisterChange}
+                          style={{
+                            borderColor: registerErrors.email ? '#dc3545' : undefined
+                          }}
+                        />
+                        {registerErrors.email && (
+                          <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                            {registerErrors.email}
+                          </small>
+                        )}
+                      </div>
                     </div>
 
                     <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-semibold small">Số điện thoại <span className="text-danger">*</span></label>
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Số điện thoại <span className="text-danger">*</span></label>
                         <input
                           type="tel"
                           name="phone"
@@ -573,8 +511,8 @@ export default function AuthPage() {
                           </small>
                         )}
                       </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-semibold small">Ngày sinh</label>
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Ngày sinh</label>
                         <input
                           type="date"
                           name="birthDate"
@@ -585,34 +523,36 @@ export default function AuthPage() {
                       </div>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Giới tính</label>
-                      <select
-                        name="gender"
-                        className="form-select bg-light"
-                        value={registerData.gender}
-                        onChange={(e) => setRegisterData({ ...registerData, gender: e.target.value })}
-                      >
-                        <option value="">Chọn giới tính</option>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
-                      </select>
+                    <div className="row">
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Giới tính</label>
+                        <select
+                          name="gender"
+                          className="form-select bg-light"
+                          value={registerData.gender}
+                          onChange={(e) => setRegisterData({ ...registerData, gender: e.target.value })}
+                        >
+                          <option value="">Chọn giới tính</option>
+                          <option value="male">Nam</option>
+                          <option value="female">Nữ</option>
+                          <option value="other">Khác</option>
+                        </select>
+                      </div>
+
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Địa chỉ</label>
+                        <input
+                          type="text"
+                          name="address"
+                          className="form-control bg-light"
+                          placeholder="Số nhà, tên đường"
+                          value={registerData.address}
+                          onChange={handleRegisterChange}
+                        />
+                      </div>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Địa chỉ</label>
-                      <input
-                        type="text"
-                        name="address"
-                        className="form-control bg-light"
-                        placeholder="Số nhà, tên đường"
-                        value={registerData.address}
-                        onChange={handleRegisterChange}
-                      />
-                    </div>
-
-                    <div className="row g-3 mb-3">
+                    <div className="row g-2 mb-2">
                       <LocationSelector
                         selectedCity={registerData.city}
                         selectedDistrict={registerData.district}
@@ -623,65 +563,67 @@ export default function AuthPage() {
                       />
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Mật khẩu <span className="text-danger">*</span></label>
-                      <div className="input-group">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          name="password"
-                          className="form-control bg-light"
-                          placeholder="Tối thiểu 6 ký tự"
-                          value={registerData.password}
-                          onChange={handleRegisterChange}
-                          style={{
-                            borderColor: registerErrors.password ? '#dc3545' : undefined
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="btn bg-light"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
-                        </button>
+                    <div className="row">
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Mật khẩu <span className="text-danger">*</span></label>
+                        <div className="input-group">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            className="form-control bg-light"
+                            placeholder="Tối thiểu 6 ký tự"
+                            value={registerData.password}
+                            onChange={handleRegisterChange}
+                            style={{
+                              borderColor: registerErrors.password ? '#dc3545' : undefined
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn bg-light"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                          </button>
+                        </div>
+                        {registerErrors.password && (
+                          <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                            {registerErrors.password}
+                          </small>
+                        )}
                       </div>
-                      {registerErrors.password && (
-                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
-                          {registerErrors.password}
-                        </small>
-                      )}
+
+                      <div className="col-md-6 mb-2">
+                        <label className="form-label fw-semibold small" style={{ fontSize: '0.85rem', marginBottom: '0.4rem' }}>Xác nhận mật khẩu <span className="text-danger">*</span></label>
+                        <div className="input-group">
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            className="form-control bg-light"
+                            placeholder="Nhập lại mật khẩu"
+                            value={registerData.confirmPassword}
+                            onChange={handleRegisterChange}
+                            style={{
+                              borderColor: registerErrors.confirmPassword ? '#dc3545' : undefined
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn bg-light"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                          </button>
+                        </div>
+                        {registerErrors.confirmPassword && (
+                          <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
+                            {registerErrors.confirmPassword}
+                          </small>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold small">Xác nhận mật khẩu <span className="text-danger">*</span></label>
-                      <div className="input-group">
-                        <input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          name="confirmPassword"
-                          className="form-control bg-light"
-                          placeholder="Nhập lại mật khẩu"
-                          value={registerData.confirmPassword}
-                          onChange={handleRegisterChange}
-                          style={{
-                            borderColor: registerErrors.confirmPassword ? '#dc3545' : undefined
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="btn bg-light"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                          <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
-                        </button>
-                      </div>
-                      {registerErrors.confirmPassword && (
-                        <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
-                          {registerErrors.confirmPassword}
-                        </small>
-                      )}
-                    </div>
-
-                    <div className="form-check mb-3">
+                    <div className="form-check mb-2">
                       <input
                         type="checkbox"
                         name="agreeTerms"
@@ -694,15 +636,27 @@ export default function AuthPage() {
                         }}
                       />
                       <label className="form-check-label small" htmlFor="agreeTerms">
-                        Tôi đồng ý với <Link 
-                          href="/terms" 
-                          className="text-decoration-none" 
-                          style={{ color: '#FF6B6B', transition: 'all 0.3s ease' }}
+                        Tôi đồng ý với{' '}
+                        <button
+                          type="button"
+                          className="btn btn-link p-0 text-decoration-none border-0"
+                          style={{ 
+                            color: '#FF6B6B', 
+                            transition: 'all 0.3s ease',
+                            fontSize: 'inherit',
+                            fontWeight: 'inherit',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowTermsModal(true);
+                          }}
                           onMouseEnter={(e) => e.currentTarget.style.color = '#FF8E53'}
                           onMouseLeave={(e) => e.currentTarget.style.color = '#FF6B6B'}
                         >
                           Điều khoản sử dụng
-                        </Link>
+                        </button>
                       </label>
                       {registerErrors.agreeTerms && (
                         <small className="text-danger d-block mt-1" style={{ fontSize: '12px' }}>
@@ -713,12 +667,12 @@ export default function AuthPage() {
 
                     <button 
                       type="submit" 
-                      className="btn text-white w-100 fw-bold mb-3"
+                      className="btn text-white w-100 fw-bold mb-2"
                       style={{ 
                         background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)',
-                        padding: '16px',
-                        fontSize: '17px',
-                        borderRadius: '12px',
+                        padding: '12px',
+                        fontSize: '15px',
+                        borderRadius: '10px',
                         transition: 'all 0.3s ease',
                         border: 'none',
                         boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
@@ -763,6 +717,97 @@ export default function AuthPage() {
         </div>
       </div>
 
+      {/* Terms Modal */}
+      {showTermsModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{
+            zIndex: 9999,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            animation: 'fadeIn 0.3s ease'
+          }}
+          onClick={() => setShowTermsModal(false)}
+        >
+          <div
+            className="bg-white rounded-3 shadow-lg"
+            style={{
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              animation: 'fadeIn 0.3s ease'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
+              <h4 className="fw-bold mb-0" style={{ color: '#FF6B6B' }}>Điều khoản sử dụng</h4>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => setShowTermsModal(false)}
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="p-4" style={{ fontSize: '0.9rem', lineHeight: '1.8' }}>
+              <h5 className="fw-semibold mb-3">1. Chấp nhận điều khoản</h5>
+              <p className="text-muted mb-4">
+                Bằng việc truy cập và sử dụng website này, bạn đồng ý tuân thủ và bị ràng buộc bởi các điều khoản và điều kiện sử dụng được nêu ra dưới đây.
+              </p>
+
+              <h5 className="fw-semibold mb-3">2. Quyền sở hữu trí tuệ</h5>
+              <p className="text-muted mb-4">
+                Tất cả nội dung trên website này, bao gồm nhưng không giới hạn ở văn bản, đồ họa, logo, hình ảnh, phần mềm, đều thuộc quyền sở hữu của chúng tôi hoặc các bên cấp phép và được bảo vệ bởi luật bản quyền.
+              </p>
+
+              <h5 className="fw-semibold mb-3">3. Sử dụng dịch vụ</h5>
+              <p className="text-muted mb-4">
+                Bạn được phép sử dụng website này cho mục đích cá nhân và thương mại hợp pháp. Bạn không được phép sao chép, phân phối, sửa đổi, tạo ra các tác phẩm phái sinh từ nội dung của website mà không có sự cho phép bằng văn bản của chúng tôi.
+              </p>
+
+              <h5 className="fw-semibold mb-3">4. Tài khoản người dùng</h5>
+              <p className="text-muted mb-4">
+                Khi tạo tài khoản, bạn có trách nhiệm bảo mật thông tin đăng nhập của mình. Bạn chịu trách nhiệm cho tất cả các hoạt động diễn ra dưới tài khoản của bạn.
+              </p>
+
+              <h5 className="fw-semibold mb-3">5. Bảo mật thông tin</h5>
+              <p className="text-muted mb-4">
+                Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn theo chính sách bảo mật. Tuy nhiên, không có phương thức truyền tải qua internet nào là hoàn toàn an toàn.
+              </p>
+
+              <h5 className="fw-semibold mb-3">6. Giới hạn trách nhiệm</h5>
+              <p className="text-muted mb-4">
+                Chúng tôi không chịu trách nhiệm về bất kỳ thiệt hại trực tiếp, gián tiếp, ngẫu nhiên, đặc biệt hoặc hậu quả nào phát sinh từ việc sử dụng hoặc không thể sử dụng website này.
+              </p>
+
+              <h5 className="fw-semibold mb-3">7. Thay đổi điều khoản</h5>
+              <p className="text-muted mb-4">
+                Chúng tôi có quyền thay đổi các điều khoản này bất cứ lúc nào. Việc tiếp tục sử dụng website sau khi có thay đổi được coi là bạn đã chấp nhận các điều khoản mới.
+              </p>
+
+              <h5 className="fw-semibold mb-3">8. Liên hệ</h5>
+              <p className="text-muted mb-0">
+                Nếu bạn có bất kỳ câu hỏi nào về các điều khoản này, vui lòng liên hệ với chúng tôi qua email hoặc số điện thoại được cung cấp trên website.
+              </p>
+            </div>
+            <div className="p-4 border-top text-end">
+              <button
+                type="button"
+                className="btn text-white fw-semibold"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B6B 0%, #FFA726 100%)',
+                  padding: '10px 30px',
+                  borderRadius: '8px',
+                  border: 'none'
+                }}
+                onClick={() => setShowTermsModal(false)}
+              >
+                Đã hiểu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -774,23 +819,16 @@ export default function AuthPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Custom Scrollbar */
-        .col-md-7 > div::-webkit-scrollbar {
-          width: 6px;
+        /* Form Input Styling */
+        .form-control,
+        .form-select {
+          padding: 0.5rem 0.75rem;
+          font-size: 0.9rem;
         }
         
-        .col-md-7 > div::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 10px;
-        }
-        
-        .col-md-7 > div::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #FF8E53, #FF6B6B);
-          border-radius: 10px;
-        }
-        
-        .col-md-7 > div::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #FF6B6B, #FFA726);
+        .input-group-text {
+          padding: 0.5rem 0.75rem;
+          font-size: 0.9rem;
         }
         
         /* Form Input Focus */
