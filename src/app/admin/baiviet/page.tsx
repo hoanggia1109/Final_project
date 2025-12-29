@@ -73,16 +73,17 @@ export default function AdminBaiVietPage() {
   }
 
   return (
-    <div>
+    <div style={{ padding: '1rem', overflowX: 'hidden', maxWidth: '100%' }}>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="fw-bold mb-1" style={{ color: '#2C3E50' }}>Quản lý Bài viết</h2>
+          <h2 className="fw-bold mb-1" style={{ color: '#2C3E50', fontSize: '1.75rem' }}>Quản lý Bài viết</h2>
           <p className="text-muted mb-0">Danh sách tất cả các bài viết</p>
         </div>
         <button
           className="btn btn-warning text-white d-flex align-items-center gap-2 shadow-sm"
           onClick={() => router.push('/admin/baiviet/create')}
+          style={{ whiteSpace: 'nowrap', minWidth: 'fit-content' }}
         >
           <PlusCircle size={18} />
           <span>Thêm bài viết mới</span>
@@ -110,41 +111,77 @@ export default function AdminBaiVietPage() {
       {/* Table */}
       <div className="card shadow-sm border-0">
         <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead style={{ backgroundColor: '#F8F9FA' }}>
+          <div className="table-responsive" style={{ overflowX: 'auto', maxWidth: '100%', overflowY: 'visible' }}>
+            <table className="table table-hover mb-0" style={{ width: '100%', tableLayout: 'fixed' }}>
+              <thead style={{ backgroundColor: '#F8F9FA', position: 'sticky', top: 0, zIndex: 10 }}>
                 <tr>
-                  <th className="px-4 py-3 text-center" style={{ width: '60px' }}>#</th>
-                  <th className="px-4 py-3">Tiêu đề</th>
-                  <th className="px-4 py-3 text-center" style={{ width: '100px' }}>Ảnh</th>
-                  <th className="px-4 py-3">Danh mục</th>
-                  <th className="px-4 py-3">Tác giả</th>
-                  <th className="px-4 py-3 text-center" style={{ width: '120px' }}>Trạng thái</th>
-                  <th className="px-4 py-3 text-center" style={{ width: '180px' }}>Hành động</th>
+                  <th className="px-3 py-3 text-center" style={{ width: '50px' }}>#</th>
+                  <th className="px-3 py-3" style={{ width: '300px', maxWidth: '300px' }}>Tiêu đề</th>
+                  <th className="px-3 py-3 text-center d-none d-md-table-cell" style={{ width: '80px' }}>Ảnh</th>
+                  <th className="px-3 py-3 d-none d-lg-table-cell" style={{ minWidth: '120px' }}>Danh mục</th>
+                  <th className="px-3 py-3 d-none d-xl-table-cell" style={{ minWidth: '120px' }}>Tác giả</th>
+                  <th className="px-3 py-3 text-center" style={{ width: '100px' }}>Trạng thái</th>
+                  <th className="px-3 py-3 text-center" style={{ width: '180px', position: 'sticky', right: 0, backgroundColor: '#F8F9FA', zIndex: 11 }}>Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length > 0 ? (
                   filtered.map((item, index) => (
                     <tr key={item.id}>
-                      <td className="px-4 py-3 text-center text-muted">{index + 1}</td>
-                      <td className="px-4 py-3">
-                        <span className="fw-semibold" style={{ color: '#2C3E50' }}>{item.tieude}</span>
-                        {item.noidung && (
-                          <p className="text-muted small mb-0 mt-1">
-                            {item.noidung.substring(0, 80)}...
-                          </p>
-                        )}
+                      <td className="px-3 py-3 text-center text-muted">{index + 1}</td>
+                      <td className="px-3 py-3" style={{ width: '300px', maxWidth: '300px', wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                        <div style={{ maxWidth: '100%', overflow: 'hidden' }}>
+                          <span 
+                            className="fw-semibold d-block" 
+                            style={{ 
+                              color: '#2C3E50', 
+                              fontSize: '0.95rem',
+                              wordBreak: 'break-word',
+                              overflowWrap: 'break-word',
+                              maxWidth: '100%',
+                              display: 'block'
+                            }}
+                            title={item.tieude}
+                          >
+                            {item.tieude.length > 50 ? `${item.tieude.substring(0, 50)}...` : item.tieude}
+                          </span>
+                          {item.noidung && (
+                            <p 
+                              className="text-muted small mb-0 mt-1" 
+                              style={{ 
+                                fontSize: '0.85rem',
+                                wordBreak: 'break-word',
+                                overflowWrap: 'break-word',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical'
+                              }}
+                            >
+                              {item.noidung}
+                            </p>
+                          )}
+                          <div className="d-md-none mt-2">
+                            <span className="badge bg-light text-dark me-2">
+                              {item.danhmuc?.tendanhmuc || '-'}
+                            </span>
+                            <span className="text-muted small">
+                              {item.user?.ho_ten || item.user?.email || '-'}
+                            </span>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-3 text-center d-none d-md-table-cell">
                         {item.hinh_anh ? (
                           <img
                             src={item.hinh_anh}
                             alt={item.tieude}
                             className="rounded"
                             style={{ 
-                              width: '60px', 
-                              height: '60px', 
+                              width: '50px', 
+                              height: '50px', 
                               objectFit: 'cover',
                               border: '2px solid #E9ECEF'
                             }}
@@ -152,46 +189,50 @@ export default function AdminBaiVietPage() {
                         ) : (
                           <div 
                             className="d-flex align-items-center justify-content-center rounded bg-light"
-                            style={{ width: '60px', height: '60px', fontSize: '0.75rem' }}
+                            style={{ width: '50px', height: '50px', fontSize: '0.7rem' }}
                           >
                             <span className="text-muted">N/A</span>
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-3 d-none d-lg-table-cell">
                         <span className="badge bg-light text-dark">
                           {item.danhmuc?.tendanhmuc || '-'}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-3 d-none d-xl-table-cell">
                         <span className="text-muted small">
                           {item.user?.ho_ten || item.user?.email || '-'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-3 text-center">
                         {item.anhien === 1 ? (
-                          <span className="badge bg-success-subtle text-success border border-success px-3 py-2">
+                          <span className="badge bg-success-subtle text-success border border-success px-2 py-1" style={{ fontSize: '0.8rem' }}>
                             Hiển thị
                           </span>
                         ) : (
-                          <span className="badge bg-danger-subtle text-danger border border-danger px-3 py-2">
+                          <span className="badge bg-danger-subtle text-danger border border-danger px-2 py-1" style={{ fontSize: '0.8rem' }}>
                             Ẩn
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="d-flex justify-content-center gap-2">
+                      <td className="px-3 py-3 text-center" style={{ position: 'sticky', right: 0, backgroundColor: '#fff', zIndex: 5 }}>
+                        <div className="d-flex justify-content-center gap-1">
                           <button
                             onClick={() => router.push(`/admin/baiviet/edit/${item.id}`)}
                             className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                            style={{ whiteSpace: 'nowrap', padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+                            title="Sửa bài viết"
                           >
-                            <Pencil size={14} /> Sửa
+                            <Pencil size={12} /> <span className="d-none d-sm-inline">Sửa</span>
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
                             className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                            style={{ whiteSpace: 'nowrap', padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+                            title="Xóa bài viết"
                           >
-                            <Trash2 size={14} /> Xóa
+                            <Trash2 size={12} /> <span className="d-none d-sm-inline">Xóa</span>
                           </button>
                         </div>
                       </td>

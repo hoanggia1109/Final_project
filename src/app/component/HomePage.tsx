@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import PromoModal from './PromoModal';
 import ChatBox from './ChatBox';
 import { useIsMobile, useIsDesktop } from '../hooks/useMediaQuery';
@@ -303,7 +303,10 @@ function ProductCategories() {
   const visibleCategories = categories.slice(currentIndex * itemsPerPage, (currentIndex * itemsPerPage) + itemsPerPage);
 
   return (
-    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #FFF9F0 0%, #ffffff 100%)' }}>
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(180deg, #FFF9F0 0%, #ffffff 100%)' }}
+    >
       <div className="container">
         <div className="text-center mb-5">
           <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
@@ -615,7 +618,10 @@ function HotProducts() {
   const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerPage);
 
   return (
-    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF5E1 100%)' }}>
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF5E1 100%)' }}
+    >
       <div className="container">
         <div className="text-center mb-5">
           <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
@@ -816,7 +822,10 @@ function DiscountProducts() {
   const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerPage);
 
   return (
-    <section className="py-5 section-padding" style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' }}>
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' }}
+    >
       <div className="container">
         <div className="text-center mb-5">
           <h2 className="text-uppercase fw-bold mb-2 text-white section-title responsive-title" style={{ 
@@ -1144,7 +1153,10 @@ function Partners() {
   }
 
   return (
-    <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}>
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}
+    >
       <div className="container">
         <div className="text-center mb-5">
           <div className="d-inline-block mb-3" style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg, #FF6B6B, #FF8E53)' }}></div>
@@ -1834,6 +1846,42 @@ function ScrollToTopButton() {
 
 // MAIN EXPORT
 export default function HomePage() {
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.getAttribute('data-section-id');
+          if (sectionId) {
+            setVisibleSections((prev) => new Set([...prev, sectionId]));
+          }
+        }
+      });
+    }, observerOptions);
+
+    const refs = Object.values(sectionRefs.current);
+    refs.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      refs.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
+
+  const setSectionRef = (id: string) => (el: HTMLElement | null) => {
+    sectionRefs.current[id] = el;
+  };
+
   return (
     <>
       <PromoModal />
@@ -2158,14 +2206,50 @@ export default function HomePage() {
         }
       `}</style>
       <Banner />
-      <ProductCategories />
-      <HotProducts />
-      <DiscountProducts />
+      <div ref={setSectionRef('categories')} data-section-id="categories" style={{
+        opacity: visibleSections.has('categories') ? 1 : 0,
+        transform: visibleSections.has('categories') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <ProductCategories />
+      </div>
+      <div ref={setSectionRef('hot-products')} data-section-id="hot-products" style={{
+        opacity: visibleSections.has('hot-products') ? 1 : 0,
+        transform: visibleSections.has('hot-products') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <HotProducts />
+      </div>
+      <div ref={setSectionRef('discount-products')} data-section-id="discount-products" style={{
+        opacity: visibleSections.has('discount-products') ? 1 : 0,
+        transform: visibleSections.has('discount-products') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <DiscountProducts />
+      </div>
       {/* <Features /> */}
-      <Partners />
+      <div ref={setSectionRef('partners')} data-section-id="partners" style={{
+        opacity: visibleSections.has('partners') ? 1 : 0,
+        transform: visibleSections.has('partners') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <Partners />
+      </div>
       {/* <PortfolioQuote /> */}
-      <ContactInfo />
-      <News />
+      <div ref={setSectionRef('contact')} data-section-id="contact" style={{
+        opacity: visibleSections.has('contact') ? 1 : 0,
+        transform: visibleSections.has('contact') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <ContactInfo />
+      </div>
+      <div ref={setSectionRef('news')} data-section-id="news" style={{
+        opacity: visibleSections.has('news') ? 1 : 0,
+        transform: visibleSections.has('news') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <News />
+      </div>
       <ChatBox />
       <ScrollToTopButton />
     </>

@@ -6,7 +6,8 @@ import { MessageSquare, Search, Mail, Phone, User, Calendar, Eye, Trash2 } from 
 import { API_BASE_URL } from '@/lib/api-config';
 
 interface LienHe {
-  lienhe_id: string;
+  id: string;
+  lienhe_id?: string; // Fallback for compatibility
   hoten: string;
   email: string;
   sdt?: string;
@@ -62,18 +63,21 @@ export default function AdminContactPage() {
           'Authorization': `Bearer ${token}`,
         },
       });
+      const data = await res.json();
       if (res.ok) {
-        setContacts(contacts.filter(item => item.lienhe_id !== id));
-        if (selectedContact?.lienhe_id === id) {
+        setContacts(contacts.filter(item => (item.id || item.lienhe_id) !== id));
+        if (selectedContact && (selectedContact.id || selectedContact.lienhe_id) === id) {
           setSelectedContact(null);
         }
-        alert('Xóa thành công!');
+        alert('✅ Xóa thành công!');
+        // Reload contacts to ensure sync
+        loadContacts();
       } else {
-        alert('Xóa thất bại!');
+        alert('❌ Xóa thất bại: ' + (data.message || 'Có lỗi xảy ra'));
       }
     } catch (err) {
-      console.error(err);
-      alert('Lỗi khi xóa liên hệ!');
+      console.error('Lỗi khi xóa liên hệ:', err);
+      alert('❌ Lỗi khi xóa liên hệ!');
     }
   };
 
@@ -133,11 +137,13 @@ export default function AdminContactPage() {
                 </div>
               ) : (
                 <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                  {filtered.map((contact) => (
+                  {filtered.map((contact) => {
+                    const contactId = contact.id || contact.lienhe_id;
+                    return (
                     <div
-                      key={contact.lienhe_id}
+                      key={contactId}
                       className={`p-3 border-bottom cursor-pointer ${
-                        selectedContact?.lienhe_id === contact.lienhe_id ? 'bg-warning bg-opacity-10' : ''
+                        selectedContact && (selectedContact.id || selectedContact.lienhe_id) === contactId ? 'bg-warning bg-opacity-10' : ''
                       }`}
                       style={{ cursor: 'pointer' }}
                       onClick={() => setSelectedContact(contact)}
@@ -148,7 +154,7 @@ export default function AdminContactPage() {
                           className="btn btn-sm btn-link text-danger p-0"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDelete(contact.lienhe_id);
+                            handleDelete(contactId);
                           }}
                         >
                           <Trash2 size={16} />
@@ -170,7 +176,8 @@ export default function AdminContactPage() {
                         <span>{new Date(contact.created_at).toLocaleString('vi-VN')}</span>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -257,7 +264,7 @@ export default function AdminContactPage() {
                   )}
                   <button
                     className="btn btn-outline-danger"
-                    onClick={() => handleDelete(selectedContact.lienhe_id)}
+                    onClick={() => handleDelete(selectedContact.id || selectedContact.lienhe_id || '')}
                   >
                     <Trash2 size={16} className="me-2" />
                     Xóa

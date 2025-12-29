@@ -254,6 +254,40 @@ export default function CheckoutPage() {
         return;
       }
 
+      // QUAN TRỌNG: Reload giỏ hàng trước khi submit để đảm bảo có dữ liệu mới nhất
+      console.log('🔄 Reloading cart before order submission...');
+      const cartCheckResponse = await fetch(`${API_BASE_URL}/api/giohang`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!cartCheckResponse.ok) {
+        if (cartCheckResponse.status === 401) {
+          localStorage.removeItem('token');
+          alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+          router.push('/auth');
+          return;
+        }
+        throw new Error('Không thể tải giỏ hàng');
+      }
+
+      const cartCheckData = await cartCheckResponse.json();
+      const currentCartItems = cartCheckData.san_pham || [];
+      
+      if (currentCartItems.length === 0) {
+        alert('Giỏ hàng của bạn đang trống. Vui lòng thêm sản phẩm vào giỏ hàng trước khi đặt hàng.');
+        router.push('/cart');
+        setProcessing(false);
+        return;
+      }
+
+      console.log('✅ Cart verified:', currentCartItems.length, 'items');
+      
+      // Cập nhật state với giỏ hàng mới nhất
+      setCartItems(currentCartItems);
+      setTotalAmount(cartCheckData.tong_tien || 0);
+
       // Tạo đơn hàng
       // CHANGED: Gửi đầy đủ thông tin địa chỉ để backend có thể lưu vào đơn hàng
       const orderData = {

@@ -29,6 +29,8 @@ interface CartItem {
 
     kichthuoc?: string;
 
+    sl_tonkho?: number;
+
     sanpham?: {
 
       tensp: string;
@@ -165,7 +167,16 @@ export default function CartPage() {
 
     if (newQuantity < 1) return;
 
+    // Tìm item trong giỏ hàng để kiểm tra tồn kho
+    const cartItem = cartItems.find(item => item.id === id);
+    if (!cartItem) return;
 
+    // Kiểm tra tồn kho trước khi cập nhật
+    const stock = cartItem.bienthe?.sl_tonkho;
+    if (stock !== undefined && stock !== null && stock > 0 && newQuantity > stock) {
+      alert(`Không đủ hàng. Chỉ còn ${stock} sản phẩm trong kho`);
+      return;
+    }
 
     try {
 
@@ -191,11 +202,17 @@ export default function CartPage() {
 
       });
 
+      const data = await response.json();
 
-
-      if (!response.ok) throw new Error('Failed to update quantity');
-
-
+      if (!response.ok) {
+        // Nếu lỗi từ server về tồn kho, hiển thị thông báo
+        if (data.message) {
+          alert(data.message);
+        } else {
+          throw new Error('Failed to update quantity');
+        }
+        return;
+      }
 
       // Update local state
 
@@ -606,6 +623,8 @@ export default function CartPage() {
 
                   const quantity = item.soluong;
 
+                  const stock = item.bienthe?.sl_tonkho;
+
                   const color = item.bienthe?.mausac;
 
                   const size = item.bienthe?.kichthuoc;
@@ -756,6 +775,8 @@ export default function CartPage() {
 
                               min="1"
 
+                              max={stock !== undefined && stock !== null && stock > 0 ? stock : undefined}
+
                             />
 
                             <button
@@ -763,6 +784,8 @@ export default function CartPage() {
                               onClick={() => updateQuantity(item.id, quantity + 1)}
 
                               className="btn btn-sm"
+
+                              disabled={stock !== undefined && stock !== null && stock > 0 && quantity >= stock}
 
                               style={{
 
@@ -774,7 +797,9 @@ export default function CartPage() {
 
                                 border: '2px solid #FF8E53',
 
-                                color: '#FF8E53',
+                                color: (stock !== undefined && stock !== null && stock > 0 && quantity >= stock) ? '#ccc' : '#FF8E53',
+                                cursor: (stock !== undefined && stock !== null && stock > 0 && quantity >= stock) ? 'not-allowed' : 'pointer',
+                                opacity: (stock !== undefined && stock !== null && stock > 0 && quantity >= stock) ? 0.5 : 1,
 
                               }}
 
@@ -785,7 +810,11 @@ export default function CartPage() {
                             </button>
 
                           </div>
-
+                          {stock !== undefined && stock !== null && stock > 0 && (
+                            <small className="text-muted mt-1" style={{ fontSize: '12px' }}>
+                              Còn {stock} sản phẩm
+                            </small>
+                          )}
                         </div>
 
 

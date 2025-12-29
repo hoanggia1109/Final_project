@@ -39,6 +39,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+//  Lấy tất cả danh mục bài viết (cho dropdown)
+router.get("/danhmuc/all", async (req, res) => {
+  try {
+    const list = await DanhMucBaiVietModel.findAll({
+      order: [["tendanhmuc", "ASC"]],
+    });
+    res.json(list);
+  } catch (err) {
+    console.error("Lỗi lấy danh mục bài viết:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
+
+//  Lấy tất cả users (cho dropdown tác giả)
+router.get("/users/all", async (req, res) => {
+  try {
+    const list = await UserModel.findAll({
+      attributes: ["id", "ho_ten", "email"],
+      order: [["ho_ten", "ASC"]],
+    });
+    res.json(list);
+  } catch (err) {
+    console.error("Lỗi lấy danh sách users:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+});
+
 //  Lấy chi tiết bài viết
 router.get("/:id", async (req, res) => {
   try {

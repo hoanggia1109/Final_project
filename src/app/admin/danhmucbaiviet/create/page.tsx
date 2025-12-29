@@ -32,7 +32,7 @@ export default function CreateBlogCategoryPage() {
 
       if (res.ok) {
         alert('✅ Thêm danh mục thành công!');
-        router.push('/admin/blog-categories');
+        router.push('/admin/danhmucbaiviet');
       } else {
         const data = await res.json();
         alert('❌ Lỗi: ' + data.message);
@@ -90,7 +90,9 @@ export default function CreateBlogCategoryPage() {
         }
         textarea.form-control {
           min-height: 120px;
+          max-height: 400px;
           resize: vertical;
+          overflow-y: auto;
         }
         .btn-submit {
           background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -181,7 +183,7 @@ export default function CreateBlogCategoryPage() {
               <p className="text-muted mb-0">Tạo danh mục mới cho bài viết</p>
             </div>
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/admin/danhmucbaiviet')}
               className="btn btn-outline-secondary d-flex align-items-center gap-2"
             >
               <ArrowLeft size={18} />
@@ -214,6 +216,10 @@ export default function CreateBlogCategoryPage() {
                       className="form-control" 
                       rows={4}
                       placeholder="Mô tả ngắn về danh mục này..."
+                      style={{
+                        maxHeight: '400px',
+                        overflowY: 'auto'
+                      }}
                     />
                   </div>
 
@@ -234,7 +240,7 @@ export default function CreateBlogCategoryPage() {
                 <div className="d-flex gap-2 justify-content-end pt-4 mt-3 border-top">
                   <button 
                     type="button" 
-                    onClick={() => router.back()} 
+                    onClick={() => router.push('/admin/danhmucbaiviet')} 
                     className="btn btn-light" 
                     disabled={saving}
                   >

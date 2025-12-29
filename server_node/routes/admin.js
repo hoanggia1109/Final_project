@@ -1205,11 +1205,18 @@ router.get("/lienhe", auth, isAdmin, async (_, res) => {
 
 
 router.delete("/lienhe/:id", auth, isAdmin, async (req, res) => {
-
-  await LienHeModel.destroy({ where: { id: req.params.id } });
-
-  res.json({ message: "Đã xóa góp ý" });
-
+  try {
+    const deleted = await LienHeModel.destroy({ where: { id: req.params.id } });
+    
+    if (deleted === 0) {
+      return res.status(404).json({ message: "Không tìm thấy liên hệ để xóa" });
+    }
+    
+    res.json({ message: "Đã xóa liên hệ thành công" });
+  } catch (err) {
+    console.error("Lỗi khi xóa liên hệ:", err);
+    res.status(500).json({ message: "Lỗi server khi xóa liên hệ", error: err.message });
+  }
 });
 
 

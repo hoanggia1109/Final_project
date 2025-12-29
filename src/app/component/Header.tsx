@@ -122,10 +122,17 @@ export default function Header() {
       const currentToken = localStorage.getItem('token');
       const currentEmail = localStorage.getItem('userEmail');
       
-      // Chỉ update nếu có thay đổi
-      if (currentToken && currentEmail && !isLoggedIn) {
-        console.log('🔄 Detected login change via interval check');
-        checkLoginStatus();
+      // Update nếu có thay đổi về login status hoặc role
+      if (currentToken && currentEmail) {
+        const currentUserRole = localStorage.getItem('userRole') || 'customer';
+        if (!isLoggedIn || userRole !== currentUserRole) {
+          console.log('🔄 Detected login/role change via interval check', { 
+            wasLoggedIn: isLoggedIn, 
+            oldRole: userRole, 
+            newRole: currentUserRole 
+          });
+          checkLoginStatus();
+        }
       } else if (!currentToken && isLoggedIn) {
         console.log('🔄 Detected logout change via interval check');
         checkLoginStatus();
@@ -139,7 +146,7 @@ export default function Header() {
       document.removeEventListener('visibilitychange', handleVisibility);
       clearInterval(interval);
     };
-  }, [checkLoginStatus, isLoggedIn]);
+  }, [checkLoginStatus, isLoggedIn, userRole]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -678,7 +685,7 @@ export default function Header() {
                                 <p className="mb-0 fw-bold" style={{ color: '#333', fontSize: '15px' }}>
                                   {userName || 'User'}
                                 </p>
-                                {userRole === 'admin' && (
+                                {(userRole === 'admin' || localStorage.getItem('userRole') === 'admin') && (
                                   <span 
                                     className="badge" 
                                     style={{ 
@@ -784,7 +791,7 @@ export default function Header() {
                         </div>
 
                         {/* Admin Section */}
-                        {userRole === 'admin' && (
+                        {(userRole === 'admin' || (typeof window !== 'undefined' && localStorage.getItem('userRole') === 'admin')) && (
                           <>
                             <div className="border-top my-1"></div>
                             <div className="py-1">

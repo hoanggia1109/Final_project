@@ -163,6 +163,8 @@ export default function NewsDetailPage() {
           border-radius: 25px;
           box-shadow: 0 10px 40px rgba(0,0,0,0.05);
           margin-bottom: 50px;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
 
         .article-content h2 {

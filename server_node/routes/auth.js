@@ -90,8 +90,34 @@ router.post("/dangky", async (req, res) => {
       }
     }
     
+    // Lấy FRONTEND_URL từ request hoặc env
+    // Ưu tiên: FRONTEND_URL env > BASE_URL env > Origin header > Referer header > localhost fallback
+    let baseUrl = process.env.FRONTEND_URL || process.env.BASE_URL;
+    
+    if (!baseUrl) {
+      // Thử lấy từ Origin header (frontend gửi request từ đâu)
+      const origin = req.get('origin') || req.get('referer');
+      if (origin) {
+        try {
+          const url = new URL(origin);
+          baseUrl = `${url.protocol}//${url.host}`;
+          console.log(' Detected frontend URL from request:', baseUrl);
+        } catch (error) {
+          console.warn('⚠️ Could not parse origin/referer:', origin, error.message);
+        }
+      }
+    }
+    
+    // Fallback cuối cùng
+    if (!baseUrl) {
+      baseUrl = 'http://localhost:3000';
+      console.warn('⚠️ Using default FRONTEND_URL:', baseUrl);
+    }
+    
+    console.log('📧 Sending verification email with frontend URL:', baseUrl);
+    
     // Gửi email xác nhận đăng ký (không chờ để không làm chậm response)
-    sendRegistrationEmail(email, fullName || email.split('@')[0], verificationToken)
+    sendRegistrationEmail(email, fullName || email.split('@')[0], verificationToken, baseUrl)
       .then(result => {
         if (result.success) {
           console.log(" Email xác nhận đã được gửi đến:", email);

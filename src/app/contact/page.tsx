@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { API_BASE_URL } from '@/lib/api-config';
 
@@ -13,6 +13,20 @@ export default function ContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Tự động điền email và tên từ user đã đăng nhập (nếu có)
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    const userName = localStorage.getItem('userName');
+    
+    if (userEmail) {
+      setFormData(prev => ({
+        ...prev,
+        email: userEmail,
+        hoten: userName || prev.hoten,
+      }));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({

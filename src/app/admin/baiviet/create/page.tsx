@@ -33,18 +33,38 @@ export default function CreateBaiVietPage() {
 
   // Fetch danh mục
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/baiviet/danhmuc/all`)
-      .then(res => res.json())
-      .then(data => setDanhmucs(data))
-      .catch(err => console.error('Lỗi lấy danh mục:', err));
+    const fetchDanhMuc = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/baiviet/danhmuc/all`);
+        if (!res.ok) {
+          throw new Error('Không thể tải danh mục');
+        }
+        const data = await res.json();
+        setDanhmucs(data || []);
+      } catch (err) {
+        console.error('Lỗi lấy danh mục:', err);
+        alert('Không thể tải danh sách danh mục. Vui lòng tải lại trang.');
+      }
+    };
+    fetchDanhMuc();
   }, []);
 
   // Fetch user
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/baiviet/users/all`)
-      .then(res => res.json())
-      .then(data => setUsers(data))
-      .catch(err => console.error('Lỗi lấy users:', err));
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/baiviet/users/all`);
+        if (!res.ok) {
+          throw new Error('Không thể tải danh sách tác giả');
+        }
+        const data = await res.json();
+        setUsers(data || []);
+      } catch (err) {
+        console.error('Lỗi lấy users:', err);
+        alert('Không thể tải danh sách tác giả. Vui lòng tải lại trang.');
+      }
+    };
+    fetchUsers();
   }, []);
 
   const validateForm = (): boolean => {
@@ -105,15 +125,16 @@ export default function CreateBaiVietPage() {
       const data = await res.json();
       setLoading(false);
       if (res.ok) {
-        alert('✅ Thêm bài viết thành công!');
+        alert(' Thêm bài viết thành công!');
         router.push('/admin/baiviet');
       } else {
-        alert('❌ Thêm thất bại: ' + data.message);
+        alert(' Thêm thất bại: ' + data.message);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setLoading(false);
       console.error(err);
-      alert('❌ Thêm thất bại: ' + err.message);
+      const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra';
+      alert('❌ Thêm thất bại: ' + errorMessage);
     }
   };
 
@@ -124,6 +145,7 @@ export default function CreateBaiVietPage() {
           background: linear-gradient(135deg, #FFF9F0 0%, #ffffff 100%);
           min-height: 100vh;
           padding: 2rem 0;
+          overflow-x: hidden;
         }
         .form-header {
           background: #ffffff;
@@ -138,6 +160,8 @@ export default function CreateBaiVietPage() {
           box-shadow: 0 4px 20px rgba(0,0,0,0.08);
           border: none;
           padding: 2rem;
+          max-width: 100%;
+          overflow-x: hidden;
         }
         .form-label {
           color: #2C3E50;
@@ -161,8 +185,13 @@ export default function CreateBaiVietPage() {
           border-color: #d0d0d0;
         }
         textarea.form-control {
-          min-height: 150px;
+          min-height: 200px;
+          max-height: 400px;
           resize: vertical;
+          overflow-y: auto;
+          overflow-x: hidden;
+          word-wrap: break-word;
+          white-space: pre-wrap;
         }
         .btn-submit {
           background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
@@ -181,7 +210,7 @@ export default function CreateBaiVietPage() {
         .btn-submit:disabled {
           opacity: 0.6;
           cursor: not-allowed;
-        }
+        } 
         @media (max-width: 768px) {
           .form-header {
             padding: 1rem;
@@ -198,12 +227,12 @@ export default function CreateBaiVietPage() {
               <h2 className="fw-bold mb-1" style={{ color: '#2C3E50', fontSize: '1.75rem' }}>Tạo bài viết mới</h2>
               <p className="text-muted mb-0">Thêm bài viết mới cho website</p>
             </div>
-            <button onClick={() => router.back()} className="btn btn-outline-secondary d-flex align-items-center gap-2">
+            <button onClick={() => router.push('/admin/baiviet')} className="btn btn-outline-secondary d-flex align-items-center gap-2">
               <ArrowLeft size={18} /> Quay lại
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '900px' }} noValidate>
+          <form onSubmit={handleSubmit} className="form-card mx-auto" style={{ maxWidth: '900px', overflowX: 'hidden' }} noValidate>
             {/* Thông báo lỗi tổng hợp */}
             {Object.keys(errors).length > 0 && (
               <div className="alert alert-danger d-flex align-items-start mb-4" role="alert" style={{ borderRadius: '12px' }}>
@@ -243,7 +272,7 @@ export default function CreateBaiVietPage() {
               <label className="form-label">Nội dung <span className="text-danger">*</span></label>
               <textarea
                 className="form-control"
-                rows={8}
+                rows={10}
                 value={noidung}
                 onChange={e => {
                   setNoidung(e.target.value);
@@ -251,7 +280,14 @@ export default function CreateBaiVietPage() {
                 }}
                 placeholder="Nhập nội dung bài viết..."
                 required
-                style={{ borderColor: errors.noidung ? '#dc3545' : undefined }}
+                style={{ 
+                  borderColor: errors.noidung ? '#dc3545' : undefined,
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  wordWrap: 'break-word',
+                  whiteSpace: 'pre-wrap'
+                }}
               ></textarea>
               {errors.noidung && (
                 <small className="text-danger d-block mt-1">{errors.noidung}</small>
@@ -335,7 +371,7 @@ export default function CreateBaiVietPage() {
             </div>
 
             <div className="d-flex justify-content-end gap-2 pt-3 border-top">
-              <button type="button" onClick={() => router.back()} className="btn btn-light" disabled={loading}>
+              <button type="button" onClick={() => router.push('/admin/baiviet')} className="btn btn-light" disabled={loading}>
                 Hủy
               </button>
               <button type="submit" className="btn-submit" disabled={loading}>

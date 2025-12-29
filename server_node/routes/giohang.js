@@ -16,6 +16,7 @@ router.get("/", auth, async (req, res) => {
         {
           model: SanPhamBienTheModel,
           as: "bienthe",
+          attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"],
           include: [
             { model: SanPhamModel, as: "sanpham" },
             { model: ImageModel, as: "images" },
@@ -135,6 +136,32 @@ router.put("/:id", auth, async (req, res) => {
   try {
     const { soluong } = req.body;
     if (soluong <= 0) return res.status(400).json({ message: "Số lượng không hợp lệ" });
+
+    // Lấy thông tin item trong giỏ hàng kèm biến thể để kiểm tra tồn kho
+    const cartItem = await GioHangModel.findOne({
+      where: { id: req.params.id, user_id: req.user.id },
+      include: [
+        {
+          model: SanPhamBienTheModel,
+          as: "bienthe"
+        }
+      ]
+    });
+
+    if (!cartItem) return res.status(404).json({ message: "Không tìm thấy sản phẩm trong giỏ" });
+
+    // Kiểm tra tồn kho
+    const bienthe = cartItem.bienthe;
+    if (!bienthe) {
+      return res.status(404).json({ message: "Không tìm thấy biến thể sản phẩm" });
+    }
+
+    if (bienthe.sl_tonkho < soluong) {
+      return res.status(400).json({ 
+        message: `Không đủ hàng. Chỉ còn ${bienthe.sl_tonkho} sản phẩm trong kho`,
+        sl_tonkho: bienthe.sl_tonkho
+      });
+    }
 
     const updated = await GioHangModel.update(
       { soluong },

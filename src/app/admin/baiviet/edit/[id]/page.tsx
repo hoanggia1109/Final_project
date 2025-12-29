@@ -18,7 +18,12 @@ export default function EditBaiViet() {
   });
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  interface User {
+    id: string;
+    ho_ten: string;
+    email: string;
+  }
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,7 +48,7 @@ export default function EditBaiViet() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
     // Clear error khi user bắt đầu nhập
@@ -52,9 +57,10 @@ export default function EditBaiViet() {
     }
   };
   
-  const handleFileChange = (e: any) => {
-    const f = e.target.files[0];
-    if (f) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      const f = files[0];
       setFile(f);
       setPreview(URL.createObjectURL(f));
     }
@@ -88,7 +94,7 @@ export default function EditBaiViet() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form trước khi submit
@@ -100,7 +106,7 @@ export default function EditBaiViet() {
 
     try {
       const formData = new FormData();
-      Object.entries(form).forEach(([k, v]) => formData.append(k, v as any));
+      Object.entries(form).forEach(([k, v]) => formData.append(k, String(v)));
       if (file) formData.append('hinh_anh', file);
 
       const res = await fetch(`${API_BASE_URL}/api/baiviet/${id}`, {
@@ -178,7 +184,9 @@ export default function EditBaiViet() {
         }
         textarea.form-control {
           min-height: 200px;
+          max-height: 500px;
           resize: vertical;
+          overflow-y: auto;
         }
         .image-upload-area {
           border: 2px dashed #d0d0d0;
@@ -234,7 +242,7 @@ export default function EditBaiViet() {
               <h2 className="fw-bold mb-1" style={{ color: '#2C3E50', fontSize: '1.75rem' }}>Chỉnh sửa bài viết</h2>
               <p className="text-muted mb-0">Cập nhật thông tin bài viết</p>
             </div>
-            <button className="btn btn-outline-secondary d-flex align-items-center gap-2" onClick={() => router.back()}>
+            <button className="btn btn-outline-secondary d-flex align-items-center gap-2" onClick={() => router.push('/admin/baiviet')}>
               <ArrowLeft size={18} /> Quay lại
             </button>
           </div>
@@ -282,7 +290,11 @@ export default function EditBaiViet() {
                 rows={10} 
                 placeholder="Nhập nội dung bài viết..." 
                 required
-                style={{ borderColor: errors.noidung ? '#dc3545' : undefined }}
+                style={{ 
+                  borderColor: errors.noidung ? '#dc3545' : undefined,
+                  maxHeight: '500px',
+                  overflowY: 'auto'
+                }}
               />
               {errors.noidung && (
                 <small className="text-danger d-block mt-1">{errors.noidung}</small>
@@ -328,7 +340,7 @@ export default function EditBaiViet() {
                 >
                   <option value="">-- Chọn tác giả --</option>
                   {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.name || u.ho_ten}</option>
+                    <option key={u.id} value={u.id}>{u.ho_ten || u.email}</option>
                   ))}
                 </select>
                 {errors.user_id && (
@@ -346,7 +358,7 @@ export default function EditBaiViet() {
             </div>
 
             <div className="d-flex justify-content-end gap-2 pt-3 border-top">
-              <button type="button" onClick={() => router.back()} className="btn btn-light" disabled={saving}>
+              <button type="button" onClick={() => router.push('/admin/baiviet')} className="btn btn-light" disabled={saving}>
                 Hủy
               </button>
               <button className="btn-submit d-flex align-items-center gap-2" type="submit" disabled={saving}>
