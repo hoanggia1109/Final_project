@@ -1,4 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
+const constants = require("./config/constants");
+const port = constants.SERVER.PORT;
 
 // Kết nối database MySQL
 const sequelize = new Sequelize("shopnoithat", "root", "", {
@@ -15,11 +17,15 @@ const UserModel = sequelize.define(
   {
     id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
     email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    password: { type: DataTypes.STRING, allowNull: false },
+    code: { type: DataTypes.STRING, allowNull: true },
     ngaysinh : { type: DataTypes.DATEONLY, allowNull: true },
     gioitinh :{ type: DataTypes.STRING, allowNull: true },
-    ho_ten : { type: DataTypes.STRING, allowNull: true },
-    sdt : { type: DataTypes.STRING, allowNull: true },
-    password: { type: DataTypes.STRING, allowNull: false },
+    ho_ten : { type: DataTypes.STRING, allowNull: true }, // Thêm hỗ trợ fullName
+    sdt : { type: DataTypes.STRING, allowNull: true }, // Thêm hỗ trợ phone
+    avatar : { type: DataTypes.STRING, allowNull: true }, // Avatar path
+    email_verified: { type: DataTypes.TINYINT, defaultValue: 0 }, // Email đã xác thực chưa
+    email_verification_token: { type: DataTypes.STRING, allowNull: true }, // Token xác thực email
     role: { type: DataTypes.ENUM('admin','customer'), defaultValue: "customer" },
     trangthai: { type: DataTypes.TINYINT, defaultValue: 1 },
     created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
@@ -92,6 +98,7 @@ const ThuongHieuModel = sequelize.define(
   "thuong_hieu",
   {
     id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    code: DataTypes.STRING,
     tenbrand: DataTypes.STRING,
     logo : DataTypes.STRING,
     thutu : DataTypes.INTEGER,
@@ -110,6 +117,9 @@ const SanPhamModel = sequelize.define(
     code: DataTypes.STRING,
     tensp: DataTypes.STRING,
     mota: DataTypes.TEXT,
+    mota_chitiet: DataTypes.TEXT,
+    dacdiem_noibat: DataTypes.TEXT, // JSON array stored as TEXT
+    thongsokythuat: DataTypes.TEXT, // JSON object stored as TEXT
     ngay: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     trangthai : DataTypes.TINYINT,
     ratingTB : { type: DataTypes.DECIMAL(3,1), defaultValue: 0 },
@@ -148,6 +158,7 @@ const DanhMucBaiVietModel = sequelize.define(
       noidung: DataTypes.TEXT,
       anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
       hinh_anh: DataTypes.STRING,
+      luotxem: { type: DataTypes.INTEGER, defaultValue: 0 },
       user_id: DataTypes.CHAR(36),
       danhmuc_baiviet_id: DataTypes.CHAR(36),
         created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
@@ -161,7 +172,8 @@ const DanhMucBaiVietModel = sequelize.define(
     {
       id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
       user_id: DataTypes.CHAR(36),
-      chitiet_donhang_id: DataTypes.CHAR(36),
+      chitiet_donhang_id: DataTypes.CHAR(36), // Để biết review thuộc về đơn hàng nào
+      bienthe_id: DataTypes.CHAR(36), // Vẫn cần vì database có foreign key constraint
       rating: DataTypes.INTEGER,
       binhluan: DataTypes.TEXT,
         created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
@@ -208,6 +220,7 @@ const GioHangModel = sequelize.define(
      created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
     updated_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW},
     soluong: { type: DataTypes.INTEGER, defaultValue: 1 },
+    tongtien: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0 }, // Tổng tiền = giá * số lượng
   },
   { tableName: "gio_hang", timestamps: false }
 );
@@ -224,18 +237,31 @@ const DonHangModel = sequelize.define(
     phi_van_chuyen : DataTypes.DECIMAL(15, 2),
     magiaodich: DataTypes.CHAR(100),
     magiamgia_id: DataTypes.CHAR(36),
+    magiamgia_code: DataTypes.STRING, // Thêm cột mã giảm giá
     diachi_id: DataTypes.CHAR(36),
     thoidiemthanhtoan : DataTypes.DATE,
     trangthaithanhtoan: DataTypes.ENUM('pending','paid','failed','refunded','cancelled'),
+    phuongthucthanhtoan: DataTypes.ENUM('cod','stripe','vnpay','momo','banking'), // Thêm phương thức thanh toán
+    payment_intent_id: DataTypes.STRING, // Thêm Stripe payment intent ID
+    ngaythanhtoan: DataTypes.DATE, // Thêm ngày thanh toán
       created_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW },
       updated_at :{ type : DataTypes.DATE, defaultValue : DataTypes.NOW},
     tongtien: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0},
     giamgia: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0},
-    tongtien_saugiam: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0},
+    tongtien_sau_giam: {type:DataTypes.DECIMAL(15, 2), defaultValue : 0}, // Sửa tên cột
 trangthai: {
   type: DataTypes.ENUM("pending", "confirmed", "shipping", "delivered", "cancelled", "returned"),
   defaultValue: "pending",
-}  },
+    },
+    ly_do_huy: DataTypes.TEXT, // Lý do hủy đơn hàng
+    // Các cột địa chỉ chi tiết (cho banking và các phương thức khác)
+    diachichitiet: DataTypes.TEXT,
+    phuong_xa: DataTypes.STRING,
+    quan_huyen: DataTypes.STRING,
+    tinh_thanh: DataTypes.STRING,
+    hoten: DataTypes.STRING,
+    sdt: DataTypes.STRING,
+  },
   { tableName:"don_hang", timestamps: false }
 );
 
@@ -262,6 +288,35 @@ const ReviewImageModel = sequelize.define("hinhanh_danhgia", {
   tableName: "hinhanh_danhgia",
   timestamps: false, // hoặc true nếu muốn có created_at / updated_at
 });
+
+// LIÊN HỆ
+const LienHeModel = sequelize.define(
+  "lien_he",
+  {
+    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    hoten: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false },
+    sdt: { type: DataTypes.STRING, allowNull: true },
+    tieude: { type: DataTypes.STRING, allowNull: false },
+    noidung: { type: DataTypes.TEXT, allowNull: false },
+    trangthai: { type: DataTypes.ENUM('pending', 'processing', 'resolved'), defaultValue: 'pending' },
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "lien_he", timestamps: false }
+);
+
+// YÊU THÍCH
+const YeuThichModel = sequelize.define(
+  "yeu_thich",
+  {
+    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    user_id: { type: DataTypes.CHAR(36), allowNull: false },
+    sanpham_id: { type: DataTypes.CHAR(36), allowNull: false },
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "yeu_thich", timestamps: false }
+);
 
 /* ------------------ QUAN HỆ ------------------ */
 // ======================
@@ -395,6 +450,7 @@ DanhGiaModel.belongsTo(UserModel, {
   as: "user",
 });
 // Đánh giá liên kết tới chi tiết đơn hàng
+// Association với DonHangChiTietModel (qua chitiet_donhang_id)
 DonHangChiTietModel.hasMany(DanhGiaModel, {
   foreignKey: "chitiet_donhang_id",
   as: "danhgias",
@@ -402,6 +458,16 @@ DonHangChiTietModel.hasMany(DanhGiaModel, {
 DanhGiaModel.belongsTo(DonHangChiTietModel, {
   foreignKey: "chitiet_donhang_id",
   as: "chitiet_donhang",
+});
+
+// Association với SanPhamBienTheModel (qua bienthe_id - vì có foreign key constraint)
+SanPhamBienTheModel.hasMany(DanhGiaModel, {
+  foreignKey: "bienthe_id",
+  as: "danhgias",
+});
+DanhGiaModel.belongsTo(SanPhamBienTheModel, {
+  foreignKey: "bienthe_id",
+  as: "bienthe",
 });
 
 UserModel.hasMany(BaiVietModel, {
@@ -423,6 +489,109 @@ BaiVietModel.belongsTo(DanhMucBaiVietModel, {
 });
 DanhGiaModel.hasMany(ReviewImageModel, { foreignKey: "danhgia_id", as: "hinhanh" });
 ReviewImageModel.belongsTo(DanhGiaModel, { foreignKey: "danhgia_id", as: "danhgia" });
+
+// ======================
+// Quan hệ yêu thích
+// ======================
+UserModel.hasMany(YeuThichModel, {
+  foreignKey: "user_id",
+  as: "yeuthich",
+});
+YeuThichModel.belongsTo(UserModel, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
+SanPhamModel.hasMany(YeuThichModel, {
+  foreignKey: "sanpham_id",
+  as: "yeuthich",
+});
+YeuThichModel.belongsTo(SanPhamModel, {
+  foreignKey: "sanpham_id",
+  as: "sanpham",
+});
+
+// BANNER
+const BannerModel = sequelize.define(
+  "banner",
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    tieude: DataTypes.STRING,
+    mota: DataTypes.TEXT,
+    url: DataTypes.STRING,
+    linksp: DataTypes.STRING,
+    thutu: { type: DataTypes.INTEGER, defaultValue: 1 },
+    anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "banner", timestamps: false }
+);
+
+// PHIẾU NHẬP XUẤT KHO
+const PhieuNhapXuatKhoModel = sequelize.define(
+  "phieu_nhap_xuat_kho",
+  {
+    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    bienthe_id: { type: DataTypes.CHAR(36), allowNull: false },
+    loai: { type: DataTypes.ENUM('nhap', 'xuat'), allowNull: false },
+    soluong: { type: DataTypes.INTEGER, allowNull: false },
+    soluong_truoc: { type: DataTypes.INTEGER, defaultValue: 0 },
+    soluong_sau: { type: DataTypes.INTEGER, defaultValue: 0 },
+    lydo: DataTypes.STRING(500),
+    nguoi_thuc_hien: DataTypes.CHAR(36),
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "phieu_nhap_xuat_kho", timestamps: false }
+);
+
+// CHI NHÁNH
+const ChiNhanhModel = sequelize.define(
+  "chi_nhanh",
+  {
+    id: { type: DataTypes.CHAR(36), primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    tenchinhanh: { type: DataTypes.STRING, allowNull: false },
+    diachi: { type: DataTypes.TEXT, allowNull: false },
+    quan: { type: DataTypes.STRING, allowNull: false },
+    thanhpho: { type: DataTypes.STRING, allowNull: false },
+    sdt: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: true },
+    giomocua: { type: DataTypes.STRING, allowNull: true },
+    giodongcua: { type: DataTypes.STRING, allowNull: true },
+    giomocua_cn: { type: DataTypes.STRING, allowNull: true },
+    giodongcua_cn: { type: DataTypes.STRING, allowNull: true },
+    hinhanh: { type: DataTypes.STRING, allowNull: true },
+    mapurl: { type: DataTypes.TEXT, allowNull: true },
+    thutu: { type: DataTypes.INTEGER, defaultValue: 0 },
+    anhien: { type: DataTypes.TINYINT, defaultValue: 1 },
+    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+  },
+  { tableName: "chi_nhanh", timestamps: false }
+);
+
+// ======================
+// Quan hệ phiếu nhập xuất kho
+// ======================
+SanPhamBienTheModel.hasMany(PhieuNhapXuatKhoModel, {
+  foreignKey: "bienthe_id",
+  as: "phieunhapxuat",
+});
+PhieuNhapXuatKhoModel.belongsTo(SanPhamBienTheModel, {
+  foreignKey: "bienthe_id",
+  as: "bienthe",
+});
+
+UserModel.hasMany(PhieuNhapXuatKhoModel, {
+  foreignKey: "nguoi_thuc_hien",
+  as: "phieunhapxuat",
+});
+PhieuNhapXuatKhoModel.belongsTo(UserModel, {
+  foreignKey: "nguoi_thuc_hien",
+  as: "nguoi_thuc_hien_info",
+});
+
 /* ------------------ EXPORT ------------------ */
 module.exports = {
   sequelize,
@@ -441,4 +610,9 @@ module.exports = {
   DonHangModel,
   DonHangChiTietModel,
   ReviewImageModel,
+  LienHeModel,
+  BannerModel,
+  PhieuNhapXuatKhoModel,
+  YeuThichModel,
+  ChiNhanhModel,
 };

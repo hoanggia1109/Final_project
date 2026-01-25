@@ -66,34 +66,10 @@ export default function NewsPage() {
       <PromoModal />
       <style jsx global>{`
         .news-page-container {
-          padding-top: 100px;
+          padding-top: 0;
           padding-bottom: 80px;
           background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 50%);
           min-height: 100vh;
-        }
-
-        .news-hero {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          padding: 60px 0;
-          margin-bottom: 50px;
-          border-radius: 0 0 50px 50px;
-        }
-
-        .news-hero h1 {
-          color: white;
-          font-size: 3.5rem;
-          font-weight: 900;
-          text-align: center;
-          margin-bottom: 15px;
-          text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .news-hero p {
-          color: rgba(255,255,255,0.9);
-          font-size: 1.2rem;
-          text-align: center;
-          max-width: 600px;
-          margin: 0 auto;
         }
 
         .category-filter {
@@ -265,10 +241,6 @@ export default function NewsPage() {
         }
 
         @media (max-width: 768px) {
-          .news-hero h1 {
-            font-size: 2.5rem;
-          }
-
           .featured-card {
             height: 400px;
           }
@@ -285,15 +257,45 @@ export default function NewsPage() {
       `}</style>
 
       <div className="news-page-container">
-        {/* Hero Section */}
-        <div className="news-hero">
-          <div className="container">
-            <h1>Tin Tức & Xu Hướng</h1>
-            <p>Cập nhật những thông tin mới nhất về kiến trúc, thiết kế nội thất và xu hướng trang trí</p>
+        {/* Hero Section - Banner giống trang giới thiệu */}
+        <section className="position-relative" style={{ height: '600px', overflow: 'hidden' }}>
+          <div className="position-absolute top-0 start-0 w-100 h-100">
+            <Image
+              src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1920"
+              alt="News Banner"
+              fill
+              style={{ objectFit: 'cover' }}
+              priority
+            />
           </div>
-        </div>
+          <div 
+            className="position-absolute top-0 start-0 w-100 h-100"
+            style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0.2))' }}
+          />
+          <div className="container position-relative h-100 d-flex align-items-center" style={{ zIndex: 2 }}>
+            <div className="text-white">
+              <h1 
+                className="display-2 fw-bold mb-4" 
+                style={{ 
+                  letterSpacing: '8px',
+                  textTransform: 'uppercase',
+                  textShadow: '2px 2px 8px rgba(0,0,0,0.3)'
+                }}
+              >
+                Tin Tức & Xu Hướng
+              </h1>
+              <div className="d-flex align-items-center gap-3 mb-4">
+                <div style={{ width: '60px', height: '3px', backgroundColor: '#FFC107' }}></div>
+                <p className="mb-0 h5" style={{ letterSpacing: '3px' }}>TIN TỨC</p>
+              </div>
+              <p className="lead mb-0" style={{ maxWidth: '600px', fontSize: '18px', lineHeight: '1.8' }}>
+                Cập nhật những thông tin mới nhất về kiến trúc, thiết kế nội thất và xu hướng trang trí
+              </p>
+            </div>
+          </div>
+        </section>
 
-        <div className="container">
+        <div className="container" style={{ marginTop: '50px' }}>
           {/* Category Filter */}
           <div className="category-filter">
             {categories.map((cat) => (
@@ -315,12 +317,26 @@ export default function NewsPage() {
                   <Link href={`/news/${article.id}`} className="text-decoration-none">
                     <div className="featured-card">
                       <div className="news-image">
-                        <Image 
-                          src={article.image} 
-                          alt={article.title}
-                          fill
-                          style={{ objectFit: 'cover' }}
-                        />
+                        {article.image && (
+                          <Image 
+                            src={article.image} 
+                            alt={article.title}
+                            fill
+                            style={{ objectFit: 'cover' }}
+                          />
+                        )}
+                        {!article.image && (
+                          <div style={{ 
+                            width: '100%', 
+                            height: '100%', 
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <i className="bi bi-newspaper" style={{ fontSize: '5rem', color: 'rgba(255,255,255,0.3)' }}></i>
+                          </div>
+                        )}
                       </div>
                       <div className="news-overlay">
                         <span className="news-category-badge">{article.category}</span>
@@ -336,8 +352,8 @@ export default function NewsPage() {
                             {formatDate(article.publishDate)}
                           </span>
                           <span className="text-white d-flex align-items-center gap-2">
-                            <i className="bi bi-eye"></i>
-                            {article.views.toLocaleString()} lượt xem
+                            <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
+                            {(article.views || 0).toLocaleString()} lượt xem
                           </span>
                         </div>
                       </div>
@@ -356,12 +372,26 @@ export default function NewsPage() {
                   <div className="news-card">
                     <div className="news-card-image">
                       <span className="news-category-badge">{article.category}</span>
-                      <Image 
-                        src={article.image} 
-                        alt={article.title}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
+                      {article.image && (
+                        <Image 
+                          src={article.image} 
+                          alt={article.title}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                        />
+                      )}
+                      {!article.image && (
+                        <div style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          background: 'linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <i className="bi bi-newspaper" style={{ fontSize: '3rem', color: 'rgba(0,0,0,0.1)' }}></i>
+                        </div>
+                      )}
                     </div>
                     <div className="news-card-body">
                       <h3 className="news-title">{article.title}</h3>
@@ -372,8 +402,8 @@ export default function NewsPage() {
                           {formatDate(article.publishDate)}
                         </span>
                         <span className="news-views">
-                          <i className="bi bi-eye"></i>
-                          {article.views.toLocaleString()}
+                          <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
+                          {(article.views || 0).toLocaleString()}
                         </span>
                       </div>
                     </div>

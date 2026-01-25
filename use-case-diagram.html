@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Use Case - Website Logistics Chuyên Nghiệp</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .diagram-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .actors-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .actor-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #4caf50;
+        }
+        
+        .actor-card h4 {
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        
+        .actor-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Sơ Đồ Use Case</h1>
+        <p class="subtitle">Website Logistics Chuyên Nghiệp</p>
+        
+        <div class="info-box">
+            <h3>📋 Mô Tả</h3>
+            <p>Sơ đồ use case mô tả các nghiệp vụ chính của một hệ thống logistics chuyên nghiệp, bao gồm quản lý vận đơn, kho hàng, vận chuyển, tuyến đường, phương tiện và các chức năng quản trị logistics.</p>
+        </div>
+        
+        <div class="actors-list">
+            <div class="actor-card">
+                <h4>📦 Người Gửi Hàng</h4>
+                <p>Tạo vận đơn, theo dõi hàng hóa</p>
+            </div>
+            <div class="actor-card">
+                <h4>📥 Người Nhận Hàng</h4>
+                <p>Tra cứu, xác nhận nhận hàng</p>
+            </div>
+            <div class="actor-card">
+                <h4>👨‍💼 Quản Trị Viên</h4>
+                <p>Quản lý toàn bộ hệ thống</p>
+            </div>
+            <div class="actor-card">
+                <h4>👨‍💻 Nhân Viên Logistics</h4>
+                <p>Xử lý vận đơn, cập nhật trạng thái</p>
+            </div>
+            <div class="actor-card">
+                <h4>🚚 Tài Xế</h4>
+                <p>Giao hàng, cập nhật vị trí</p>
+            </div>
+            <div class="actor-card">
+                <h4>📋 Nhân Viên Kho</h4>
+                <p>Quản lý kho hàng</p>
+            </div>
+            <div class="actor-card">
+                <h4>⚙️ Hệ Thống</h4>
+                <p>Tự động hóa các quy trình</p>
+            </div>
+        </div>
+        
+        <div class="diagram-container">
+            <div class="mermaid">
+graph TB
+    %% Actors
+    Shipper[📦 Người Gửi Hàng]
+    Consignee[📥 Người Nhận Hàng]
+    Admin[👨‍💼 Quản Trị Viên]
+    Staff[👨‍💻 Nhân Viên Logistics]
+    Driver[🚚 Tài Xế]
+    WarehouseStaff[📋 Nhân Viên Kho]
+    System[⚙️ Hệ Thống]
+
+    %% Shipper Use Cases
+    subgraph "Quản Lý Tài Khoản"
+        UC1[Đăng Ký Tài Khoản]
+        UC2[Đăng Nhập]
+        UC3[Quản Lý Thông Tin Cá Nhân]
+        UC4[Quản Lý Địa Chỉ]
+    end
+
+    subgraph "Tạo & Quản Lý Vận Đơn"
+        UC5[Tạo Vận Đơn Mới]
+        UC6[Khai Báo Thông Tin Hàng Hóa]
+        UC7[Chọn Dịch Vụ Vận Chuyển]
+        UC8[Tính Phí Vận Chuyển]
+        UC9[Thanh Toán Phí Vận Chuyển]
+        UC10[Xem Danh Sách Vận Đơn]
+        UC11[Theo Dõi Vận Đơn]
+        UC12[In Vận Đơn]
+        UC13[Hủy Vận Đơn]
+        UC14[Xem Lịch Sử Vận Chuyển]
+    end
+
+    subgraph "Theo Dõi & Tra Cứu"
+        UC15[Tra Cứu Vận Đơn]
+        UC16[Theo Dõi Vị Trí Hàng Hóa]
+        UC17[Xem Trạng Thái Vận Đơn]
+        UC18[Nhận Thông Báo Cập Nhật]
+    end
+
+    %% Consignee Use Cases
+    subgraph "Người Nhận Hàng"
+        UC19[Tra Cứu Vận Đơn Theo Mã]
+        UC20[Xem Thông Tin Hàng Hóa]
+        UC21[Xác Nhận Nhận Hàng]
+        UC22[Khiếu Nại Hàng Hóa]
+        UC23[Yêu Cầu Giao Lại]
+    end
+
+    %% Admin Use Cases
+    subgraph "Quản Lý Vận Đơn"
+        UC24[Xem Tất Cả Vận Đơn]
+        UC25[Xác Nhận Vận Đơn]
+        UC26[Từ Chối Vận Đơn]
+        UC27[Chỉnh Sửa Vận Đơn]
+        UC28[Phân Công Tài Xế]
+        UC29[Gán Phương Tiện]
+        UC30[Cập Nhật Trạng Thái Vận Đơn]
+        UC31[In Vận Đơn]
+        UC32[Xử Lý Khiếu Nại]
+    end
+
+    subgraph "Quản Lý Kho Hàng"
+        UC33[Quản Lý Danh Sách Kho]
+        UC34[Nhập Hàng Vào Kho]
+        UC35[Xuất Hàng Từ Kho]
+        UC36[Kiểm Kê Kho]
+        UC37[Quản Lý Vị Trí Hàng Trong Kho]
+        UC38[Xem Tồn Kho]
+        UC39[Quản Lý Khu Vực Kho]
+    end
+
+    subgraph "Quản Lý Vận Chuyển"
+        UC40[Quản Lý Tuyến Đường]
+        UC41[Tạo Lịch Trình Vận Chuyển]
+        UC42[Quản Lý Phương Tiện]
+        UC43[Theo Dõi Phương Tiện]
+        UC44[Quản Lý Nhiên Liệu]
+        UC45[Quản Lý Bảo Trì Phương Tiện]
+        UC46[Quản Lý Chi Phí Vận Chuyển]
+    end
+
+    subgraph "Quản Lý Nhân Sự"
+        UC47[Quản Lý Tài Xế]
+        UC48[Quản Lý Nhân Viên Kho]
+        UC49[Phân Công Công Việc]
+        UC50[Theo Dõi Hiệu Suất]
+        UC51[Quản Lý Ca Làm Việc]
+    end
+
+    subgraph "Báo Cáo & Thống Kê"
+        UC52[Xem Báo Cáo Doanh Thu]
+        UC53[Thống Kê Vận Đơn]
+        UC54[Thống Kê Theo Tuyến Đường]
+        UC55[Thống Kê Theo Kho]
+        UC56[Thống Kê Hiệu Suất Tài Xế]
+        UC57[Xuất Báo Cáo Excel]
+        UC58[Thống Kê Thời Gian Giao Hàng]
+    end
+
+    subgraph "Quản Trị Hệ Thống"
+        UC59[Quản Lý Người Dùng]
+        UC60[Phân Quyền Người Dùng]
+        UC61[Cấu Hình Dịch Vụ]
+        UC62[Cấu Hình Phí Vận Chuyển]
+        UC63[Quản Lý Đối Tác]
+        UC64[Quản Lý Chi Nhánh]
+    end
+
+    %% Staff Use Cases
+    subgraph "Nhân Viên Logistics"
+        UC65[Xử Lý Vận Đơn]
+        UC66[Nhập Hàng Vào Kho]
+        UC67[Xuất Hàng Từ Kho]
+        UC68[Cập Nhật Trạng Thái]
+        UC69[Kiểm Kê Kho]
+    end
+
+    %% Driver Use Cases
+    subgraph "Tài Xế"
+        UC70[Xem Lịch Trình Giao Hàng]
+        UC71[Xác Nhận Nhận Hàng Từ Kho]
+        UC72[Cập Nhật Vị Trí]
+        UC73[Xác Nhận Giao Hàng]
+        UC74[Ghi Nhận Vấn Đề Giao Hàng]
+        UC75[Xem Thông Tin Phương Tiện]
+    end
+
+    %% Warehouse Staff Use Cases
+    subgraph "Nhân Viên Kho"
+        UC76[Nhận Hàng Vào Kho]
+        UC77[Kiểm Tra Hàng Hóa]
+        UC78[Sắp Xếp Hàng Trong Kho]
+        UC79[Chuẩn Bị Hàng Xuất Kho]
+        UC80[Kiểm Kê Hàng Hóa]
+    end
+
+    %% System Use Cases
+    subgraph "Tự Động Hóa"
+        UC81[Tự Động Tính Phí]
+        UC82[Tự Động Tối Ưu Tuyến Đường]
+        UC83[Gửi Thông Báo SMS/Email]
+        UC84[Cập Nhật Trạng Thái Tự Động]
+        UC85[Cảnh Báo Tồn Kho Thấp]
+        UC86[Tự Động Tạo Lịch Trình]
+    end
+
+    %% Shipper Connections
+    Shipper --> UC1
+    Shipper --> UC2
+    Shipper --> UC3
+    Shipper --> UC4
+    Shipper --> UC5
+    Shipper --> UC6
+    Shipper --> UC7
+    Shipper --> UC8
+    Shipper --> UC9
+    Shipper --> UC10
+    Shipper --> UC11
+    Shipper --> UC12
+    Shipper --> UC13
+    Shipper --> UC14
+    Shipper --> UC15
+    Shipper --> UC16
+    Shipper --> UC17
+    Shipper --> UC18
+
+    %% Consignee Connections
+    Consignee --> UC19
+    Consignee --> UC20
+    Consignee --> UC21
+    Consignee --> UC22
+    Consignee --> UC23
+
+    %% Admin Connections
+    Admin --> UC3
+    Admin --> UC24
+    Admin --> UC25
+    Admin --> UC26
+    Admin --> UC27
+    Admin --> UC28
+    Admin --> UC29
+    Admin --> UC30
+    Admin --> UC31
+    Admin --> UC32
+    Admin --> UC33
+    Admin --> UC34
+    Admin --> UC35
+    Admin --> UC36
+    Admin --> UC37
+    Admin --> UC38
+    Admin --> UC39
+    Admin --> UC40
+    Admin --> UC41
+    Admin --> UC42
+    Admin --> UC43
+    Admin --> UC44
+    Admin --> UC45
+    Admin --> UC46
+    Admin --> UC47
+    Admin --> UC48
+    Admin --> UC49
+    Admin --> UC50
+    Admin --> UC51
+    Admin --> UC52
+    Admin --> UC53
+    Admin --> UC54
+    Admin --> UC55
+    Admin --> UC56
+    Admin --> UC57
+    Admin --> UC58
+    Admin --> UC59
+    Admin --> UC60
+    Admin --> UC61
+    Admin --> UC62
+    Admin --> UC63
+    Admin --> UC64
+
+    %% Staff Connections
+    Staff --> UC65
+    Staff --> UC66
+    Staff --> UC67
+    Staff --> UC68
+    Staff --> UC69
+
+    %% Driver Connections
+    Driver --> UC70
+    Driver --> UC71
+    Driver --> UC72
+    Driver --> UC73
+    Driver --> UC74
+    Driver --> UC75
+
+    %% Warehouse Staff Connections
+    WarehouseStaff --> UC76
+    WarehouseStaff --> UC77
+    WarehouseStaff --> UC78
+    WarehouseStaff --> UC79
+    WarehouseStaff --> UC80
+
+    %% System Connections
+    System --> UC81
+    System --> UC82
+    System --> UC83
+    System --> UC84
+    System --> UC85
+    System --> UC86
+
+    %% Relationships
+    UC5 -.->|includes| UC6
+    UC5 -.->|includes| UC7
+    UC5 -.->|includes| UC8
+    UC7 -.->|triggers| UC81
+    UC25 -.->|triggers| UC34
+    UC28 -.->|triggers| UC70
+    UC29 -.->|triggers| UC75
+    UC41 -.->|uses| UC82
+    UC34 -.->|updates| UC38
+    UC35 -.->|updates| UC38
+
+    %% Styling
+    classDef actorStyle fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef useCaseStyle fill:#2196F3,stroke:#1565C0,stroke-width:2px,color:#fff
+    classDef subgraphStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    
+    class Shipper,Consignee,Admin,Staff,Driver,WarehouseStaff,System actorStyle
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h3>📌 Ghi Chú</h3>
+            <ul style="margin-left: 20px; color: #555;">
+                <li>Sơ đồ này mô tả các use case chính của một hệ thống logistics chuyên nghiệp</li>
+                <li>Có thể mở rộng thêm các use case phụ tùy theo yêu cầu cụ thể</li>
+                <li>Các use case có thể được nhóm lại theo module chức năng</li>
+                <li>Quan hệ giữa các use case được thể hiện bằng mũi tên nét đứt</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#4CAF50',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#2E7D32',
+                lineColor: '#1976D2',
+                secondaryColor: '#E3F2FD',
+                tertiaryColor: '#BBDEFB'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

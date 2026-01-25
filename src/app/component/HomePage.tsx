@@ -1,8 +1,11 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import PromoModal from './PromoModal';
+import ChatBox from './ChatBox';
+import { useIsMobile, useIsDesktop } from '../hooks/useMediaQuery';
+import { API_BASE_URL } from '@/lib/api-config';
 
 //INTERFACES
 interface Product {
@@ -14,6 +17,16 @@ interface Product {
   originalPrice: number;
 }
 
+interface ProductFromAPI {
+  id: number;
+  tensp: string;
+  thumbnail: string;
+  luotxem?: number;
+  giamgia?: number;
+  bienthe?: Array<{ gia: number }>;
+}
+
+
 interface Category {
   id: number;
   title: string;
@@ -21,66 +34,100 @@ interface Category {
   link: string;
 }
 
-// (removed unused Partner interface)
+// Định nghĩa interface cho Banner
+interface BannerType {
+  id: number;
+  tieude: string;
+  mota: string;
+  url: string;
+  anhien: number;
+  thutu: number;
+  image: string;
+  link?: string;
+  // Bổ sung các trường khác nếu cần thiết
+}
 
 //Banner 
 function Banner() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  
-  const banners = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1920',
-      title: 'TRỞ THÀNH NGƯỜI CỘNG SỰ',
-      subtitle: 'NHIỆT TÌNH - UY TÍN - HIỆU QUẢ',
-      description: 'Công ty TNHH Trang trí Nội thất và Xây dựng Vân Tây chuyên thiết kế và thi công các phòng vệ sắc có hình dạng trọn gói như cửa hàng, phòng làm việc/cửa hàng, các cửa hàng, Showroom...'
-    },
-    {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920',
-      title: 'THIẾT KẾ NỘI THẤT HIỆN ĐẠI',
-      subtitle: 'SÁNG TẠO - CHUYÊN NGHIỆP - TINH TẾ',
-      description: 'Mang đến những không gian sống và làm việc hoàn hảo với phong cách thiết kế hiện đại, tối ưu công năng và thẩm mỹ cao.'
-    },
-    {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920',
-      title: 'THI CÔNG CHUYÊN NGHIỆP',
-      subtitle: 'CHẤT LƯỢNG - TIẾN ĐỘ - CAM KẾT',
-      description: 'Đội ngũ thợ lành nghề, quy trình thi công chuyên nghiệp, đảm bảo tiến độ và chất lượng công trình theo đúng cam kết.'
-    },
-    {
-      id: 4,
-      image: 'https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?w=1920',
-      title: 'GIÁ TRỊ BỀN VỮNG',
-      subtitle: 'TIN CẬY - TRÁCH NHIỆM - PHÁT TRIỂN',
-      description: 'Xây dựng mối quan hệ lâu dài với khách hàng thông qua chất lượng sản phẩm và dịch vụ tốt nhất.'
-    }
-  ];
+  const [banners, setBanners] = useState<BannerType[]>([]);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
+
+  // Fetch banners từ API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/banner`)
+      .then(async res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Response is not JSON");
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Chỉ lấy banner có anhien = 1, sắp xếp theo thutu và giới hạn 4 banner
+          const activeBanners = data
+            .filter(b => b.anhien === 1)
+            .sort((a, b) => a.thutu - b.thutu)
+            .slice(0, 4); // Chỉ lấy 4 banner đầu tiên
+          
+          if (activeBanners.length > 0) {
+            setBanners(activeBanners);
+          }
+        }
+      })
+      .catch(err => {
+        console.error('❌ Lỗi khi tải banner:', err);
+        console.error('🔗 API URL:', `${API_BASE_URL}/api/banner`);
+        console.error('💡 Kiểm tra xem backend có đang chạy trên port 5002 không?');
+        // Giữ nguyên banner mặc định nếu lỗi
+      });
+  }, []);
 
   useEffect(() => {
+    if (banners.length === 0) return; // kiểm tra banner có tồn tại không
+    
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
+      setCurrentSlide((prev) => (prev + 1) % banners.length); 
     }, 5000); // Chuyển slide mỗi 5 giây
     
-    return () => clearInterval(timer);
+    return () => clearInterval(timer); 
   }, [banners.length]);
 
   const nextSlide = () => {
+    if (banners.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % banners.length);
   };
 
   const prevSlide = () => {
+    if (banners.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
+  if (banners.length === 0) {
+    return (
+      <section className="position-relative" style={{ minHeight: '640px', overflow: 'hidden', background: 'linear-gradient(135deg, #FFF9F0 0%, #ffffff 100%)' }}>
+        <div className="container position-relative d-flex align-items-center justify-content-center" style={{ minHeight: '640px' }}>
+          <div className="text-center">
+            <h1 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>Chào mừng đến với DANNYdecor</h1>
+            <p className="mb-4 text-muted">Đang tải banner...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="position-relative" style={{ minHeight: '640px', overflow: 'hidden' }}>
+    <section className="position-relative banner-section" style={{ minHeight: '640px', overflow: 'hidden' }}>
       {/* Banner Slides */}
       {banners.map((banner, slideIndex) => (
         <div
           key={banner.id}
-          className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white"
+          className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white banner-content"
           style={{
             minHeight: '520px',
             opacity: currentSlide === slideIndex ? 1 : 0,
@@ -92,7 +139,7 @@ function Banner() {
           <div
             className="position-absolute top-0 start-0 w-100 h-100"
             style={{
-              backgroundImage: `url("${banner.image}")`,
+              backgroundImage: `url("${banner.url}")`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
@@ -104,40 +151,81 @@ function Banner() {
             className="position-absolute top-0 start-0 w-100 h-100"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 1 }}
           ></div>
-          <div className="container position-relative text-center" style={{ zIndex: 2 }}>
-            <h1 className="fw-bold hero-title mb-3">
-              {banner.title}
-            </h1>
-            <h2 className="hero-subtitle mb-3">
-              {banner.subtitle}
-            </h2>
-            <p className="mb-4 mx-auto hero-desc">
-              {banner.description}
-            </p>
-            <Link href="/contact" className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold">
-              Xem thêm
-            </Link>
+          <div className="container position-relative text-center px-3" style={{ zIndex: 2 }}>
+            {isMobile ? (
+              <>
+                <h1 className="fw-bold mb-3" style={{ fontSize: '1.5rem', lineHeight: '1.3' }}>
+                  {banner.tieude}
+                </h1>
+                <p className="mb-4 mx-auto" style={{ fontSize: '0.9rem', maxWidth: '95%' }}>
+                  {banner.mota}
+                </p>
+                <Link href={banner.link || "/contact"} className="btn btn-warning text-white px-4 py-2 fw-semibold" style={{ fontSize: '0.85rem' }}>
+                  Xem thêm
+                </Link>
+              </>
+            ) : (
+              <>
+                <h1 className="fw-bold hero-title mb-3">
+                  {banner.tieude}
+                </h1>
+                <p className="mb-4 mx-auto hero-desc">
+                  {banner.mota}
+                </p>
+                <Link href={banner.link || "/contact"} className="btn btn-warning btn-lg text-white px-5 py-3 fw-semibold banner-button btn-lg-responsive">
+                  Xem thêm
+                </Link>
+              </>
+            )}
           </div>
         </div>
       ))}
 
-      {/* Previous Button */}
-      <button
-        onClick={prevSlide}
-        className="btn btn-light rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3"
-        style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
-      >
-        <i className="bi bi-chevron-left"></i>
-      </button>
+      {/* Navigation Buttons - Desktop only */}
+      {isDesktop && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="btn btn-light rounded-circle position-absolute top-50 start-0 translate-middle-y ms-3"
+            style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
+            suppressHydrationWarning
+          >
+            <i className="bi bi-chevron-left"></i>
+          </button>
 
-      {/* Next Button */}
-      <button
-        onClick={nextSlide}
-        className="btn btn-light rounded-circle position-absolute top-50 end-0 translate-middle-y me-3"
-        style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
-      >
-        <i className="bi bi-chevron-right"></i>
-      </button>
+          <button
+            onClick={nextSlide}
+            className="btn btn-light rounded-circle position-absolute top-50 end-0 translate-middle-y me-3"
+            style={{ width: '50px', height: '50px', zIndex: 10, opacity: 0.7 }}
+            suppressHydrationWarning
+          >
+            <i className="bi bi-chevron-right"></i>
+          </button>
+        </>
+      )}
+      
+      {/* Mobile: Swipe indicators */}
+      {isMobile && banners.length > 1 && (
+        <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3" style={{ zIndex: 10 }}>
+          <div className="d-flex gap-2">
+            {banners.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                style={{
+                  width: idx === currentSlide ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: idx === currentSlide ? '#FFC107' : 'rgba(255,255,255,0.5)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
     </section>
   );
@@ -150,12 +238,21 @@ function ProductCategories() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     fetch('/api/categories')
       .then(res => res.json())
-      .then(data => { setCategories(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
+      .then(data => { 
+        // Giới hạn chỉ lấy 6 danh mục đầu tiên cho trang chủ
+        setCategories(data.slice(0, 6)); 
+        setLoading(false); 
+      })
+      .catch(err => { 
+        console.error('Error fetching categories:', err); 
+        setLoading(false); 
+      });
   }, []);
 
   const itemsPerPage = 3;
@@ -190,54 +287,124 @@ function ProductCategories() {
 
   if (loading) return <div className="py-5 text-center"><div className="spinner-border text-warning"></div></div>;
 
+  if (categories.length === 0) {
+    return (
+      <section className="py-5 bg-light">
+        <div className="container">
+          <div className="text-center py-5">
+            <h3 className="text-muted">Không có danh mục nào</h3>
+            <p className="text-muted">Vui lòng kiểm tra kết nối API</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const visibleCategories = categories.slice(currentIndex * itemsPerPage, (currentIndex * itemsPerPage) + itemsPerPage);
 
   return (
-    <section className="py-5 bg-light">
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(180deg, #FFF9F0 0%, #ffffff 100%)' }}
+    >
       <div className="container">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="text-uppercase fw-bold section-title mb-0">DANH MỤC SẢN PHẨM</h2>
+        <div className="text-center mb-5">
+          <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
+            fontSize: '2rem', 
+            letterSpacing: '2px',
+            color: '#2c3e50',
+            position: 'relative',
+            display: 'inline-block'
+          }}>
+            DANH MỤC SẢN PHẨM
+            <div style={{
+              position: 'absolute',
+              bottom: '-10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, #FFC107, #FFD54F)',
+              borderRadius: '2px'
+            }}></div>
+          </h2>
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Khám phá bộ sưu tập nội thất cao cấp</p>
+        </div>
+        
+        <div className="d-flex justify-content-center align-items-center mb-4">
           <div className="d-flex align-items-center gap-2">
-            <span className="text-muted small">{currentIndex + 1} / {maxIndex + 1}</span>
+            <span className="badge bg-warning text-dark px-3 py-2">{currentIndex + 1} / {maxIndex + 1}</span>
           </div>
         </div>
         
         <div className="position-relative">
-          {/* Previous Arrow */}
-          <button
-            onClick={handlePrev}
-            className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginLeft: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
-          </button>
+          {/* Navigation Arrows - Chỉ hiển thị trên desktop */}
+          {isDesktop && (
+            <>
+              <button
+                onClick={handlePrev}
+                className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginLeft: '-22px'
+                }}
+              >
+                <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
+              </button>
 
-          {/* Next Arrow */}
-          <button
-            onClick={handleNext}
-            className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginRight: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
-          </button>
+              <button
+                onClick={handleNext}
+                className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginRight: '-22px'
+                }}
+              >
+                <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
+              </button>
+            </>
+          )}
+          
+          {/* Mobile: Swipe indicators */}
+          {isMobile && (
+            <div className="d-flex justify-content-center gap-2 mb-3">
+              {categories.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSlideDirection(idx < currentIndex ? 'right' : 'left');
+                    setCurrentIndex(idx);
+                  }}
+                  style={{
+                    width: idx === currentIndex ? '24px' : '8px',
+                    height: '8px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: idx === currentIndex ? '#FFC107' : '#ddd',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           <div className="row g-4">
+            {visibleCategories.length === 0 && (
+              <div className="col-12 text-center">
+                <p className="text-muted">Không có danh mục hiển thị</p>
+              </div>
+            )}
             {visibleCategories.map((cat) => (
               <div 
                 key={cat.id} 
-                className="col-md-4"
+                className="col-12 col-md-6 col-lg-4"
                 style={{
                   animationName: isAnimating 
                     ? (slideDirection === 'right' ? 'slideInLeft' : 'slideInRight')
@@ -249,53 +416,119 @@ function ProductCategories() {
               >
                 <Link href={cat.link} className="text-decoration-none">
                   <div 
-                    className="card border-0 shadow-sm overflow-hidden" 
+                    className="card border-0 overflow-hidden category-card" 
                     style={{ 
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      borderRadius: '20px',
+                      boxShadow: '0 5px 20px rgba(0,0,0,0.08)'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-15px) scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.2)';
+                      e.currentTarget.style.transform = 'translateY(-15px) scale(1.03)';
+                      e.currentTarget.style.boxShadow = '0 25px 50px rgba(255,193,7,0.2)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                      e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.08)';
                     }}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '300px' }}>
-                      <div 
-                        className="position-absolute top-0 start-0 w-100 h-100"
-                        style={{ transition: 'transform 0.4s ease' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                      >
-                        <Image src={cat.image} alt={cat.title} fill style={{ objectFit: 'cover' }} />
-                      </div>
-                      {/* Overlay on hover */}
-                      <div 
-                        className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                        style={{ 
-                          backgroundColor: 'rgba(255, 193, 7, 0)', 
-                          transition: 'background-color 0.3s ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0)'; }}
-                      >
-                        <i className="bi bi-arrow-right-circle text-white" style={{ fontSize: '40px', opacity: 0, transition: 'opacity 0.3s ease' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
-                        ></i>
-                      </div>
-                    </div>
-                    <div className="card-body text-center py-3">
-                      <h5 className="card-title text-dark mb-0 fw-bold" style={{ transition: 'color 0.3s ease' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = '#333'; }}
-                      >
-                        {cat.title}
-                      </h5>
-                    </div>
+                    {/* Mobile: Hiển thị đơn giản hơn */}
+                    {isMobile ? (
+                      <>
+                        <div className="position-relative overflow-hidden category-image" style={{ 
+                          height: '180px',
+                          background: '#f8f9fa'
+                        }}>
+                          <Image 
+                            src={cat.image} 
+                            alt={cat.title} 
+                            fill 
+                            sizes="100vw"
+                            style={{ 
+                              objectFit: 'cover',
+                              objectPosition: 'center'
+                            }}
+                            className="category-img"
+                          />
+                        </div>
+                        <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
+                          <h6 className="card-title text-dark mb-0 fw-bold" style={{ 
+                            fontSize: '0.95rem',
+                            letterSpacing: '0.3px'
+                          }}>
+                            {cat.title}
+                          </h6>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Desktop: Có hover effects và animations */}
+                        <div className="position-relative overflow-hidden category-image" style={{ 
+                          height: '250px',
+                          background: '#f8f9fa'
+                        }}>
+                          <Image 
+                            src={cat.image} 
+                            alt={cat.title} 
+                            fill 
+                            sizes="(max-width: 1200px) 50vw, 33vw"
+                            style={{ 
+                              objectFit: 'cover',
+                              objectPosition: 'center'
+                            }}
+                            className="category-img"
+                          />
+                          <div 
+                            className="position-absolute top-0 start-0 w-100 h-100"
+                            style={{ 
+                              transition: 'transform 0.4s ease',
+                              pointerEvents: 'none'
+                            }}
+                            onMouseEnter={(e) => { 
+                              const img = e.currentTarget.previousElementSibling as HTMLElement;
+                              if (img) img.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => { 
+                              const img = e.currentTarget.previousElementSibling as HTMLElement;
+                              if (img) img.style.transform = 'scale(1)';
+                            }}
+                          />
+                          {/* Overlay on hover - chỉ desktop */}
+                          <div 
+                            className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                            style={{ 
+                              backgroundColor: 'rgba(255, 193, 7, 0)', 
+                              transition: 'background-color 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0)'; }}
+                          >
+                            <i className="bi bi-arrow-right-circle text-white" style={{ fontSize: '40px', opacity: 0, transition: 'opacity 0.3s ease' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
+                            ></i>
+                          </div>
+                        </div>
+                        <div className="card-body text-center py-3" style={{ background: '#ffffff' }}>
+                          <h6 className="card-title text-dark mb-0 fw-bold" style={{ 
+                            transition: 'all 0.3s ease', 
+                            fontSize: '1rem',
+                            letterSpacing: '0.5px'
+                          }}
+                            onMouseEnter={(e) => { 
+                              e.currentTarget.style.color = '#FFC107';
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => { 
+                              e.currentTarget.style.color = '#2c3e50';
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                          >
+                            {cat.title}
+                          </h6>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </Link>
               </div>
@@ -307,20 +540,66 @@ function ProductCategories() {
   );
 }
 
-// HOT PRODUCTS SECTION
+// FEATURED PRODUCTS SECTION (Sản phẩm nổi bật - sorted by views)
 function HotProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
-    fetch('/api/products')
+    fetch(`${API_BASE_URL}/api/sanpham`)
       .then(res => res.json())
-      .then(data => { setProducts(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
+      .then(data => { 
+        if (Array.isArray(data)) {
+          // Sort by luotxem (view count) descending, then take top products
+          const allProducts = (data as ProductFromAPI[]).filter(p => p.id && p.tensp);
+          
+          // Sort: products with views first, then by ID (newest first)
+          const sortedProducts = allProducts.sort((a, b) => {
+            const viewsA = a.luotxem || 0;
+            const viewsB = b.luotxem || 0;
+            if (viewsA > 0 || viewsB > 0) {
+              return viewsB - viewsA; // Sort by views descending
+            }
+            return b.id - a.id; // If no views, sort by ID descending (newest first)
+          });
+          
+          const transformedProducts = sortedProducts
+            .slice(0, 20) // Take top 20
+            .map((p) => {
+              const price = p.bienthe?.[0]?.gia || 0;
+              const originalPrice = price ? Math.round(price * 1.25) : 0;
+              // Tính phần trăm giảm giá dựa trên originalPrice và price
+              const discount = originalPrice > price && originalPrice > 0 
+                ? Math.round(((originalPrice - price) / originalPrice) * 100)
+                : 0;
+              
+              return {
+                id: p.id,
+                name: p.tensp || 'Sản phẩm',
+                image: p.thumbnail || 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg',
+                discount: discount,
+                price: price,
+                originalPrice: originalPrice,
+              };
+            });
+          setProducts(transformedProducts);
+        } else {
+          console.error('Products API did not return array:', data);
+          setProducts([]);
+        }
+        setLoading(false); 
+      })
+      .catch(err => { 
+        console.error('Error fetching products:', err); 
+        setProducts([]);
+        setLoading(false); 
+      });
   }, []);
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price: number) => Number(price || 0).toLocaleString('vi-VN') + '₫';
 
   const itemsPerPage = 4;
   const maxIndex = Math.max(0, products.length - itemsPerPage);
@@ -339,11 +618,38 @@ function HotProducts() {
   const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerPage);
 
   return (
-    <section className="py-5">
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF5E1 100%)' }}
+    >
       <div className="container">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="text-uppercase fw-bold section-title mb-0">SẢN PHẨM HOT</h2>
-          <Link href="/products" className="text-dark text-decoration-none">xem tất cả →</Link>
+        <div className="text-center mb-5">
+          <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
+            fontSize: '2rem', 
+            letterSpacing: '2px',
+            color: '#2c3e50',
+            position: 'relative',
+            display: 'inline-block'
+          }}>
+             SẢN PHẨM NỔI BẬT
+            <div style={{
+              position: 'absolute',
+              bottom: '-10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, #ff6b6b, #ff8787)',
+              borderRadius: '2px'
+            }}></div>
+          </h2>
+          <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Sản phẩm được xem nhiều nhất</p>
+          <Link href="/products" className="btn btn-outline-dark mt-2 px-4 btn-responsive" style={{ 
+            borderRadius: '25px',
+            transition: 'all 0.3s ease'
+          }}>
+            Xem tất cả <i className="bi bi-arrow-right ms-2"></i>
+          </Link>
         </div>
         <div className="position-relative">
           {/* Previous Arrow */}
@@ -379,49 +685,89 @@ function HotProducts() {
           </button>
 
           <div className="row g-4">
-            {visibleProducts.map((product) => (
-              <div key={product.id} className="col-md-3">
-                <Link href={`/products/${product.id}`} className="text-decoration-none">
+            {visibleProducts.length === 0 ? (
+              <div className="col-12 text-center py-5">
+                <p className="text-muted">Chưa có sản phẩm nổi bật</p>
+              </div>
+            ) : (
+              visibleProducts.map((product) => (
+                <div key={product.id} className="col-6 col-md-4 col-lg-3">
+                  <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
-                    className="card border-0 shadow-sm"
-                    style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-10px)';
-                      e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
+                    className="card border-0 product-card"
+                    style={{ 
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+                      cursor: 'pointer',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.08)'
                     }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                    }}
+                    onMouseEnter={isDesktop ? (e) => {
+                      e.currentTarget.style.transform = 'translateY(-12px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)';
+                    } : undefined}
+                    onMouseLeave={isDesktop ? (e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.08)';
+                    } : undefined}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
-                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fw-bold" style={{ fontSize: '14px', zIndex: 2 }}>
-                        -{product.discount}%
+                    <div className="position-relative overflow-hidden" style={{ height: isMobile ? '180px' : '220px' }}>
+                      <div className="position-absolute top-0 start-0 text-white px-2 py-1 fw-bold" 
+                        style={{ 
+                          fontSize: isMobile ? '10px' : '12px', 
+                          zIndex: 2,
+                          background: 'linear-gradient(135deg, #ff6b6b, #ff8787)',
+                          borderRadius: '0 0 15px 0',
+                          boxShadow: '0 4px 10px rgba(255,107,107,0.3)'
+                        }}>
+                        <i className="bi bi-fire me-1"></i>-{product.discount}%
                       </div>
                       <div 
                         style={{ 
                           width: '100%', 
                           height: '100%', 
                           position: 'relative',
-                          transition: 'transform 0.3s ease'
+                          transition: isDesktop ? 'transform 0.4s ease' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                        onMouseEnter={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1.12)'; } : undefined}
+                        onMouseLeave={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1)'; } : undefined}
                       >
-                        <Image src={product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
+                        <Image 
+                          src={product.image} 
+                          alt={product.name} 
+                          fill 
+                          style={{ 
+                            objectFit: 'cover',
+                            objectPosition: 'center'
+                          }} 
+                        />
                       </div>
+                      {/* Gradient overlay */}
+                      <div className="position-absolute bottom-0 start-0 w-100" style={{
+                        height: '60px',
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)'
+                      }}></div>
                     </div>
-                    <div className="card-body text-center py-3">
-                      <p className="mb-2 text-dark product-name fw-medium">{product.name}</p>
-                      <div className="d-flex align-items-center justify-content-center gap-2">
-                        <span className="text-danger fw-bold price-text">{formatPrice(product.price)}</span>
-                        <span className="text-muted text-decoration-line-through" style={{ fontSize: '12px' }}>{formatPrice(product.originalPrice)}</span>
+                    <div className="card-body py-3 px-3">
+                      <p className="mb-2 text-dark fw-semibold product-card-title" style={{ fontSize: '0.95rem', lineHeight: '1.4', minHeight: '40px' }}>{product.name}</p>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex flex-column">
+                          <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
+                          <span className="text-muted text-decoration-line-through responsive-text" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
+                        </div>
+                        <div className="badge bg-warning text-dark px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
+                          <i className="bi bi-star-fill me-1"></i>NỔI BẬT
+                        </div>
                       </div>
                     </div>
                   </div>
-                </Link>
-              </div>
-            ))}
+                  </Link>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -429,20 +775,35 @@ function HotProducts() {
   );
 }
 
-// DISCOUNT PRODUCTS SECTION
+// BEST-SELLING PRODUCTS SECTION (Sản phẩm bán chạy - sorted by purchase count)
 function DiscountProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
-    fetch('/api/discount-products')
+    // Fetch best-selling products from API
+    fetch('/api/best-selling-products')
       .then(res => res.json())
-      .then(data => { setProducts(data); setLoading(false); })
-      .catch(err => { console.error(err); setLoading(false); });
+      .then(data => { 
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          console.error('Best-selling products API did not return array:', data);
+          setProducts([]);
+        }
+        setLoading(false); 
+      })
+      .catch(err => { 
+        console.error('Error fetching best-selling products:', err); 
+        setProducts([]);
+        setLoading(false); 
+      });
   }, []);
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price: number) => Number(price || 0).toLocaleString('vi-VN') + '₫';
 
   const itemsPerPage = 4;
   const maxIndex = Math.max(0, products.length - itemsPerPage);
@@ -461,89 +822,168 @@ function DiscountProducts() {
   const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerPage);
 
   return (
-    <section className="py-5 bg-light">
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' }}
+    >
       <div className="container">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="text-uppercase fw-bold section-title mb-0">SẢN PHẨM GIẢM GIÁ</h2>
-          <Link href="/discount-products" className="text-dark text-decoration-none">xem tất cả →</Link>
+        <div className="text-center mb-5">
+          <h2 className="text-uppercase fw-bold mb-2 text-white section-title responsive-title" style={{ 
+            fontSize: '2rem', 
+            letterSpacing: '2px',
+            position: 'relative',
+            display: 'inline-block',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+          }}>
+               SẢN PHẨM BÁN CHẠY
+            <div style={{
+              position: 'absolute',
+              bottom: '-10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, #FFE66D, #FFEB99)',
+              borderRadius: '2px',
+              boxShadow: '0 2px 8px rgba(255,230,109,0.6)'
+            }}></div>
+          </h2>
+          <p className="text-white mt-3 responsive-text" style={{ fontSize: '1.05rem', opacity: 0.95 }}>Sản phẩm được mua nhiều nhất</p>
+          <Link href="/discount-products" className="btn btn-light mt-2 px-4 fw-semibold btn-responsive" style={{ 
+            borderRadius: '25px',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+          }}>
+            Xem tất cả <i className="bi bi-arrow-right ms-2"></i>
+          </Link>
         </div>
         <div className="position-relative">
-          {/* Previous Arrow */}
-          <button
-            onClick={prevProducts}
-            disabled={currentIndex === 0}
-            className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginLeft: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
-          </button>
+          {/* Navigation - Desktop only */}
+          {isDesktop && (
+            <>
+              <button
+                onClick={prevProducts}
+                disabled={currentIndex === 0}
+                className="carousel-arrow position-absolute top-50 start-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginLeft: '-22px',
+                  backgroundColor: 'rgba(255,255,255,0.9)'
+                }}
+              >
+                <i className="bi bi-chevron-left" style={{ fontSize: '18px' }}></i>
+              </button>
 
-          {/* Next Arrow */}
-          <button
-            onClick={nextProducts}
-            disabled={currentIndex >= maxIndex}
-            className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '45px', 
-              height: '45px', 
-              borderRadius: '50%',
-              zIndex: 10,
-              marginRight: '-22px'
-            }}
-          >
-            <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
-          </button>
+              <button
+                onClick={nextProducts}
+                disabled={currentIndex >= maxIndex}
+                className="carousel-arrow position-absolute top-50 end-0 translate-middle-y d-flex align-items-center justify-content-center"
+                style={{ 
+                  width: '45px', 
+                  height: '45px', 
+                  borderRadius: '50%',
+                  zIndex: 10,
+                  marginRight: '-22px',
+                  backgroundColor: 'rgba(255,255,255,0.9)'
+                }}
+              >
+                <i className="bi bi-chevron-right" style={{ fontSize: '18px' }}></i>
+              </button>
+            </>
+          )}
 
           <div className="row g-4">
-            {visibleProducts.map((product) => (
-              <div key={product.id} className="col-md-3">
+            {visibleProducts.length === 0 ? (
+              <div className="col-12 text-center py-5">
+                <p className="text-white">Chưa có sản phẩm bán chạy</p>
+              </div>
+            ) : (
+              visibleProducts.map((product) => (
+                <div key={product.id} className={isMobile ? "col-6" : "col-6 col-md-4 col-lg-3"}>
                 <Link href={`/products/${product.id}`} className="text-decoration-none">
                   <div 
-                    className="card border-0 shadow-sm"
-                    style={{ transition: 'all 0.3s ease', cursor: 'pointer' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-10px)';
-                      e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
+                    className="card border-0 product-card"
+                    style={{ 
+                      transition: isDesktop ? 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' : 'none', 
+                      cursor: 'pointer',
+                      background: '#ffffff',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
                     }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                    }}
+                    onMouseEnter={isDesktop ? (e) => {
+                      e.currentTarget.style.transform = 'translateY(-15px) scale(1.03)';
+                      e.currentTarget.style.boxShadow = '0 25px 50px rgba(0,0,0,0.25)';
+                    } : undefined}
+                    onMouseLeave={isDesktop ? (e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+                    } : undefined}
                   >
-                    <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
-                      <div className="position-absolute top-0 start-0 bg-danger text-white px-2 py-1 fw-bold" style={{ fontSize: '14px', zIndex: 2 }}>
-                        -{product.discount}%
+                    <div className="position-relative overflow-hidden" style={{ height: isMobile ? '180px' : '220px' }}>
+                      <div className="position-absolute top-0 start-0 text-white px-2 py-1 fw-bold" 
+                        style={{ 
+                          fontSize: isMobile ? '10px' : '12px', 
+                          zIndex: 2,
+                          background: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)',
+                          borderRadius: '0 0 15px 0',
+                          boxShadow: '0 4px 10px rgba(255,107,107,0.3)'
+                        }}>
+                        <i className="bi bi-lightning-fill me-1"></i>-{product.discount}%
                       </div>
                       <div 
                         style={{ 
                           width: '100%', 
                           height: '100%', 
                           position: 'relative',
-                          transition: 'transform 0.3s ease'
+                          transition: isDesktop ? 'transform 0.4s ease' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                        onMouseEnter={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1.15) rotate(2deg)'; } : undefined}
+                        onMouseLeave={isDesktop ? (e) => { e.currentTarget.style.transform = 'scale(1) rotate(0deg)'; } : undefined}
                       >
-                        <Image src={product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
+                        <Image 
+                          src={product.image} 
+                          alt={product.name} 
+                          fill 
+                          style={{ 
+                            objectFit: 'cover',
+                            objectPosition: 'center'
+                          }} 
+                        />
                       </div>
+                      {/* Gradient overlay */}
+                      <div className="position-absolute bottom-0 start-0 w-100" style={{
+                        height: '60px',
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)'
+                      }}></div>
                     </div>
-                    <div className="card-body">
-                      <h6 className="card-title mb-3 product-name text-dark" style={{ minHeight: '40px' }}>{product.name}</h6>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="text-danger fw-bold price-text">{formatPrice(product.price)}</span>
-                        <span className="text-muted text-decoration-line-through" style={{ fontSize: '12px' }}>{formatPrice(product.originalPrice)}</span>
+                    <div className="card-body py-3 px-3">
+                      <h6 className="card-title mb-2 text-dark fw-semibold product-card-title" style={{ 
+                        minHeight: isMobile ? '35px' : '40px', 
+                        fontSize: isMobile ? '0.85rem' : '0.95rem', 
+                        lineHeight: '1.4' 
+                      }}>{product.name}</h6>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex flex-column">
+                          <span className="text-danger fw-bold product-price" style={{ fontSize: '1.1rem' }}>{formatPrice(product.price)}</span>
+                          <span className="text-muted text-decoration-line-through responsive-text" style={{ fontSize: '0.85rem' }}>{formatPrice(product.originalPrice)}</span>
+                        </div>
+                        <div className="badge bg-success text-white px-2 py-1" style={{ fontSize: '0.7rem', borderRadius: '8px' }}>
+                          <i className="bi bi-trophy-fill me-1"></i>BÁN CHẠY
+                        </div>
                       </div>
                     </div>
                   </div>
                 </Link>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -552,143 +992,231 @@ function DiscountProducts() {
 }
 
 // FEATURES 
-function Features() {
-  const features = [
-    { id: 1, iconType: 'pencil', title: 'Thông điệp nhà sáng lập', description: 'VANTAYdecor là "đứa con tinh thần" mà chúng tôi đã tạo ra từ niềm đam mê thiết kế nội thất' },
-    { id: 2, iconType: 'eye', title: 'Tầm nhìn', description: 'Tạo ra một thế giới khỏe mạnh, thoải mái thông qua những giải pháp trong nội thất' },
-    { id: 3, iconType: 'target', title: 'Sứ mệnh', description: 'Vận Tây nỗ lực tạo ra những không gian nội thất mang năng lượng chữa lành' },
-    { id: 4, iconType: 'diamond', title: 'Giá trị cốt lõi', description: 'VANTAYdecor xây dựng cho mình 05 giá trị cốt lõi: Sáng tạo, hành công, lành đạo, đổi ngũ và khách hàng' },
-  ];
+// function Features() {
+//   const features = [
+//     { 
+//       id: 1, 
+//       iconType: 'chat-heart-fill', 
+//       title: 'Thông điệp nhà sáng lập', 
+//       description: 'DANNYdecor là "đứa con tinh thần" mà chúng tôi đã tạo ra từ niềm đam mê thiết kế nội thất',
+//       color: '#FF6B6B'
+//     },
+//     { 
+//       id: 2, 
+//       iconType: 'eye-fill', 
+//       title: 'Tầm nhìn', 
+//       description: 'Tạo ra một thế giới khỏe mạnh, thoải mái thông qua những giải pháp trong nội thất',
+//       color: '#FF8E53'
+//     },
+//     { 
+//       id: 3, 
+//       iconType: 'bullseye', 
+//       title: 'Sứ mệnh', 
+//       description: 'Vận Tây nỗ lực tạo ra những không gian nội thất mang năng lượng chữa lành',
+//       color: '#FFA726'
+//     },
+//     { 
+//       id: 4, 
+//       iconType: 'gem', 
+//       title: 'Giá trị cốt lõi', 
+//       description: 'DANNYdecor xây dựng cho mình 05 giá trị cốt lõi: Sáng tạo, hành công, lành đạo, đổi ngũ và khách hàng',
+//       color: '#FFC107'
+//     },
+//   ];
 
-  return (
-    <section className="py-5">
-      <div className="container">
-        <div className="row g-4">
-          {features.map((f) => (
-                        <div key={f.id} className="col-md-3 text-center">
-                        <i className="bi bi-circle" style={{ fontSize: '36px', color: '#FFC107' }}></i>
-                        <h5 className="fw-bold my-3 feature-title" style={{ color: '#FFC107' }}>{f.title}</h5>
-                        <p className="text-muted feature-desc" style={{ minHeight: '80px' }}>{f.description}</p>
-              <Link href="/" className="text-decoration-none fw-semibold feature-desc" style={{ color: '#FFC107' }}>Xem Thêm</Link>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+//   return (
+//     <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #FFF8E8 0%, #ffffff 100%)' }}>
+//       <div className="container">
+//         <div className="text-center mb-5">
+//           <h2 className="text-uppercase fw-bold mb-2 section-title responsive-title" style={{ 
+//             fontSize: '2rem', 
+//             letterSpacing: '2px',
+//             color: '#2c3e50',
+//             position: 'relative',
+//             display: 'inline-block'
+//           }}>
+//             VỀ CHÚNG TÔI
+//             <div style={{
+//               position: 'absolute',
+//               bottom: '-10px',
+//               left: '50%',
+//               transform: 'translateX(-50%)',
+//               width: '80px',
+//               height: '4px',
+//               background: 'linear-gradient(90deg, #FF6B6B, #FFC107)',
+//               borderRadius: '2px'
+//             }}></div>
+//           </h2>
+//           <p className="text-muted mt-3 responsive-text" style={{ fontSize: '1.05rem' }}>Giá trị và tầm nhìn của DANNYdecor</p>
+//         </div>
+
+//         <div className="row g-4">
+//           {features.map((f) => (
+//             <div key={f.id} className="col-12 col-md-6 col-lg-3">
+//               <div 
+//                 className="card border-0 h-100 p-4 text-center d-flex flex-column feature-card"
+//                 style={{
+//                   borderRadius: '20px',
+//                   background: '#ffffff',
+//                   boxShadow: '0 5px 20px rgba(0,0,0,0.06)',
+//                   transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+//                   cursor: 'pointer'
+//                 }}
+//                 onMouseEnter={(e) => {
+//                   e.currentTarget.style.transform = 'translateY(-10px)';
+//                   e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,107,107,0.15)';
+//                 }}
+//                 onMouseLeave={(e) => {
+//                   e.currentTarget.style.transform = 'translateY(0)';
+//                   e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.06)';
+//                 }}
+//               >
+//                 <div 
+//                   className="d-inline-flex align-items-center justify-content-center mb-3 mx-auto feature-icon"
+//                   style={{
+//                     width: '70px',
+//                     height: '70px',
+//                     borderRadius: '50%',
+//                     background: `linear-gradient(135deg, ${f.color}, ${f.color}dd)`,
+//                     boxShadow: `0 8px 20px ${f.color}40`
+//                   }}
+//                 >
+//                   <i className={`bi bi-${f.iconType}`} style={{ fontSize: '32px', color: '#fff' }}></i>
+//                 </div>
+//                 <h5 className="fw-bold mb-3" style={{ color: '#2c3e50', fontSize: '1.1rem' }}>{f.title}</h5>
+//                 <p className="text-muted mb-3 flex-grow-1" style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>{f.description}</p>
+//                 <Link 
+//                   href="/introduction" 
+//                   className="text-decoration-none fw-semibold d-inline-flex align-items-center gap-1 mt-auto" 
+//                   style={{ color: f.color, fontSize: '0.9rem', transition: 'all 0.3s ease' }}
+//                   onMouseEnter={(e) => {
+//                     e.currentTarget.style.gap = '8px';
+//                   }}
+//                   onMouseLeave={(e) => {
+//                     e.currentTarget.style.gap = '4px';
+//                   }}
+//                 >
+//                   Xem Thêm <i className="bi bi-arrow-right"></i>
+//                 </Link>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 // PARTNERS 
 function Partners() {
-  const partners = [
-    { 
-      name: 'Bến xe Miền Đông', 
-      logo: '/logo/benxe.png' 
-    },
-    { 
-      name: 'Wolffun Game', 
-      logo: '/logo/game.png' 
-    },
-    { 
-      name: 'Flash Fitness', 
-      logo: '/logo/flash.png' 
-    },
-    { 
-      name: 'An Lạc Gia Estate', 
-      logo: '/logo/anlac.png' 
-    },
-    { 
-      name: 'Gạo Vĩnh Hiển', 
-      logo: '/logo/gao.png' 
-    },
-    { 
-      name: '25FIT', 
-      logo: '/logo/25fit.png' 
-    },
-    { 
-      name: 'Vua Cua', 
-      logo: '/logo/vuacua.png' 
-    },
-    { 
-      name: 'Chi Pilates', 
-      logo: '/logo/phongtap.png' 
-    },
-    { 
-      name: 'Vạn Xuân Holding', 
-      logo: '/logo/VXH.png' 
-    },
-    { 
-      name: 'Boost Juice Bars', 
-      logo: '/logo/boost.png' 
-    },
-    { 
-      name: 'Đăng Gia Trang', 
-      logo: '/logo/danggiatrang.png' 
-    },
-    { 
-      name: 'Otoke Chicken', 
-      logo: '/logo/chicken.png' 
-    }
-  ];
+  const [brands, setBrands] = useState<Array<{ id: string; tenbrand: string; logo: string; thutu: number; anhien: number }>>([]);
+  const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  const isDesktop = useIsDesktop();
+
+  // Fetch brands từ API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/api/thuonghieu`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Chỉ lấy brand có anhien = 1, sắp xếp theo thutu
+          const activeBrands = data
+            .filter(b => b.anhien === 1)
+            .sort((a, b) => (a.thutu || 0) - (b.thutu || 0));
+          setBrands(activeBrands);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Lỗi khi tải thương hiệu:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-5 section-padding" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}>
+        <div className="container">
+          <div className="text-center">
+            <div className="spinner-border text-warning" role="status">
+              <span className="visually-hidden">Đang tải...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (brands.length === 0) {
+    return null; // Không hiển thị section nếu không có brand
+  }
 
   return (
-    <section className="py-5 bg-light">
+    <section 
+      className="py-5 section-padding" 
+      style={{ background: 'linear-gradient(180deg, #ffffff 0%, #FFF9F0 100%)' }}
+    >
       <div className="container">
         <div className="text-center mb-5">
-          <div className="d-inline-block bg-warning mb-3" style={{ width: '60px', height: '3px' }}></div>
-          <h2 className="text-uppercase fw-bold section-title">CÁC THƯƠNG HIỆU HỢP TÁC</h2>
+          <div className="d-inline-block mb-3" style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg, #FF6B6B, #FF8E53)' }}></div>
+          <h2 className="text-uppercase fw-bold section-title responsive-title" style={{ color: '#2c3e50' }}>CÁC THƯƠNG HIỆU HỢP TÁC</h2>
         </div>
         <div className="row g-4">
-          {partners.map((partner, partnerIndex) => (
-            <div key={partnerIndex} className="col-6 col-md-4 col-lg-3">
+          {brands.map((brand) => (
+            <div key={brand.id} className={isMobile ? "col-6 col-md-4" : "col-6 col-md-4 col-lg-3"}>
               <div 
-                className="card border-0 shadow-sm overflow-hidden"
+                className="card border-0 shadow-sm overflow-hidden partner-card"
                 style={{ 
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: isDesktop ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
                   cursor: 'pointer',
-                  height: '200px',
-                  backgroundColor: '#fff', // Nền trắng
+                  height: isMobile ? '160px' : '200px',
+                  backgroundColor: '#fff',
                 }}
-                onMouseEnter={(e) => {
+                onMouseEnter={isDesktop ? (e) => {
                   e.currentTarget.style.transform = 'translateY(-8px)';
                   e.currentTarget.style.boxShadow = '0 12px 28px rgba(255, 193, 7, 0.2)';
-                }}
-                onMouseLeave={(e) => {
+                } : undefined}
+                onMouseLeave={isDesktop ? (e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                }}
+                } : undefined}
               >
                 {/* Logo Image - Grayscale/Đen trắng */}
                 <div 
                   className="position-relative w-100 h-100 d-flex align-items-center justify-content-center"
                   style={{ 
-                    padding: '30px',
+                    padding: isMobile ? '20px' : '30px',
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  <Image 
-                    src={partner.logo} 
-                    alt={partner.name}
-                    fill
-                    style={{ 
-                      objectFit: 'contain', // Giữ nguyên tỷ lệ logo
-                      filter: 'grayscale(100%) contrast(1.2) brightness(0.9)', // Đen trắng
-                      transition: 'all 0.3s ease',
-                      padding: '30px' // Padding để logo không chạm viền
-                    }}
-                    onMouseEnter={(e) => { 
-                      // Khi hover: thêm màu nhẹ
-                      e.currentTarget.style.filter = 'grayscale(0%) brightness(1.1)';
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                    }}
-                    onMouseLeave={(e) => { 
-                      e.currentTarget.style.filter = 'grayscale(100%) contrast(1.2) brightness(0.9)';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                  />
+                  {brand.logo ? (
+                    <Image 
+                      src={brand.logo} 
+                      alt={brand.tenbrand}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 992px) 33vw, 25vw"
+                      style={{ 
+                        objectFit: 'contain',
+                        filter: 'grayscale(0%)',
+                        transition: 'all 0.3s ease',
+                        padding: isMobile ? '20px' : '30px'
+                      }}
+                      onMouseEnter={isDesktop ? (e) => { 
+                        e.currentTarget.style.filter = 'grayscale(0%) brightness(1.1)';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      } : undefined}
+                      onMouseLeave={isDesktop ? (e) => { 
+                        e.currentTarget.style.filter = 'grayscale(0%)';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      } : undefined}
+                    />
+                  ) : (
+                    <div className="text-muted small">No Logo</div>
+                  )}
                 </div>
                 
-                {/* Tên thương hiệu bên dưới (optional) */}
+                {/* Tên thương hiệu bên dưới */}
                 <div 
                   className="position-absolute bottom-0 start-0 w-100 text-center py-2"
                   style={{
@@ -699,11 +1227,11 @@ function Partners() {
                   <p 
                     className="mb-0 small text-muted" 
                     style={{ 
-                      fontSize: '0.85rem',
+                      fontSize: isMobile ? '0.75rem' : '0.85rem',
                       fontWeight: '500'
                     }}
                   >
-                    {partner.name}
+                    {brand.tenbrand}
                   </p>
                 </div>
               </div>
@@ -716,204 +1244,208 @@ function Partners() {
 }
 
 // PORTFOLIO 
-function PortfolioQuote() {
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    message: '',
-  });
+// function PortfolioQuote() {
+//   const [formData, setFormData] = useState({
+//     name: '',
+//     phone: '',
+//     message: '',
+//   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Cảm ơn bạn! Chúng tôi sẽ liên hệ sớm.');
-    setFormData({ name: '', phone: '', message: '' });
-  };
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     console.log('Form submitted:', formData);
+//     alert('Cảm ơn bạn! Chúng tôi sẽ liên hệ sớm.');
+//     setFormData({ name: '', phone: '', message: '' });
+//   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+//     setFormData({ ...formData, [e.target.name]: e.target.value });
+//   };
 
-  return (
-    <section className="py-5">
-      <div className="container">
-        <div className="row g-4">
-          {/* Portfolio Card - Left */}
-          <div className="col-md-6">
-            <div 
-              className="card border-0 shadow-lg overflow-hidden h-100"
-              style={{ 
-                background: 'linear-gradient(135deg, rgba(150,120,100,0.9) 0%, rgba(100,80,70,0.9) 100%)',
-                transition: 'all 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-10px)';
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
-              }}
-            >
-              <div className="card-body p-5 text-white">
-                {/* Logo */}
-                <div className="mb-4">
-                  <div className="d-flex align-items-center mb-2">
-                    <div className="bg-white text-dark px-2 py-1 fw-bold me-2" style={{ fontSize: '16px' }}>
-                      Danny
-                    </div>
-                    <span className="text-white" style={{ fontSize: '10px' }}>DECOR</span>
-                  </div>
-                </div>
+//   return (
+//     <section className="py-5">
+//       <div className="container">
+//         <div className="row g-4">
+//           {/* Portfolio Card - Left */}
+//           <div className="col-md-6">
+//             <div 
+//               className="card border-0 shadow-lg overflow-hidden h-100"
+//               style={{ 
+//                 background: 'linear-gradient(135deg, rgba(150,120,100,0.9) 0%, rgba(100,80,70,0.9) 100%)',
+//                 transition: 'all 0.3s ease',
+//               }}
+//               onMouseEnter={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(-10px)';
+//                 e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+//               }}
+//               onMouseLeave={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(0)';
+//                 e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+//               }}
+//             >
+//               <div className="card-body p-5 text-white">
+//                 {/* Logo */}
+//                 <div className="mb-4">
+//                   <div className="d-flex align-items-center mb-2">
+//                     <div className="bg-white text-dark px-2 py-1 fw-bold me-2" style={{ fontSize: '16px' }}>
+//                       Danny
+//                     </div>
+//                     <span className="text-white" style={{ fontSize: '10px' }}>DECOR</span>
+//                   </div>
+//                 </div>
 
-                {/* Title */}
-                <h2 className="display-5 fw-bold mb-3">PORTFOLIO</h2>
-                <p className="mb-4" style={{ fontSize: '14px', opacity: 0.9 }}>
-                  & CATALOGUE
-                </p>
+//                 {/* Title */}
+//                 <h2 className="display-5 fw-bold mb-3">PORTFOLIO</h2>
+//                 <p className="mb-4" style={{ fontSize: '14px', opacity: 0.9 }}>
+//                   & CATALOGUE
+//                 </p>
 
-                {/* Description */}
-                <p className="mb-4" style={{ fontSize: '14px', lineHeight: '1.8' }}>
-                  Để có thể hiểu rõ hơn về những dịch vụ mà chúng tôi cung cấp cho khách hàng.<br/>
-                  Để có thể tìm hiểu rõ hơn về phong cách thiết kế nội thất mà chúng tôi hướng tới.<br/>
-                  Để có thể thấy được chất lượng công trình mà chúng tôi đã và đang thi công.
-                </p>
+//                 {/* Description */}
+//                 <p className="mb-4" style={{ fontSize: '14px', lineHeight: '1.8' }}>
+//                   Để có thể hiểu rõ hơn về những dịch vụ mà chúng tôi cung cấp cho khách hàng.<br/>
+//                   Để có thể tìm hiểu rõ hơn về phong cách thiết kế nội thất mà chúng tôi hướng tới.<br/>
+//                   Để có thể thấy được chất lượng công trình mà chúng tôi đã và đang thi công.
+//                 </p>
 
-                {/* Download Button */}
-                <button 
-                  className="btn btn-warning text-white fw-semibold px-5 py-3"
-                  style={{ 
-                    fontSize: '16px',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  Tải Portfolio
-                </button>
+//                 {/* Download Button */}
+//                 <button 
+//                   className="btn btn-warning text-white fw-semibold px-5 py-3"
+//                   style={{ 
+//                     fontSize: '16px',
+//                     transition: 'all 0.3s ease',
+//                   }}
+//                   onMouseEnter={(e) => {
+//                     e.currentTarget.style.transform = 'scale(1.05)';
+//                     e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
+//                   }}
+//                   onMouseLeave={(e) => {
+//                     e.currentTarget.style.transform = 'scale(1)';
+//                     e.currentTarget.style.boxShadow = 'none';
+//                   }}
+//                   suppressHydrationWarning
+//                 >
+//                   Tải Portfolio
+//                 </button>
 
-                {/* Decorative Image */}
-                <div className="position-absolute" style={{ bottom: '20px', right: '20px', opacity: 0.3 }}>
-                  <i className="bi bi-folder2-open" style={{ fontSize: '120px' }}></i>
-                </div>
-              </div>
-            </div>
-          </div>
+//                 {/* Decorative Image */}
+//                 <div className="position-absolute" style={{ bottom: '20px', right: '20px', opacity: 0.3 }}>
+//                   <i className="bi bi-folder2-open" style={{ fontSize: '120px' }}></i>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
 
-          {/* Quote Form - Right */}
-          <div className="col-md-6">
-            <div 
-              className="card shadow-lg h-100"
-              style={{ 
-                border: '3px dashed #FFC107',
-                transition: 'all 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-10px)';
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,193,7,0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
-              }}
-            >
-              <div className="card-body p-5">
-                <h2 className="text-center fw-bold mb-4 section-title">
-                  NHẬN BÁO GIÁ
-                </h2>
+//           {/* Quote Form - Right */}
+//           <div className="col-md-6">
+//             <div 
+//               className="card shadow-lg h-100"
+//               style={{ 
+//                 border: '3px dashed #FFC107',
+//                 transition: 'all 0.3s ease',
+//               }}
+//               onMouseEnter={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(-10px)';
+//                 e.currentTarget.style.boxShadow = '0 20px 40px rgba(255,193,7,0.2)';
+//               }}
+//               onMouseLeave={(e) => {
+//                 e.currentTarget.style.transform = 'translateY(0)';
+//                 e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+//               }}
+//             >
+//               <div className="card-body p-5">
+//                 <h2 className="text-center fw-bold mb-4 section-title">
+//                   NHẬN BÁO GIÁ
+//                 </h2>
 
-                <form onSubmit={handleSubmit}>
-                  {/* Name Input */}
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      name="name"
-                      className="form-control"
-                      placeholder="Họ & Tên"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      style={{
-                        padding: '12px 16px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '15px',
-                      }}
-                    />
-                  </div>
+//                 <form onSubmit={handleSubmit}>
+//                   {/* Name Input */}
+//                   <div className="mb-3">
+//                     <input
+//                       type="text"
+//                       name="name"
+//                       className="form-control"
+//                       placeholder="Họ & Tên"
+//                       value={formData.name}
+//                       onChange={handleChange}
+//                       required
+//                       style={{
+//                         padding: '12px 16px',
+//                         border: '1px solid #ddd',
+//                         borderRadius: '4px',
+//                         fontSize: '15px',
+//                       }}
+//                       suppressHydrationWarning
+//                     />
+//                   </div>
 
-                  {/* Phone Input */}
-                  <div className="mb-3">
-                    <input
-                      type="tel"
-                      name="phone"
-                      className="form-control"
-                      placeholder="Số điện thoại"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                      style={{
-                        padding: '12px 16px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '15px',
-                      }}
-                    />
-                  </div>
+//                   {/* Phone Input */}
+//                   <div className="mb-3">
+//                     <input
+//                       type="tel"
+//                       name="phone"
+//                       className="form-control"
+//                       placeholder="Số điện thoại"
+//                       value={formData.phone}
+//                       onChange={handleChange}
+//                       required
+//                       style={{
+//                         padding: '12px 16px',
+//                         border: '1px solid #ddd',
+//                         borderRadius: '4px',
+//                         fontSize: '15px',
+//                       }}
+//                       suppressHydrationWarning
+//                     />
+//                   </div>
 
-                  {/* Message Textarea */}
-                  <div className="mb-4">
-                    <textarea
-                      name="message"
-                      className="form-control"
-                      rows={5}
-                      placeholder="Nội dung tin nhắn..."
-                      value={formData.message}
-                      onChange={handleChange}
-                      style={{
-                        padding: '12px 16px',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        fontSize: '15px',
-                        resize: 'none',
-                      }}
-                    ></textarea>
-                  </div>
+//                   {/* Message Textarea */}
+//                   <div className="mb-4">
+//                     <textarea
+//                       name="message"
+//                       className="form-control"
+//                       rows={5}
+//                       placeholder="Nội dung tin nhắn..."
+//                       value={formData.message}
+//                       onChange={handleChange}
+//                       style={{
+//                         padding: '12px 16px',
+//                         border: '1px solid #ddd',
+//                         borderRadius: '4px',
+//                         fontSize: '15px',
+//                         resize: 'none',
+//                       }}
+//                     ></textarea>
+//                   </div>
 
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    className="btn btn-warning text-white w-100 py-3 fw-semibold"
-                    style={{
-                      fontSize: '16px',
-                      transition: 'all 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    Gửi
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+//                   {/* Submit Button */}
+//                   <button
+//                     type="submit"
+//                     className="btn btn-warning text-white w-100 py-3 fw-semibold"
+//                     style={{
+//                       fontSize: '16px',
+//                       transition: 'all 0.3s ease',
+//                     }}
+//                     onMouseEnter={(e) => {
+//                       e.currentTarget.style.transform = 'translateY(-2px)';
+//                       e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,193,7,0.4)';
+//                     }}
+//                     onMouseLeave={(e) => {
+//                       e.currentTarget.style.transform = 'translateY(0)';
+//                       e.currentTarget.style.boxShadow = 'none';
+//                     }}
+//                     suppressHydrationWarning
+//                   >
+//                     Gửi
+//                   </button>
+//                 </form>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 // CONTACT INFO SECTION
 function ContactInfo() {
@@ -924,7 +1456,7 @@ function ContactInfo() {
       title: 'Văn phòng',
       description: 'Số 50 Đường số 3, KDT Vạn Phúc, Hiệp Bình Phước, TP Thủ Đức, TP Hồ Chí Minh',
       linkText: 'Xem địa chỉ',
-      link: '#',
+      link: '/contact',
     },
     {
       id: 2,
@@ -932,7 +1464,7 @@ function ContactInfo() {
       title: 'Tư vấn',
       description: 'Để lại thông tin của bạn để được báo giá ngay',
       linkText: 'Nhận báo giá',
-      link: '#quote',
+      link: '/contact',
     },
     {
       id: 3,
@@ -940,13 +1472,13 @@ function ContactInfo() {
       title: 'Hỗ trợ',
       description: 'Liên lạc ngay cho chúng tôi qua số hotline',
       linkText: 'Gọi ngay',
-      link: 'tel:0123456789',
+      link: 'tel:0909123456',
     },
   ];
 
   return (
     <section 
-      className="py-5 position-relative"
+      className="py-5 position-relative section-padding"
       style={{
         backgroundImage: 'url("https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920")',
         backgroundSize: 'cover',
@@ -961,7 +1493,7 @@ function ContactInfo() {
         {/* Header */}
         <div className="text-center text-white mb-5">
           <i className="bi bi-geo-alt-fill mb-3" style={{ fontSize: '40px' }}></i>
-          <h2 className="text-uppercase fw-bold section-title">
+          <h2 className="text-uppercase fw-bold section-title responsive-title">
             THÔNG TIN LIÊN HỆ
           </h2>
         </div>
@@ -969,9 +1501,9 @@ function ContactInfo() {
         {/* Info Cards */}
         <div className="row g-0">
           {contactData.map((item, itemIndex) => (
-            <div key={item.id} className="col-md-4">
+            <div key={item.id} className="col-12 col-md-4">
               <div 
-                className="bg-white p-5 text-center h-100"
+                className="bg-white p-5 text-center h-100 contact-card"
                 style={{
                   borderRight: itemIndex < 2 ? '1px solid #eee' : 'none',
                   transition: 'all 0.3s ease',
@@ -1012,26 +1544,49 @@ function ContactInfo() {
                 </p>
 
                 {/* Link */}
-                <a 
-                  href={item.link}
-                  className="text-decoration-none fw-semibold d-inline-block feature-desc"
-                  style={{ 
-                    color: '#FFC107',
-                    borderBottom: '2px solid #FFC107',
-                    paddingBottom: '4px',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#333';
-                    e.currentTarget.style.color = '#333';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#FFC107';
-                    e.currentTarget.style.color = '#FFC107';
-                  }}
-                >
-                  {item.linkText}
-                </a>
+                {item.link.startsWith('tel:') || item.link.startsWith('mailto:') ? (
+                  <a 
+                    href={item.link}
+                    className="text-decoration-none fw-semibold d-inline-block feature-desc"
+                    style={{ 
+                      color: '#FFC107',
+                      borderBottom: '2px solid #FFC107',
+                      paddingBottom: '4px',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#333';
+                      e.currentTarget.style.color = '#333';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#FFC107';
+                      e.currentTarget.style.color = '#FFC107';
+                    }}
+                  >
+                    {item.linkText}
+                  </a>
+                ) : (
+                  <Link 
+                    href={item.link}
+                    className="text-decoration-none fw-semibold d-inline-block feature-desc"
+                    style={{ 
+                      color: '#FFC107',
+                      borderBottom: '2px solid #FFC107',
+                      paddingBottom: '4px',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#333';
+                      e.currentTarget.style.color = '#333';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderBottomColor = '#FFC107';
+                      e.currentTarget.style.color = '#FFC107';
+                    }}
+                  >
+                    {item.linkText}
+                  </Link>
+                )}
               </div>
             </div>
           ))}
@@ -1042,121 +1597,182 @@ function ContactInfo() {
 }
 
 // NEWS SECTION
+interface NewsArticle {
+  id: string;
+  title: string;
+  image: string;
+  slug: string;
+  category: string;
+  excerpt?: string;
+}
+
 function News() {
-  const newsData = [
-    {
-      id: 1,
-      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
-      title: '3 ĐIỀU CẦN BIẾT KHI LỰA CHỌN CÔNG TY THIẾT KẾ VĂN PHÒNG',
-      tag: '3 ĐIỀU CẦN BIẾT ĐỂ LỰA CHỌN CÔNG TY THIẾT KẾ VĂN PHÒNG',
-    },
-    {
-      id: 2,
-      image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800',
-      title: 'CÔNG TY THIẾT KẾ NỘI THẤT TẠI KHU ĐÔ THỊ VẠN PHÚC',
-      tag: 'CÔNG TY THIẾT KẾ NỘI THẤT TẠI KHU ĐÔ THỊ VẠN PHÚC',
-    },
-    {
-      id: 3,
-      image: 'https://images.unsplash.com/photo-1556020685-ae41abfc9365?w=800',
-      title: '7 MẪU THIẾT KẾ NỘI THẤT CHUNG CƯ XU HƯỚNG VÀ GIẢI PHÁP TỐI ƯU',
-      tag: 'MẪU THIẾT KẾ NỘI THẤT CĂN HỘ ĐẸP XU HƯỚNG VÀ GIẢI PHÁP TỐI ƯU',
-    },
-  ];
+  const [newsData, setNewsData] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/news')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Chỉ lấy 3 bài viết đầu tiên cho homepage
+          const latestNews = data.slice(0, 3).map((article: {
+            id: string;
+            title: string;
+            image: string;
+            slug: string;
+            category: string;
+            excerpt?: string;
+          }) => ({
+            id: article.id,
+            title: article.title,
+            image: article.image || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
+            slug: article.slug || article.id,
+            category: article.category || 'Tin tức',
+            excerpt: article.excerpt,
+          }));
+          setNewsData(latestNews);
+        } else {
+          console.error('News API did not return array:', data);
+          setNewsData([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching news:', err);
+        setNewsData([]);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-5 bg-light">
+        <div className="container">
+          <div className="text-center mb-5">
+            <div className="d-inline-block bg-warning mb-3" style={{ width: '60px', height: '3px' }}></div>
+            <h2 className="text-uppercase fw-bold section-title mb-3" style={{ letterSpacing: '2px' }}>
+              TIN TỨC
+            </h2>
+          </div>
+          <div className="text-center py-5">
+            <div className="spinner-border text-warning" role="status">
+              <span className="visually-hidden">Đang tải...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="py-5 bg-light">
+    <section className="py-5 bg-light section-padding">
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
           <div className="d-inline-block bg-warning mb-3" style={{ width: '60px', height: '3px' }}></div>
-          <h2 className="text-uppercase fw-bold section-title mb-3" style={{ letterSpacing: '2px' }}>
+          <h2 className="text-uppercase fw-bold section-title mb-3 responsive-title" style={{ letterSpacing: '2px' }}>
             TIN TỨC
           </h2>
-          <p className="text-muted mx-auto" style={{ maxWidth: '800px', fontSize: '15px', lineHeight: '1.8' }}>
+          <p className="text-muted mx-auto responsive-text" style={{ maxWidth: '800px', fontSize: '15px', lineHeight: '1.8' }}>
             Cập nhật những thông tin để khách hàng tìm hiểu thêm về kiến trúc, xu hướng của thiết kế nội thất đồng 
-            thời là nơi để VANTAYdecor chia sẻ những hoạt động nội bộ của mình
+            thời là nơi để DaNNYdecor chia sẻ những hoạt động nội bộ của mình
           </p>
+          <Link href="/news" className="btn btn-outline-dark mt-3 px-4 btn-responsive" style={{ 
+            borderRadius: '25px',
+            transition: 'all 0.3s ease'
+          }}>
+            Xem tất cả tin tức <i className="bi bi-arrow-right ms-2"></i>
+          </Link>
         </div>
 
         {/* News Grid */}
-        <div className="row g-4">
-          {newsData.map((news) => (
-            <div key={news.id} className="col-md-4">
-              <div 
-                className="card border-0 shadow-sm overflow-hidden h-100"
-                style={{ 
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-10px)';
-                  e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
-                }}
-              >
-                {/* Image with overlay */}
-                <div className="position-relative overflow-hidden" style={{ height: '250px' }}>
-                  <div 
-                    className="position-absolute top-0 start-0 w-100 h-100"
-                    style={{ transition: 'transform 0.3s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-                  >
-                    <Image src={news.image} alt={news.title} fill style={{ objectFit: 'cover' }} />
-                  </div>
-                  
-                  {/* Dark overlay */}
-                  <div 
-                    className="position-absolute top-0 start-0 w-100 h-100"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-                  ></div>
+        {newsData.length === 0 ? (
+          <div className="text-center py-5">
+            <p className="text-muted">Chưa có tin tức nào</p>
+          </div>
+        ) : (
+          <div className="row g-4">
+            {newsData.map((news) => (
+              <div key={news.id} className="col-12 col-md-6 col-lg-4">
+                <div 
+                  className="card border-0 shadow-sm overflow-hidden h-100 news-card"
+                  style={{ 
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-10px)';
+                    e.currentTarget.style.boxShadow = '0 15px 35px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                  }}
+                >
+                  {/* Image with overlay */}
+                  <div className="position-relative overflow-hidden news-image" style={{ height: '250px' }}>
+                    <div 
+                      className="position-absolute top-0 start-0 w-100 h-100"
+                      style={{ transition: 'transform 0.3s ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    >
+                      <Image src={news.image} alt={news.title} fill style={{ objectFit: 'cover' }} />
+                    </div>
+                    
+                    {/* Dark overlay */}
+                    <div 
+                      className="position-absolute top-0 start-0 w-100 h-100"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+                    ></div>
 
-                  {/* Tag on image */}
-                  <div 
-                    className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-4"
-                  >
-                    <h5 
-                      className="text-white text-center fw-bold text-uppercase news-tag"
+                    {/* Category badge on image */}
+                    <div 
+                      className="position-absolute top-0 start-0 p-3"
+                      style={{ zIndex: 2 }}
+                    >
+                      <span 
+                        className="badge bg-warning text-dark px-3 py-2"
+                        style={{ 
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          borderRadius: '8px'
+                        }}
+                      >
+                        {news.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="card-body p-4">
+                    <h6 
+                      className="card-title fw-bold mb-3 news-title responsive-text" 
                       style={{ 
-                        textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                        minHeight: '45px',
                       }}
                     >
-                      {news.tag}
-                    </h5>
+                      {news.title}
+                    </h6>
+                    <Link 
+                      href={`/news/${news.id}`}
+                      className="text-decoration-none fw-semibold feature-desc"
+                      style={{ 
+                        color: '#333',
+                        transition: 'color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = '#333'; }}
+                    >
+                      Xem thêm →
+                    </Link>
                   </div>
                 </div>
-
-                {/* Card Body */}
-                <div className="card-body p-4">
-                  <h6 
-                    className="card-title fw-bold mb-3 news-title" 
-                    style={{ 
-                      minHeight: '45px',
-                    }}
-                  >
-                    {news.title}
-                  </h6>
-                  <a 
-                    href="#" 
-                    className="text-decoration-none fw-semibold feature-desc"
-                    style={{ 
-                      color: '#333',
-                      transition: 'color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#333'; }}
-                  >
-                    Xem thêm →
-                  </a>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1200,7 +1816,7 @@ function ScrollToTopButton() {
   return (
     <div 
       onClick={scrollToTop}
-      className="position-fixed d-flex align-items-center justify-content-center"
+      className="position-fixed d-flex align-items-center justify-content-center scroll-to-top"
       style={{
         width: '45px',
         height: '45px',
@@ -1230,6 +1846,42 @@ function ScrollToTopButton() {
 
 // MAIN EXPORT
 export default function HomePage() {
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.getAttribute('data-section-id');
+          if (sectionId) {
+            setVisibleSections((prev) => new Set([...prev, sectionId]));
+          }
+        }
+      });
+    }, observerOptions);
+
+    const refs = Object.values(sectionRefs.current);
+    refs.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      refs.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
+
+  const setSectionRef = (id: string) => (el: HTMLElement | null) => {
+    sectionRefs.current[id] = el;
+  };
+
   return (
     <>
       <PromoModal />
@@ -1289,16 +1941,316 @@ export default function HomePage() {
             transform: translateY(0);
           }
         }
+
+        /* Responsive Styles */
+        /* Mobile First - Base styles for mobile */
+        .hero-title {
+          font-size: 1.75rem;
+          line-height: 1.3;
+        }
+
+        .hero-desc {
+          font-size: 0.95rem;
+          max-width: 90%;
+        }
+
+        .section-title {
+          font-size: 1.5rem;
+        }
+
+        .carousel-arrow {
+          display: none;
+        }
+
+        /* Tablet - 768px and up */
+        @media (min-width: 768px) {
+          .hero-title {
+            font-size: 2.5rem;
+          }
+
+          .hero-desc {
+            font-size: 1.1rem;
+            max-width: 80%;
+          }
+
+          .section-title {
+            font-size: 1.75rem;
+          }
+
+          .carousel-arrow {
+            display: flex;
+          }
+        }
+
+        /* Desktop - 992px and up */
+        @media (min-width: 992px) {
+          .hero-title {
+            font-size: 3.5rem;
+          }
+
+          .hero-desc {
+            font-size: 1.25rem;
+            max-width: 70%;
+          }
+
+          .section-title {
+            font-size: 2rem;
+          }
+        }
+
+        /* Banner Responsive */
+        @media (max-width: 767px) {
+          .banner-section {
+            min-height: 400px !important;
+          }
+
+          .banner-content {
+            min-height: 400px !important;
+            padding: 20px 15px;
+          }
+
+          .banner-button {
+            padding: 10px 20px !important;
+            font-size: 0.9rem !important;
+          }
+
+          .banner-nav-btn {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 0.8rem;
+          }
+
+          .banner-nav-btn.start-0 {
+            margin-left: 10px !important;
+          }
+
+          .banner-nav-btn.end-0 {
+            margin-right: 10px !important;
+          }
+        }
+
+        /* Product Cards Responsive */
+        @media (max-width: 767px) {
+          .product-card {
+            margin-bottom: 20px;
+          }
+
+          .product-card .card-body {
+            padding: 15px !important;
+          }
+
+          .product-card-title {
+            font-size: 0.9rem !important;
+            min-height: auto !important;
+          }
+
+          .product-price {
+            font-size: 1rem !important;
+          }
+        }
+
+        /* Category Cards Responsive */
+        @media (max-width: 767px) {
+          .category-card {
+            margin-bottom: 20px;
+          }
+
+          .category-image {
+            height: 180px !important;
+          }
+        }
+        
+        /* Fix category image display - ensure full image coverage */
+        .category-image {
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .category-image .category-img,
+        .category-image img,
+        .category-image [data-next-image],
+        .category-image span[style*="object-fit"] {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          object-position: center !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          transition: transform 0.4s ease !important;
+        }
+
+        /* Features Section Responsive */
+        @media (max-width: 767px) {
+          .feature-card {
+            margin-bottom: 20px;
+          }
+
+          .feature-icon {
+            width: 50px !important;
+            height: 50px !important;
+          }
+
+          .feature-icon i {
+            font-size: 24px !important;
+          }
+        }
+
+        /* Partners Section Responsive */
+        @media (max-width: 767px) {
+          .partner-card {
+            height: 150px !important;
+            margin-bottom: 15px;
+          }
+        }
+
+        /* News Section Responsive */
+        @media (max-width: 767px) {
+          .news-card {
+            margin-bottom: 20px;
+          }
+
+          .news-image {
+            height: 200px !important;
+          }
+
+          .news-title {
+            font-size: 0.95rem !important;
+            min-height: auto !important;
+          }
+        }
+
+        /* Contact Info Responsive */
+        @media (max-width: 767px) {
+          .contact-card {
+            border-right: none !important;
+            border-bottom: 1px solid #eee;
+            padding: 30px 20px !important;
+          }
+
+          .contact-card:last-child {
+            border-bottom: none;
+          }
+
+          section[style*="backgroundAttachment"] {
+            background-attachment: scroll !important;
+          }
+        }
+
+        /* Section Padding Responsive */
+        @media (max-width: 767px) {
+          .section-padding {
+            padding-top: 40px !important;
+            padding-bottom: 40px !important;
+          }
+        }
+
+        /* Text Responsive */
+        @media (max-width: 767px) {
+          .responsive-text {
+            font-size: 0.9rem;
+          }
+
+          .responsive-title {
+            font-size: 1.25rem;
+          }
+        }
+
+        /* Button Responsive */
+        @media (max-width: 767px) {
+          .btn-responsive {
+            padding: 8px 16px !important;
+            font-size: 0.85rem !important;
+          }
+
+          .btn-lg-responsive {
+            padding: 10px 20px !important;
+            font-size: 0.95rem !important;
+          }
+        }
+
+        /* Container Padding Responsive */
+        @media (max-width: 767px) {
+          .container {
+            padding-left: 15px;
+            padding-right: 15px;
+          }
+        }
+
+        /* Scroll to Top Button Responsive */
+        @media (max-width: 767px) {
+          .scroll-to-top {
+            width: 40px !important;
+            height: 40px !important;
+            bottom: 20px !important;
+            right: 20px !important;
+          }
+
+          .scroll-to-top i {
+            font-size: 20px !important;
+          }
+        }
+
+        /* Hide arrows on mobile for carousel */
+        @media (max-width: 767px) {
+          .carousel-arrow {
+            display: none !important;
+          }
+        }
+
+        /* Grid adjustments for mobile */
+        @media (max-width: 767px) {
+          .row.g-4 {
+            --bs-gutter-y: 1.5rem;
+          }
+        }
       `}</style>
       <Banner />
-      <ProductCategories />
-      <HotProducts />
-      <DiscountProducts />
-      <Features />
-      <Partners />
-      <PortfolioQuote />
-      <ContactInfo />
-      <News />
+      <div ref={setSectionRef('categories')} data-section-id="categories" style={{
+        opacity: visibleSections.has('categories') ? 1 : 0,
+        transform: visibleSections.has('categories') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <ProductCategories />
+      </div>
+      <div ref={setSectionRef('hot-products')} data-section-id="hot-products" style={{
+        opacity: visibleSections.has('hot-products') ? 1 : 0,
+        transform: visibleSections.has('hot-products') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <HotProducts />
+      </div>
+      <div ref={setSectionRef('discount-products')} data-section-id="discount-products" style={{
+        opacity: visibleSections.has('discount-products') ? 1 : 0,
+        transform: visibleSections.has('discount-products') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <DiscountProducts />
+      </div>
+      {/* <Features /> */}
+      <div ref={setSectionRef('partners')} data-section-id="partners" style={{
+        opacity: visibleSections.has('partners') ? 1 : 0,
+        transform: visibleSections.has('partners') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <Partners />
+      </div>
+      {/* <PortfolioQuote /> */}
+      <div ref={setSectionRef('contact')} data-section-id="contact" style={{
+        opacity: visibleSections.has('contact') ? 1 : 0,
+        transform: visibleSections.has('contact') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <ContactInfo />
+      </div>
+      <div ref={setSectionRef('news')} data-section-id="news" style={{
+        opacity: visibleSections.has('news') ? 1 : 0,
+        transform: visibleSections.has('news') ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'opacity 0.8s ease, transform 0.8s ease'
+      }}>
+        <News />
+      </div>
+      <ChatBox />
       <ScrollToTopButton />
     </>
   );

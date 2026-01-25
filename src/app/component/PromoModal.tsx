@@ -1,17 +1,25 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function PromoModal() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Auto show popup sau 1.5s mỗi khi load trang
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-    }, 1500);
+    // Chỉ hiển thị popup ở trang chủ
+    if (pathname === '/') {
+      // Auto show popup sau 1.5s mỗi khi load trang chủ
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 1500);
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    } else {
+      // Đóng popup nếu không phải trang chủ
+      setIsOpen(false);
+    }
+  }, [pathname]);
 
   const handleClose = () => {
     setIsOpen(false);

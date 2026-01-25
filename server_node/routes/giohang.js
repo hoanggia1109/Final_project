@@ -16,6 +16,7 @@ router.get("/", auth, async (req, res) => {
         {
           model: SanPhamBienTheModel,
           as: "bienthe",
+          attributes: ["id", "gia", "mausac", "kichthuoc", "sl_tonkho"],
           include: [
             { model: SanPhamModel, as: "sanpham" },
             { model: ImageModel, as: "images" },
@@ -36,7 +37,7 @@ router.get("/", auth, async (req, res) => {
       san_pham: list,
     });
   } catch (err) {
-    console.error("❌ Lỗi GET /api/giohang:", err);
+    console.error(" Lỗi GET /api/giohang:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -46,20 +47,58 @@ router.post("/", auth, async (req, res) => {
   try {
     const items = req.body; // [{ bienthe_id, soluong }, ...]
 
-    if (!Array.isArray(items) || items.length === 0)
+    if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "Dữ liệu không hợp lệ" });
+    }
 
     const result = [];
 
     for (const item of items) {
+      // Validate input
+      if (!item.bienthe_id) {
+        return res.status(400).json({ message: "Thiếu bienthe_id" });
+      }
+      
+      if (!item.soluong || item.soluong <= 0) {
+        return res.status(400).json({ message: "Số lượng không hợp lệ" });
+      }
+
+      // Kiểm tra biến thể sản phẩm có tồn tại không
+      const bienthe = await SanPhamBienTheModel.findByPk(item.bienthe_id);
+      if (!bienthe) {
+        return res.status(404).json({ message: `Không tìm thấy biến thể sản phẩm với ID: ${item.bienthe_id}` });
+      }
+
+      // Kiểm tra tồn kho
+      if (bienthe.sl_tonkho < item.soluong) {
+        return res.status(400).json({ 
+          message: `Không đủ hàng. Chỉ còn ${bienthe.sl_tonkho} sản phẩm trong kho` 
+        });
+      }
+
       // kiểm tra sp đã có trong giỏ chưa
       const existed = await GioHangModel.findOne({
         where: { user_id: req.user.id, bienthe_id: item.bienthe_id },
       });
 
+      // Tính tổng tiền = giá * số lượng
+      const tongtien = Number(bienthe.gia || 0) * Number(item.soluong);
+
       if (existed) {
+        // Kiểm tra tồn kho khi cộng thêm
+        const tongSoLuong = existed.soluong + item.soluong;
+        if (bienthe.sl_tonkho < tongSoLuong) {
+          return res.status(400).json({ 
+            message: `Không đủ hàng. Tổng số lượng ${tongSoLuong} vượt quá tồn kho (${bienthe.sl_tonkho})` 
+          });
+        }
+        
+        // Tính lại tổng tiền với số lượng mới
+        const tongtienMoi = Number(bienthe.gia || 0) * tongSoLuong;
+        
         // nếu có rồi thì cộng thêm số lượng
-        existed.soluong += item.soluong;
+        existed.soluong = tongSoLuong;
+        existed.tongtien = tongtienMoi;
         await existed.save();
         result.push(existed);
       } else {
@@ -69,6 +108,7 @@ router.post("/", auth, async (req, res) => {
           user_id: req.user.id,
           bienthe_id: item.bienthe_id,
           soluong: item.soluong,
+          tongtien: tongtien, // Thêm tổng tiền
         });
         result.push(newItem);
       }
@@ -77,6 +117,16 @@ router.post("/", auth, async (req, res) => {
     res.json({ message: "Thêm sản phẩm vào giỏ hàng thành công", result });
   } catch (err) {
     console.error("❌ Lỗi POST /api/giohang:", err);
+    
+    // Xử lý lỗi database cụ thể
+    if (err.name === 'SequelizeForeignKeyConstraintError') {
+      return res.status(400).json({ message: "Biến thể sản phẩm không tồn tại" });
+    }
+    
+    if (err.name === 'SequelizeValidationError') {
+      return res.status(400).json({ message: err.errors?.[0]?.message || "Dữ liệu không hợp lệ" });
+    }
+    
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -87,6 +137,32 @@ router.put("/:id", auth, async (req, res) => {
     const { soluong } = req.body;
     if (soluong <= 0) return res.status(400).json({ message: "Số lượng không hợp lệ" });
 
+    // Lấy thông tin item trong giỏ hàng kèm biến thể để kiểm tra tồn kho
+    const cartItem = await GioHangModel.findOne({
+      where: { id: req.params.id, user_id: req.user.id },
+      include: [
+        {
+          model: SanPhamBienTheModel,
+          as: "bienthe"
+        }
+      ]
+    });
+
+    if (!cartItem) return res.status(404).json({ message: "Không tìm thấy sản phẩm trong giỏ" });
+
+    // Kiểm tra tồn kho
+    const bienthe = cartItem.bienthe;
+    if (!bienthe) {
+      return res.status(404).json({ message: "Không tìm thấy biến thể sản phẩm" });
+    }
+
+    if (bienthe.sl_tonkho < soluong) {
+      return res.status(400).json({ 
+        message: `Không đủ hàng. Chỉ còn ${bienthe.sl_tonkho} sản phẩm trong kho`,
+        sl_tonkho: bienthe.sl_tonkho
+      });
+    }
+
     const updated = await GioHangModel.update(
       { soluong },
       { where: { id: req.params.id, user_id: req.user.id } }
@@ -95,7 +171,7 @@ router.put("/:id", auth, async (req, res) => {
 
     res.json({ message: "Cập nhật số lượng thành công" });
   } catch (err) {
-    console.error("❌ Lỗi PUT /api/giohang/:id:", err);
+    console.error(" Lỗi PUT /api/giohang/:id:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
@@ -110,7 +186,7 @@ router.delete("/:id", auth, async (req, res) => {
 
     res.json({ message: "Đã xóa sản phẩm khỏi giỏ hàng" });
   } catch (err) {
-    console.error("❌ Lỗi DELETE /api/giohang/:id:", err);
+    console.error(" Lỗi DELETE /api/giohang/:id:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });

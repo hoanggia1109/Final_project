@@ -163,6 +163,8 @@ export default function NewsDetailPage() {
           border-radius: 25px;
           box-shadow: 0 10px 40px rgba(0,0,0,0.05);
           margin-bottom: 50px;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
 
         .article-content h2 {
@@ -347,8 +349,8 @@ export default function NewsDetailPage() {
                   {formatDate(article.publishDate)}
                 </span>
                 <span className="meta-item">
-                  <i className="bi bi-eye"></i>
-                  {article.views.toLocaleString()} lượt xem
+                  <i className="bi bi-eye" style={{ fontSize: '18px' }}></i>
+                  {(article.views || 0).toLocaleString()} lượt xem
                 </span>
               </div>
             </div>
@@ -356,13 +358,27 @@ export default function NewsDetailPage() {
 
           {/* Featured Image */}
           <div className="featured-image">
-            <Image 
-              src={article.image} 
-              alt={article.title}
-              fill
-              style={{ objectFit: 'cover' }}
-              priority
-            />
+            {article.image && (
+              <Image 
+                src={article.image} 
+                alt={article.title}
+                fill
+                style={{ objectFit: 'cover' }}
+                priority
+              />
+            )}
+            {!article.image && (
+              <div style={{ 
+                width: '100%', 
+                height: '100%', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <i className="bi bi-newspaper" style={{ fontSize: '5rem', color: 'rgba(255,255,255,0.3)' }}></i>
+              </div>
+            )}
           </div>
 
           {/* Article Content */}
@@ -393,12 +409,26 @@ export default function NewsDetailPage() {
                     <Link href={`/news/${related.id}`} className="text-decoration-none">
                       <div className="related-card">
                         <div className="related-image">
-                          <Image 
-                            src={related.image} 
-                            alt={related.title}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                          />
+                          {related.image && (
+                            <Image 
+                              src={related.image} 
+                              alt={related.title}
+                              fill
+                              style={{ objectFit: 'cover' }}
+                            />
+                          )}
+                          {!related.image && (
+                            <div style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              background: 'linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <i className="bi bi-newspaper" style={{ fontSize: '2rem', color: 'rgba(0,0,0,0.1)' }}></i>
+                            </div>
+                          )}
                         </div>
                         <div className="p-3">
                           <span className="badge bg-warning text-dark mb-2">{related.category}</span>

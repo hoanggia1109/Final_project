@@ -1,177 +1,535 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useIsMobile } from '@/app/hooks/useMediaQuery';
 
 export default function Footer() {
-  const servicesCol1 = [
-    { name: 'Văn phòng', href: '/van-phong' },
-    { name: 'Thiết kế cửa hàng', href: '/thiet-ke-cua-hang' },
-    { name: 'Gym, Spa', href: '/gym-spa' },
-    { name: 'Nhà hàng', href: '/nha-hang' },
-    { name: 'Quán cà phê', href: '/quan-ca-phe' },
-    { name: 'Quán trà sữa', href: '/quan-tra-sua' },
-    { name: 'Showroom', href: '/showroom' },
-    { name: 'Cách tính vực khác', href: '/cach-tinh-vuc-khac' },
+  const isMobile = useIsMobile();
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    products: false,
+    support: false,
+    contact: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+  // Danh sách sản phẩm (Chỉ để chữ hiển thị)
+  const products = [
+    'Sofa phòng khách',
+    'Bàn trà - Kệ Tivi',
+    'Bộ bàn ghế ăn',
+    'Giường ngủ hiện đại',
+    'Tủ quần áo',
+    'Bàn trang điểm',
+    'Nội thất văn phòng',
+    'Đồ trang trí (Decor)'
   ];
 
-  const servicesCol2 = [
-    { name: 'Chính sách bảo hành', href: '/chinh-sach-bao-hanh' },
-    { name: 'Điều khoản dịch vụ', href: '/dieu-khoan-dich-vu' },
-    { name: 'Chính sách bảo mật', href: '/chinh-sach-bao-mat' },
+  // Danh sách hỗ trợ
+  const supports = [
+    { name: 'Hướng dẫn mua hàng', link: '/faq' },
+    { name: 'Chính sách bảo hành', link: '/faq' },
+    { name: 'Chính sách đổi trả', link: '/faq' },
+    { name: 'Vận chuyển & Lắp đặt', link: '/faq' },
+    { name: 'Hình thức thanh toán', link: '/faq' },
+    { name: 'Bảo mật thông tin', link: '/faq' },
+    { name: 'Hỏi đáp (FAQ)', link: '/faq' },
+    { name: 'Hệ thống cửa hàng', link: '/stores' }
   ];
 
   return (
-    <footer className="bg-dark text-white pt-5 pb-3">
-      <div className="container">
-        <div className="row g-4">
-          {/* Column 1 - Company Info */}
-          <div className="col-md-3">
-            {/* Logo */}
-            <div className="mb-4">
-              <div className="d-flex align-items-center mb-2">
-                <div className="bg-white text-dark px-2 py-1 fw-bold me-2" style={{ fontSize: '20px' }}>
-                  DN
+    <>
+      <footer className="bg-dark text-white pt-5 pb-4 footer-container">
+        <div className="container">
+          <div className="row g-4">
+            
+            {/* Cột 1: Thương hiệu */}
+            <div className="col-lg-4 col-md-6">
+              <div className="mb-4">
+                <div className="d-flex align-items-center mb-3">
+                  <div className="bg-white text-dark fw-bold px-2 py-1 me-2 rounded-1" style={{ fontSize: '20px' }}>
+                    DN
+                  </div>
+                  <span className="fw-bold text-uppercase" style={{ letterSpacing: '2px', fontSize: '18px' }}>
+                    Nội thất Danny
+                  </span>
                 </div>
-                <span className="text-white" style={{ fontSize: '12px' }}>BRAND</span>
+                <p className="text-white-50 small mb-4" style={{ lineHeight: '1.8' }}>
+                  Nâng tầm không gian sống của bạn với những sản phẩm nội thất chất lượng, 
+                  thiết kế hiện đại và tinh tế. Chúng tôi cam kết mang lại sự hài lòng tuyệt đối.
+                </p>
+                
+                {/* Social Icons - Giữ nguyên vẻ đẹp nhưng code gọn hơn */}
+                <div className="d-flex gap-2">
+                  {['facebook', 'instagram', 'tiktok', 'youtube'].map((icon, index) => (
+                    <div key={index} className="social-icon d-flex align-items-center justify-content-center rounded-circle border border-secondary text-white">
+                      <i className={`bi bi-${icon}`}></i>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Company Description */}
-            <p className="mb-4" style={{ fontSize: '13px', lineHeight: '1.7', color: '#aaa' }}>
-              Công ty TNHH Trang trí Nội thất và Xây dựng Vân Tây
-              <br /><br />
-              chuyên thiết kế và thi công văn phòng và các cơ sở kinh doanh (quán cà phê, nhà hàng, phòng tập gym, yoga, các cửa hàng, showroom...)
-            </p>
+            {/* Cột 2: Danh mục Sản phẩm */}
+            <div className="col-lg-3 col-md-6">
+              <h5 
+                className="text-warning fw-bold text-uppercase mb-4 d-flex justify-content-between align-items-center" 
+                style={{ fontSize: '16px', cursor: isMobile ? 'pointer' : 'default' }}
+                onClick={isMobile ? () => toggleSection('products') : undefined}
+              >
+                <span>Sản phẩm</span>
+                {isMobile && (
+                  <i className={`bi bi-chevron-${expandedSections.products ? 'up' : 'down'}`} style={{ fontSize: '14px' }}></i>
+                )}
+              </h5>
+              <ul className="list-unstyled" style={{ 
+                display: isMobile && !expandedSections.products ? 'none' : 'block',
+                transition: 'all 0.3s ease'
+              }}>
+                {products.map((item, index) => (
+                  <li key={index} className="mb-2">
+                    <span className="footer-item text-white-50">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            {/* Social Icons */}
-            <div className="d-flex gap-2">
-              <a 
-                href="#" 
-                className="btn btn-outline-light btn-sm rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: '36px', height: '36px', transition: 'all 0.3s ease' }}
+            {/* Cột 3: Hỗ trợ khách hàng */}
+            <div className="col-lg-2 col-md-6">
+              <h5 
+                className="text-warning fw-bold text-uppercase mb-4 d-flex justify-content-between align-items-center" 
+                style={{ fontSize: '16px', cursor: isMobile ? 'pointer' : 'default' }}
+                onClick={isMobile ? () => toggleSection('support') : undefined}
+              >
+                <span>Hỗ trợ</span>
+                {isMobile && (
+                  <i className={`bi bi-chevron-${expandedSections.support ? 'up' : 'down'}`} style={{ fontSize: '14px' }}></i>
+                )}
+              </h5>
+              <ul className="list-unstyled" style={{ 
+                display: isMobile && !expandedSections.support ? 'none' : 'block',
+                transition: 'all 0.3s ease'
+              }}>
+                {supports.map((item, index) => (
+                  <li key={index} className="mb-2">
+                    {item.link ? (
+                      <Link href={item.link} className="text-decoration-none">
+                        <span className="footer-item text-white-50">
+                          {item.name}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span className="footer-item text-white-50">
+                        {item.name}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Cột 4: Liên hệ */}
+            <div className="col-lg-3 col-md-6">
+              <h5 
+                className="text-warning fw-bold text-uppercase mb-4 d-flex justify-content-between align-items-center" 
+                style={{ fontSize: '16px', cursor: isMobile ? 'pointer' : 'default' }}
+                onClick={isMobile ? () => toggleSection('contact') : undefined}
+              >
+                <span>Liên hệ</span>
+                {isMobile && (
+                  <i className={`bi bi-chevron-${expandedSections.contact ? 'up' : 'down'}`} style={{ fontSize: '14px' }}></i>
+                )}
+              </h5>
+              <ul className="list-unstyled small text-white-50" style={{ 
+                display: isMobile && !expandedSections.contact ? 'none' : 'block',
+                transition: 'all 0.3s ease'
+              }}>
+                <li className="mb-3 d-flex">
+                  <i className="bi bi-geo-alt-fill text-warning me-2 mt-1"></i>
+                  <span>Số Đường 3, KDC Vạn Phúc, Hiệp Bình Phước, Thủ Đức, TP. HCM</span>
+                </li>
+                <li className="mb-3 d-flex">
+                  <i className="bi bi-telephone-fill text-warning me-2 mt-1"></i>
+                  <div>
+                    <span className="d-block text-white fw-bold fs-6">(028) 66 857 354</span>
+                    <span className="small">Hỗ trợ 24/7</span>
+                  </div>
+                </li>
+                <li className="d-flex">
+                  <i className="bi bi-envelope-fill text-warning me-2 mt-1"></i>
+                  <span>info@noithatdanny.com</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="border-top border-secondary mt-5 pt-3">
+            <div className="text-center mb-2">
+              <p className="small text-secondary mb-0">
+                © 2024 <b>Nội thất Danny</b>. All Rights Reserved.
+              </p>
+            </div>
+            <div className="text-center">
+              <Link 
+                href="/terms" 
+                className="text-decoration-none me-3"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '13px',
+                  transition: 'all 0.3s ease'
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFC107';
-                  e.currentTarget.style.borderColor = '#FFC107';
+                  e.currentTarget.style.color = '#ffc107';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.borderColor = '#fff';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
                 }}
               >
-                <i className="bi bi-facebook"></i>
-              </a>
-              <a 
-                href="#" 
-                className="btn btn-outline-light btn-sm rounded-circle d-flex align-items-center justify-content-center"
-                style={{ width: '36px', height: '36px', transition: 'all 0.3s ease' }}
+                Điều khoản sử dụng
+              </Link>
+              <span className="text-secondary" style={{ fontSize: '13px' }}>|</span>
+              <Link 
+                href="/privacy" 
+                className="text-decoration-none ms-3"
+                style={{ 
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '13px',
+                  transition: 'all 0.3s ease'
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFC107';
-                  e.currentTarget.style.borderColor = '#FFC107';
+                  e.currentTarget.style.color = '#ffc107';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.borderColor = '#fff';
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
                 }}
               >
-                <i className="bi bi-instagram"></i>
-              </a>
+                Chính sách bảo mật
+              </Link>
             </div>
-          </div>
-
-          {/* Column 2 - Contact Info */}
-          <div className="col-md-3">
-            <h5 className="text-uppercase fw-bold mb-4" style={{ fontSize: '16px', color: '#FFC107' }}>
-              LIÊN HỆ NGAY ĐỂ ĐƯỢC TƯ VẤN
-            </h5>
-            
-            <div className="mb-3">
-              <p className="mb-2" style={{ fontSize: '13px', color: '#aaa' }}>
-                DANNYdecor rất hân hạnh được phục vụ quý khách tại văn phòng của chúng tôi:
-              </p>
-              <p className="mb-0 fw-semibold" style={{ fontSize: '13px', lineHeight: '1.7' }}>
-                Số Đường 3, KDC Vạn Phúc, Hiệp Bình Phước, Thủ Đức, TP. HCM
-              </p>
-            </div>
-
-            <div className="mb-3">
-              <p className="mb-1 fw-bold text-warning" style={{ fontSize: '14px' }}>
-                HOTLINE: (028) 66 857 354
-              </p>
-            </div>
-
-            <div className="mb-2">
-              <p className="mb-1" style={{ fontSize: '13px' }}>
-                Email: <a href="mailto:info@dannydecor.com" className="text-warning text-decoration-none">info@dannydecor.com</a>
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-1" style={{ fontSize: '13px' }}>
-                Web: <a href="https://dannydecor.com" className="text-warning text-decoration-none">dannydecor.com</a>
-              </p>
-            </div>
-          </div>
-
-          {/* Column 3 - Services */}
-          <div className="col-md-3">
-            <h5 className="text-lowercase fw-bold mb-4" style={{ fontSize: '16px', color: '#FFC107' }}>
-              Thiết kế
-            </h5>
-            <ul className="list-unstyled">
-              {servicesCol1.map((service, idx) => (
-                <li key={idx} className="mb-2">
-                  <Link 
-                    href={service.href} 
-                    className="text-decoration-none"
-                    style={{ 
-                      fontSize: '13px', 
-                      color: '#aaa',
-                      transition: 'color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#aaa'; }}
-                  >
-                    {service.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4 - Policies */}
-          <div className="col-md-3">
-            <h5 className="text-lowercase fw-bold mb-4" style={{ fontSize: '16px', color: '#FFC107' }}>
-                Chính sách điều khoản
-            </h5>
-            <ul className="list-unstyled">
-              {servicesCol2.map((service, idx) => (
-                <li key={idx} className="mb-2">
-                  <Link 
-                    href={service.href} 
-                    className="text-decoration-none"
-                    style={{ 
-                      fontSize: '13px', 
-                      color: '#aaa',
-                      transition: 'color 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#FFC107'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#aaa'; }}
-                  >
-                    {service.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
+      </footer>
 
-        {/* Copyright */}
-        <div className="border-top border-secondary mt-5 pt-3">
-          <p className="text-center mb-0" style={{ fontSize: '13px', color: '#777' }}>
-            Dannydecor © 2022 , All Rights Reserved
-          </p>
-        </div>
-      </div>
-    </footer>
+      {/* Style JSX: Responsive và hiệu ứng hover */}
+      <style jsx>{`
+        .footer-container {
+          padding-top: 3.5rem !important;
+          padding-bottom: 2rem !important;
+          background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%) !important;
+        }
+
+        .footer-item {
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          font-size: 14px;
+          display: inline-block;
+          position: relative;
+        }
+        .footer-item:hover {
+          color: #ffc107 !important;
+          padding-left: 8px;
+          transform: translateX(5px);
+        }
+        .footer-item::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          width: 0;
+          height: 2px;
+          background: #ffc107;
+          transition: width 0.3s ease;
+        }
+        .footer-item:hover::before {
+          width: 20px;
+        }
+        
+        .social-icon {
+          width: 38px;
+          height: 38px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
+          font-size: 16px;
+          position: relative;
+          overflow: hidden;
+        }
+        .social-icon::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 193, 7, 0.2);
+          transform: translate(-50%, -50%);
+          transition: width 0.3s ease, height 0.3s ease;
+        }
+        .social-icon:hover::before {
+          width: 100%;
+          height: 100%;
+        }
+        .social-icon:hover {
+          background-color: #ffc107;
+          border-color: #ffc107 !important;
+          color: #000 !important;
+          transform: translateY(-4px) scale(1.1);
+          box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+        .social-icon i {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Mobile First - Base styles for mobile */
+        @media (max-width: 575.98px) {
+          .footer-container {
+            padding-top: 2.5rem !important;
+            padding-bottom: 1.5rem !important;
+          }
+
+          .footer-container .container {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+
+          /* Brand section mobile - chỉ logo và tên căn giữa */
+          .footer-container .col-lg-4 {
+            margin-bottom: 2.5rem;
+            text-align: left;
+          }
+
+          .footer-container .col-lg-4 .d-flex {
+            justify-content: flex-start;
+            margin-bottom: 1rem;
+          }
+
+          .footer-container .col-lg-4 .bg-white {
+            font-size: 18px !important;
+            padding: 8px 12px !important;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+          }
+
+          .footer-container .col-lg-4 span {
+            font-size: 16px !important;
+            letter-spacing: 1.5px !important;
+          }
+
+          .footer-container .col-lg-4 p {
+            font-size: 13px !important;
+            text-align: left;
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+            color: rgba(255, 255, 255, 0.7) !important;
+          }
+
+          /* Social icons mobile */
+          .footer-container .d-flex.gap-2 {
+            justify-content: flex-start;
+            margin-top: 0;
+          }
+
+          .social-icon {
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 18px !important;
+          }
+
+          /* Column titles mobile */
+          .footer-container h5 {
+            font-size: 15px !important;
+            margin-bottom: 1.25rem !important;
+            text-align: left;
+            letter-spacing: 0.5px;
+          }
+
+          /* List items mobile - giữ text-align left */
+          .footer-container .col-lg-3,
+          .footer-container .col-lg-2 {
+            text-align: left;
+            margin-bottom: 2rem;
+          }
+
+          .footer-container ul {
+            margin-bottom: 0;
+          }
+
+          .footer-item {
+            font-size: 13.5px !important;
+            line-height: 1.8;
+          }
+
+          /* Contact info mobile */
+          .footer-container .col-lg-3 ul li {
+            align-items: flex-start;
+            text-align: left;
+            margin-bottom: 1rem;
+          }
+
+          .footer-container .col-lg-3 ul li i {
+            margin-top: 2px;
+            font-size: 16px;
+            flex-shrink: 0;
+          }
+
+          .footer-container .col-lg-3 ul li span {
+            word-break: break-word;
+            line-height: 1.6;
+            font-size: 13px;
+          }
+
+          .footer-container .col-lg-3 ul li .d-block {
+            font-size: 14px !important;
+          }
+
+          /* Copyright mobile */
+          .footer-container .border-top {
+            margin-top: 2.5rem !important;
+            padding-top: 1.25rem !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+          }
+
+          .footer-container .border-top p {
+            font-size: 12px !important;
+            line-height: 1.6;
+          }
+        }
+
+        /* Tablet - 576px to 767px */
+        @media (min-width: 576px) and (max-width: 767.98px) {
+          .footer-container {
+            padding-top: 3rem !important;
+            padding-bottom: 2rem !important;
+          }
+
+          .footer-container .col-md-6 {
+            margin-bottom: 2.5rem;
+          }
+
+          .footer-container h5 {
+            font-size: 15px !important;
+            margin-bottom: 1.5rem !important;
+          }
+
+          .footer-item {
+            font-size: 14px;
+            line-height: 1.8;
+          }
+
+          .footer-container .col-lg-3 ul li {
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+          }
+
+          .footer-container .col-lg-3 ul li span {
+            word-break: break-word;
+            line-height: 1.7;
+          }
+
+          .social-icon {
+            width: 40px;
+            height: 40px;
+          }
+        }
+
+        /* Small Desktop - 768px to 991px */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+          .footer-container {
+            padding-top: 3.25rem !important;
+            padding-bottom: 2rem !important;
+          }
+
+          .footer-container .col-md-6 {
+            margin-bottom: 2rem;
+          }
+
+          .footer-container h5 {
+            font-size: 15.5px !important;
+            margin-bottom: 1.5rem !important;
+          }
+
+          .footer-item {
+            font-size: 14px;
+            line-height: 1.8;
+          }
+
+          .social-icon {
+            width: 38px;
+            height: 38px;
+          }
+        }
+
+        /* Large Desktop - 992px and up */
+        @media (min-width: 992px) {
+          .footer-container {
+            padding-top: 4rem !important;
+            padding-bottom: 2.5rem !important;
+          }
+
+          .footer-container h5 {
+            font-size: 16px;
+            margin-bottom: 1.75rem;
+            letter-spacing: 0.5px;
+          }
+
+          .footer-item {
+            font-size: 14px;
+            line-height: 1.9;
+          }
+
+          .social-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 17px;
+          }
+        }
+
+        /* Extra Large Desktop - 1200px and up */
+        @media (min-width: 1200px) {
+          .footer-container {
+            padding-top: 4.5rem !important;
+            padding-bottom: 3rem !important;
+          }
+
+          .footer-container .container {
+            max-width: 1140px;
+          }
+        }
+
+        /* Touch devices - better tap targets */
+        @media (hover: none) and (pointer: coarse) {
+          .footer-item {
+            padding: 6px 0;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+          }
+
+          .social-icon {
+            min-width: 44px;
+            min-height: 44px;
+          }
+        }
+
+        /* Print styles */
+        @media print {
+          .footer-container {
+            background: white !important;
+            color: black !important;
+          }
+
+          .social-icon {
+            display: none;
+          }
+        }
+      `}</style>
+    </>
   );
 }
-

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-config';
 
 export default function EditBrandPage() {
   const { id } = useParams();
@@ -16,7 +17,6 @@ export default function EditBrandPage() {
     anhien: 1,
   });
 
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -25,7 +25,7 @@ export default function EditBrandPage() {
     if (!id) return;
     const fetchBrand = async () => {
       try {
-        const res = await fetch(`http://localhost:4000/api/thuonghieu/${id}`);
+        const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${id}`);
         const data = await res.json();
         setForm({
           code: data.code || '',
@@ -34,7 +34,6 @@ export default function EditBrandPage() {
           thutu: data.thutu || '',
           anhien: data.anhien ?? 1,
         });
-        setLogoPreview(data.logo || null);
       } catch (err) {
         console.error('Lỗi khi tải thương hiệu:', err);
       } finally {
@@ -49,24 +48,11 @@ export default function EditBrandPage() {
     setForm({ ...form, [name]: value });
   };
 
-  // 🖼️ Xử lý chọn ảnh từ máy
-  const handleFileChange = (e: any) => {
-    const file = e.target.files[0];
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
-      setLogoPreview(previewURL);
-
-      // Nếu bạn chỉ muốn lưu URL tạm thời (frontend) thì đủ.
-      // Nếu cần upload ảnh lên server thật, cần thêm API upload riêng.
-      setForm({ ...form, logo: previewURL });
-    }
-  };
-
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:4000/api/thuonghieu/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/thuonghieu/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -114,91 +100,93 @@ export default function EditBrandPage() {
       <form
         onSubmit={handleSubmit}
         className="card shadow-sm border-0 mx-auto p-4"
-        style={{ maxWidth: '700px' }}
+        style={{ maxWidth: '900px' }}
       >
-        {/* Mã thương hiệu */}
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Mã thương hiệu</label>
-          <input
-            name="code"
-            value={form.code}
-            onChange={handleChange}
-            className="form-control"
-          />
-        </div>
-
-        {/* Tên thương hiệu */}
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Tên thương hiệu</label>
-          <input
-            name="tenbrand"
-            value={form.tenbrand}
-            onChange={handleChange}
-            className="form-control"
-          />
-        </div>
-
-        {/* Logo */}
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Logo</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="form-control"
-          />
-          {logoPreview && (
-            <div className="mt-3 text-center">
-              <img
-                src={logoPreview}
-                alt="Logo Preview"
-                className="img-thumbnail"
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  objectFit: 'contain',
-                }}
+        <div className="row g-4">
+          {/* Cột trái */}
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Mã thương hiệu</label>
+              <input
+                name="code"
+                value={form.code}
+                onChange={handleChange}
+                className="form-control"
               />
             </div>
-          )}
-        </div>
 
-        {/* Thứ tự */}
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Thứ tự</label>
-          <input
-            type="number"
-            name="thutu"
-            value={form.thutu}
-            onChange={handleChange}
-            className="form-control"
-          />
-        </div>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Tên thương hiệu</label>
+              <input
+                name="tenbrand"
+                value={form.tenbrand}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
 
-        {/* Trạng thái */}
-        <div className="mb-4">
-          <label className="form-label fw-semibold">Trạng thái</label>
-          <select
-            name="anhien"
-            value={form.anhien}
-            onChange={handleChange}
-            className="form-select"
-          >
-            <option value={1}>Hiển thị</option>
-            <option value={0}>Ẩn</option>
-          </select>
-        </div>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Logo (URL)</label>
+              <input
+                name="logo"
+                value={form.logo}
+                onChange={handleChange}
+                className="form-control"
+              />
+              {form.logo && (
+                <div className="mt-3 text-center">
+                  <img
+                    src={form.logo}
+                    alt="Logo Preview"
+                    className="img-thumbnail"
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      objectFit: 'contain',
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
-        {/* Nút lưu */}
-        <div className="d-flex justify-content-end align-items-center mt-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn btn-primary d-flex align-items-center gap-2 px-4"
-          >
-            <Save size={18} />
-            {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
-          </button>
+          {/* Cột phải */}
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Thứ tự</label>
+              <input
+                type="number"
+                name="thutu"
+                value={form.thutu}
+                onChange={handleChange}
+                className="form-control"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Trạng thái</label>
+              <select
+                name="anhien"
+                value={form.anhien}
+                onChange={handleChange}
+                className="form-select"
+              >
+                <option value={1}>Hiển thị</option>
+                <option value={0}>Ẩn</option>
+              </select>
+            </div>
+
+            <div className="d-flex justify-content-end align-items-center mt-5">
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-primary d-flex align-items-center gap-2 px-4"
+              >
+                <Save size={18} />
+                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
+            </div>
+          </div>
         </div>
       </form>
     </div>

@@ -1,78 +1,142 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-
+import PromoModal from './PromoModal';
 interface Product {
   id: number;
   tensp: string;
+  mota: string;
   thumbnail: string;
-  gia?: number;
+  slug: string;
+  danhmuc?: { tendm: string };
+  thuonghieu?: { tenbrand: string };
+  discount?: number;
+  price?: number;
+  originalPrice?: number;
 }
 
-export default function ProductList({ products }: { products: Product[] }) {
-  return (
-    <div className="container pb-5">
-      <div className="row g-4">
-        {products.length > 0 ? (
-          products.map((p) => (
-            <div key={p.id} className="col-6 col-md-3">
-              <div className="product-card p-2 h-100 d-flex flex-column">
-                <img
-                  src={p.thumbnail || '/no-image.png'}
-                  alt={p.tensp}
-                  className="product-img"
-                />
-                <div className="flex-grow-1 d-flex flex-column justify-content-between text-center">
-                  <h5 className="product-title">{p.tensp}</h5>
-                  <p className="product-price">
-                    {p.gia ? p.gia.toLocaleString('vi-VN') + '₫' : 'Liên hệ'}
-                  </p>
-                  <Link
-                    href={`/products/${p.id}`}
-                    className="btn btn-outline-primary btn-sm rounded-pill"
-                  >
-                    Xem chi tiết
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-muted">Không có sản phẩm nào</p>
-        )}
-      </div>
+interface ProductListProps {
+  title?: string; // cho phép truyền tiêu đề, ví dụ “Sản phẩm mới”
+  apiUrl?: string; // custom API nếu cần (vd: /api/discount-products)
+}
 
-      {/* --- CSS --- */}
-      <style jsx global>{`
-        .product-card {
-          transition: all 0.3s ease;
-          border-radius: 16px;
-          overflow: hidden;
-          background: #fff;
-          border: 1px solid #eee;
-        }
-        .product-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-        }
-        .product-title {
-          font-weight: 600;
-          color: #1e90ff;
-          font-size: 1rem;
-          margin: 8px 0 4px;
-        }
-        .product-price {
-          color: #00bfff;
-          font-weight: 700;
-          margin-bottom: 10px;
-        }
-        .product-img {
-          width: 100%;
-          height: 220px;
-          object-fit: cover;
-          border-bottom: 1px solid #eee;
-        }
-      `}</style>
-    </div>
+export default function ProductList({
+  title = 'Tất cả sản phẩm',
+  apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham`, // Backend Node.js port 5002
+}: ProductListProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Lỗi khi tải sản phẩm:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [apiUrl]);
+
+  if (loading)
+    return (
+      <div className="text-center py-5">
+        <div className="spinner-border text-info"></div>
+      </div>
+    );
+
+  return (
+    <section className="py-5 bg-light">
+      <div className="container">
+        <h2 className="text-uppercase fw-bold mb-4 text-center text-primary">
+          {title}
+        </h2>
+        <div className="row g-4">
+          {products.length > 0 ? (
+            products.map((p) => (
+              <div key={p.id} className="col-6 col-md-4 col-lg-3">
+                <Link href={`/products/${p.id}`} className="text-decoration-none">
+                  <div
+                    className="card border-0 shadow-sm h-100"
+                    style={{
+                      transition: 'all 0.3s ease',
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.transform = 'translateY(-8px)')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.transform = 'translateY(0)')
+                    }
+                  >
+                    <div
+                      className="position-relative"
+                      style={{ 
+                        height: '240px', 
+                        background: '#f8f9fa',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Image
+                        src={
+                          p.thumbnail
+                            ? p.thumbnail.startsWith("http")
+                              ? p.thumbnail
+                              : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}${p.thumbnail}`
+                            : 'https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'
+                        }
+                        alt={p.tensp}
+                        fill
+                        style={{ 
+                          objectFit: 'cover',
+                          objectPosition: 'center'
+                        }}
+                      />
+                      {p.discount && (
+                        <span className="badge bg-danger position-absolute top-0 end-0 m-2">
+                          -{p.discount}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="card-body text-center">
+                      <h6 className="fw-bold text-dark mb-2">{p.tensp}</h6>
+                      {p.price && p.originalPrice ? (
+                        <p className="mb-0">
+                          <span className="text-primary fw-bold me-2">
+                            {Number(p.price || 0).toLocaleString('vi-VN')}₫
+                          </span>
+                          <span className="text-muted text-decoration-line-through small">
+                            {Number(p.originalPrice || 0).toLocaleString('vi-VN')}₫
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-muted small">{p.mota?.slice(0, 40)}...</p>
+                      )}
+                      <p className="text-muted small mt-1">
+                        {p.danhmuc?.tendm || 'Danh mục khác'} |{' '}
+                        {p.thuonghieu?.tenbrand || 'Thương hiệu'}
+                        
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-muted">Không có sản phẩm nào</p>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

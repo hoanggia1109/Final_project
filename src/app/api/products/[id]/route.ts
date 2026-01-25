@@ -1,109 +1,160 @@
 import { NextResponse } from 'next/server';
 
-// Fake data cho sản phẩm chi tiết
-const productsDetail = [
-  {
-    id: 1,
-    name: 'Ghế sofa hiện đại cao cấp',
-    price: 15000000,
-    originalPrice: 20000000,
-    discount: 25,
-    category: 'Sofa & ghế thư giãn',
-    brand: 'VANTAYdecor',
-    sku: 'SOFA-001',
-    stock: 15,
-    rating: 4.8,
-    reviews: 128,
-    description: 'Ghế sofa hiện đại với thiết kế sang trọng, chất liệu vải cao cấp, khung gỗ thông chắc chắn. Mang đến sự thoải mái tuyệt đối cho không gian phòng khách của bạn.',
-    features: [
-      'Chất liệu vải cao cấp chống bám bụi',
-      'Khung gỗ thông tự nhiên, chắc chắn',
-      'Đệm mút D40 êm ái, độ đàn hồi tốt',
-      'Thiết kế hiện đại, phù hợp nhiều không gian',
-      'Dễ dàng vệ sinh và bảo quản'
-    ],
-    specifications: {
-      'Kích thước': '220 x 90 x 85 cm',
-      'Chất liệu khung': 'Gỗ thông tự nhiên',
-      'Chất liệu bọc': 'Vải cao cấp',
-      'Chất liệu đệm': 'Mút D40',
-      'Màu sắc': 'Xám, Be, Xanh navy',
-      'Trọng lượng': '65 kg',
-      'Xuất xứ': 'Việt Nam',
-      'Bảo hành': '24 tháng'
-    },
-    images: [
-      'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800',
-      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800',
-      'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800',
-      'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800'
-    ],
-    colors: [
-      { name: 'Xám', code: '#808080' },
-      { name: 'Be', code: '#F5F5DC' },
-      { name: 'Xanh navy', code: '#000080' }
-    ],
-    relatedProducts: [2, 3, 4, 5]
-  },
-  {
-    id: 2,
-    name: 'Bàn làm việc gỗ tự nhiên',
-    price: 5500000,
-    originalPrice: 7000000,
-    discount: 21,
-    category: 'Bàn làm việc',
-    brand: 'VANTAYdecor',
-    sku: 'DESK-002',
-    stock: 25,
-    rating: 4.6,
-    reviews: 89,
-    description: 'Bàn làm việc cao cấp từ gỗ tự nhiên, thiết kế tối giản hiện đại. Bề mặt rộng rãi, chắc chắn, phù hợp cho cả văn phòng và nhà riêng.',
-    features: [
-      'Gỗ tự nhiên cao cấp',
-      'Thiết kế tối giản, hiện đại',
-      'Bề mặt rộng rãi, tiện lợi',
-      'Chân bàn chắc chắn, có điều chỉnh độ cao',
-      'Dễ dàng lắp ráp'
-    ],
-    specifications: {
-      'Kích thước': '140 x 70 x 75 cm',
-      'Chất liệu mặt bàn': 'Gỗ tự nhiên',
-      'Chất liệu chân': 'Thép sơn tĩnh điện',
-      'Màu sắc': 'Nâu gỗ, Đen',
-      'Trọng lượng': '35 kg',
-      'Tải trọng': '100 kg',
-      'Xuất xứ': 'Việt Nam',
-      'Bảo hành': '18 tháng'
-    },
-    images: [
-      'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800',
-      'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?w=800',
-      'https://images.unsplash.com/photo-1611269154421-4e27233ac5c7?w=800',
-      'https://images.unsplash.com/photo-1593062096033-9a26b09da705?w=800'
-    ],
-    colors: [
-      { name: 'Nâu gỗ', code: '#8B4513' },
-      { name: 'Đen', code: '#000000' }
-    ],
-    relatedProducts: [1, 3, 6, 8]
-  }
-];
+interface BienThe {
+  id?: string;
+  gia?: number;
+  mausac?: string;
+  kichthuoc?: string;
+  sl_tonkho?: number;
+  images?: { url: string }[];
+}
+
+interface BackendProduct {
+  id: number;
+  tensp?: string;
+  code?: string;
+  mota?: string;
+  mota_chitiet?: string;
+  dacdiem_noibat?: string;
+  thongsokythuat?: string;
+  thumbnail?: string;
+  luotxem?: number;
+  bienthe?: BienThe[];
+  danhmuc?: { tendm?: string };
+  thuonghieu?: { tenbrand?: string };
+}
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: idParam } = await params;
-  const id = parseInt(idParam);
-  const product = productsDetail.find(p => p.id === id);
-
-  if (!product) {
+  try {
+    const { id } = await params;
+    
+    console.log('🔍 Fetching product ID:', id);
+    
+    // Call backend Node.js API (Port 5000)
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/sanpham/${id}`;
+    console.log('📡 Calling backend:', backendUrl);
+    
+    const response = await fetch(backendUrl, {
+      cache: 'no-store' // Tắt cache
+    });
+    
+    console.log(' Response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('Backend response not OK:', response.status);
+      return NextResponse.json(
+        { error: 'Không tìm thấy sản phẩm' },
+        { status: 404 }
+      );
+    }
+    
+    const product: BackendProduct = await response.json();
+    console.log('✅ Product from backend:', product);
+    
+    // Tính tổng tồn kho từ tất cả các biến thể
+    const totalStock = product.bienthe?.reduce((sum, bt) => sum + (bt.sl_tonkho || 0), 0) || 0;
+    
+    // Helper function để format image URL
+    const formatImageUrl = (url: string | undefined): string => {
+      if (!url) return '';
+      // Nếu đã là URL đầy đủ (bắt đầu bằng http/https), trả về nguyên
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      // Nếu là đường dẫn tương đối, thêm API_BASE_URL
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
+      return `${apiBaseUrl}${url.startsWith('/') ? url : '/' + url}`;
+    };
+    
+    // Transform data để phù hợp với frontend
+    const transformedProduct = {
+      id: product.id,
+      name: product.tensp || 'Sản phẩm',
+      price: product.bienthe?.[0]?.gia || 0,
+      originalPrice: product.bienthe?.[0]?.gia ? Math.round(product.bienthe[0].gia * 1.2) : 0,
+      discount: 20,
+      category: product.danhmuc?.tendm || 'Chưa phân loại',
+      brand: product.thuonghieu?.tenbrand || 'DANNYdecor',
+      sku: product.code || `SP-${product.id}`,
+      stock: totalStock, // Tổng tồn kho từ tất cả biến thể
+      views: product.luotxem || 0,
+      rating: 4.8,
+      reviews: 0,
+      description: product.mota_chitiet || product.mota || 'Sản phẩm chất lượng cao từ DANNYdecor',
+      features: (() => {
+        try {
+          if (product.dacdiem_noibat) {
+            // Backend đã parse JSON rồi, nên có thể là array hoặc string
+            let parsed = product.dacdiem_noibat;
+            if (typeof parsed === 'string') {
+              parsed = JSON.parse(parsed);
+            }
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing dacdiem_noibat:', e);
+        }
+        // Fallback nếu không có dữ liệu
+        return [];
+      })(),
+      specifications: (() => {
+        try {
+          if (product.thongsokythuat) {
+            // Backend đã parse JSON rồi, nên có thể là object hoặc string
+            let parsed = product.thongsokythuat;
+            if (typeof parsed === 'string') {
+              parsed = JSON.parse(parsed);
+            }
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing thongsokythuat:', e);
+        }
+        // Fallback nếu không có dữ liệu - chỉ trả về thông tin cơ bản
+        const fallback: Record<string, string> = {};
+        if (product.code) fallback['Mã sản phẩm'] = product.code;
+        if (product.thuonghieu?.tenbrand) fallback['Thương hiệu'] = product.thuonghieu.tenbrand;
+        if (product.danhmuc?.tendm) fallback['Danh mục'] = product.danhmuc.tendm;
+        const colors = product.bienthe?.map((bt: BienThe) => bt.mausac).filter(Boolean);
+        if (colors && colors.length > 0) fallback['Màu sắc'] = colors.join(', ');
+        const sizes = product.bienthe?.map((bt: BienThe) => bt.kichthuoc).filter(Boolean);
+        if (sizes && sizes.length > 0) fallback['Kích thước'] = sizes.join(', ');
+        return fallback;
+      })(),
+      // Lấy images từ biến thể hoặc dùng thumbnail, và format URL
+      images: product.bienthe?.[0]?.images && product.bienthe[0].images.length > 0
+        ? product.bienthe[0].images.map((img: { url: string }) => formatImageUrl(img.url))
+        : product.thumbnail
+        ? [formatImageUrl(product.thumbnail)]
+        : [],
+        // : ['https://images.pexels.com/photos/5695871/pexels-photo-5695871.jpeg'],
+      colors: product.bienthe?.map((bt: BienThe) => ({
+        id: bt.id, // ID của biến thể (bienthe_id)
+        name: bt.mausac || 'Màu mặc định',
+        code: '#808080', // Default color
+        stock: bt.sl_tonkho || 0, // Số lượng tồn kho của biến thể này
+        gia: bt.gia || 0, // Giá của biến thể
+        kichthuoc: bt.kichthuoc || '', // Kích thước
+        mausac: bt.mausac || '' // Màu sắc
+      })) || [],
+      relatedProducts: []
+    };
+    
+    console.log(' Transformed product:', transformedProduct);
+    return NextResponse.json(transformedProduct);
+  } catch (error) {
+    console.error(' Error fetching product:', error);
     return NextResponse.json(
-      { error: 'Không tìm thấy sản phẩm' },
-      { status: 404 }
+      { error: 'Lỗi khi tải sản phẩm', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(product);
 }
 
